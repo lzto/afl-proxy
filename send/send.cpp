@@ -28,9 +28,9 @@ int main(int argc, char **argv) {
   auto *sm = shm.getMem();
   // INFO("SHM cconnected @ " << sm);
   // INFO("Acquired SM, path=" << sm->path);
-  srand (time(NULL));
+  srand(time(NULL));
   // send random IP
-  for (int i=0;i<100;i++) {
+  for (int i = 0; i < 100; i++) {
     // send exit
     if (sem_wait(&sm->semr) == -1) {
       unreachable("error wait semr");

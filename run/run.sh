@@ -11,4 +11,4 @@ rm afl.log
   -i in -o out \
   -f seed \
   -d  -- \
-  ../proxy/build/ap seed
+  ../proxy/build/ap /home/tong/afl-proxy/run/seed

@@ -17,6 +17,7 @@ public:
 
   bool isOpen() { return fd > 0; }
   bool open(SHMOpenType t) {
+    mode = t;
     switch (t) {
     case (SHMOpenType::CREATE):
       return createOpen();
@@ -31,7 +32,7 @@ public:
     if (smem)
       munmap(smem, sizeof(T));
     smem = nullptr;
-    if (fd > 0)
+    if ((fd > 0) && (mode == SHMOpenType::CREATE))
       shm_unlink(shmPath.c_str());
     fd = 0;
   }
@@ -42,6 +43,7 @@ private:
   const std::string shmPath;
   int fd;
   void *smem;
+  SHMOpenType mode;
 
   bool createOpen() {
     fd = shm_open(shmPath.c_str(), O_CREAT | O_RDWR | O_TRUNC,
