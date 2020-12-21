@@ -31,6 +31,7 @@ void inject_cov(uint64_t addr) { aflClient->AFLMaybeLog(addr); }
 void handle_type_cov(struct XXX *sm) {
   uint64_t addr;
   memcpy(&addr, &(sm->data), sizeof(uint64_t));
+  //LOG_TO_FILE("afl.log", " pc@" << (uint64_t)(addr));
   inject_cov(addr);
 }
 
@@ -54,8 +55,6 @@ int main(int argc, char **argv) {
   aflClient = new AFLClient;
   if (aflClient->isAFLAlive()) {
     INFO("AFLClient is alive");
-    LOG_TO_FILE("afl.log",
-                "afl_area_ptr[0]=" << (uint64_t)(aflClient->getAFLArea()[0]));
   }
   skip_dry_run();
   SHM<struct XXX> shm("/afl-proxy");

@@ -17,12 +17,6 @@
 #define FORKSRV_FD 198
 #define TSL_FD (FORKSRV_FD - 1)
 
-struct afl_tsl {
-  uint64_t pc;
-  uint64_t cs_base;
-  uint64_t flags;
-};
-
 class AFLClient {
 public:
   AFLClient() : afl_area_ptr(nullptr), shm_id(-1) {

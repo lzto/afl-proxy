@@ -1,4 +1,4 @@
-SUBDIRS := proxy send
+SUBDIRS := proxy send aplib
 
 all: $(SUBDIRS)
 
