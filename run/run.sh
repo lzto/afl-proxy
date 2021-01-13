@@ -5,10 +5,10 @@ export AFL_SKIP_CPUFREQ=1
 rm dry_run_stamp*
 echo > afl.log
 
-~/AFL/afl-fuzz \
-  -b 0 \
+/home/tong/AFL/afl-fuzz \
+  -b 2 \
   -t 500000000+ -m 256 \
   -i in -o out \
+  -d \
   -f seed \
-  -d  -- \
-  ../proxy/build/ap /home/tong/afl-proxy/run/seed
+  ../proxy/build/ap @@

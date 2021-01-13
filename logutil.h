@@ -10,7 +10,10 @@
 #define errs() std::cerr
 
 #define WARN(X)                                                                \
-  outs() << ANSI_COLOR_RED << "WARN:" << X << ANSI_COLOR_RESET << "\n"
+  outs() << ANSI_COLOR_YELLOW << "WARN:" << X << ANSI_COLOR_RESET << "\n"
+
+#define ERROR(X)                                                               \
+  outs() << ANSI_COLOR_RED << "ERROR:" << X << ANSI_COLOR_RESET << "\n"
 
 #define INFO(X) outs() << ANSI_COLOR_RESET << "INFO:" << X << "\n"
 
@@ -20,7 +23,7 @@
     throw;                                                                     \
   }
 
-#define hexval(X) std::hex << X << std::dec
+#define hexval(X) "0x" << std::hex << (uintptr_t)X << std::dec
 
 ///
 /// log to file -- append mode

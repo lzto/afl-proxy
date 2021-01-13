@@ -5,10 +5,12 @@
 #define _AFL_CLIENT_
 
 #include "logutil.h"
+#include "pt-runner.h"
 #include <stdlib.h>
 #include <sys/shm.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <thread>
 #include <unistd.h>
 #define SHM_ENV_VAR "__AFL_SHM_ID"
 #define PERSIST_ENV_VAR "__AFL_PERSISTENT"
@@ -21,10 +23,12 @@ class AFLClient {
 public:
   AFLClient() : afl_area_ptr(nullptr), shm_id(-1) {
     is_persistent = !!getenv(PERSIST_ENV_VAR);
-    AFLSetup();
+    if (!AFLSetup())
+      return;
     AFLForkServer();
     // -- should mark this 1 to let AFL know we are valid
-    afl_area_ptr[0] = 1;
+    if (afl_area_ptr)
+      afl_area_ptr[0] = 1;
   };
   ~AFLClient(){};
   // call this to inject coverage information to AFL
@@ -40,17 +44,25 @@ public:
   };
   bool isAFLAlive() { return afl_area_ptr != nullptr; }
   uint8_t *getAFLArea() { return afl_area_ptr; }
+  void startPT(pid_t tid) {
+    if (!ptThread)
+      ptThread = new std::thread(ptWorker, tid);
+  }
 
 private:
-  void AFLSetup() {
+  bool AFLSetup() {
     char *id_str = getenv(SHM_ENV_VAR);
     if (id_str) {
       shm_id = atoi(id_str);
       afl_area_ptr = (uint8_t *)shmat(shm_id, NULL, 0);
-      if (afl_area_ptr == (void *)-1)
-        exit(1);
+      if (afl_area_ptr == (void *)-1) {
+        afl_area_ptr = nullptr;
+        WARN("afl not available");
+        return false;
+      }
       afl_area_ptr[0] = 1;
     }
+    return true;
   };
   void AFLForkServer() {
     uint8_t tmp[4];
@@ -113,6 +125,8 @@ private:
   unsigned char afl_fork_child;
   int shm_id;
   bool is_persistent;
+  // thread to handle pt
+  std::thread *ptThread;
 };
 
 #endif

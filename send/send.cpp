@@ -9,6 +9,7 @@
 #include <iostream>
 #include <semaphore.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 // TODO: should implement a lock free queue here ...
@@ -30,7 +31,7 @@ int main(int argc, char **argv) {
   // INFO("Acquired SM, path=" << sm->path);
   srand(time(NULL));
   // send random IP
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < 0; i++) {
     // send exit
     if (sem_wait(&sm->semr) == -1) {
       unreachable("error wait semr");
@@ -43,6 +44,23 @@ int main(int argc, char **argv) {
       unreachable("error post semr");
     }
   }
+  // send start-pt
+  // send exit
+  if (sem_wait(&sm->semr) == -1) {
+    unreachable("error wait semr");
+  }
+  // INFO("send type 0xff msg");
+  sm->type = 0x02;
+  pid_t tid = gettid();
+  memcpy(sm->data, &tid, sizeof(pid_t));
+  if (sem_post(&sm->semw) == -1) {
+    unreachable("error post semr");
+  }
+
+  for (int i = 0; i < 10; i++) {
+    sleep(1);
+  }
+
   // send exit
   if (sem_wait(&sm->semr) == -1) {
     unreachable("error wait semr");

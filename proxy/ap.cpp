@@ -31,8 +31,15 @@ void inject_cov(uint64_t addr) { aflClient->AFLMaybeLog(addr); }
 void handle_type_cov(struct XXX *sm) {
   uint64_t addr;
   memcpy(&addr, &(sm->data), sizeof(uint64_t));
-  //LOG_TO_FILE("afl.log", " pc@" << (uint64_t)(addr));
+  // LOG_TO_FILE("afl.log", " pc@" << (uint64_t)(addr));
   inject_cov(addr);
+}
+
+void start_pt(struct XXX *sm) {
+  pid_t tid;
+  memcpy(&tid, &(sm->data), sizeof(pid_t));
+  LOG_TO_FILE("afl.log", "start PT for tid " << tid);
+  aflClient->startPT(tid);
 }
 
 bool hasStamp(const std::string fname) {
@@ -84,6 +91,9 @@ int main(int argc, char **argv) {
     switch (sm->type) {
     case (1):
       handle_type_cov(sm);
+      break;
+    case (2):
+      start_pt(sm);
       break;
     case (0xFF):
       run = false;

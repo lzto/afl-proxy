@@ -1,7 +1,7 @@
 #!/bin/bash
 
 while [ true ]; do
-  ./build/send
+  taskset -c 0 ./build/send
   #sleep 1
 done
 

@@ -3,9 +3,9 @@
 
 #include <fcntl.h>
 #include <semaphore.h>
+#include <stdint.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <stdint.h>
 #include <unistd.h>
 
 struct XXX {
@@ -22,9 +22,11 @@ extern "C" {
 // this is a c library for afl-proxy's client
 void ap_init(void);
 const char *ap_get_fuzz_file(void);
-int ap_fetch_fuzz_data(char* dest, uint64_t addr, size_t size);
+int ap_get_fuzz_data(char *dest, uint64_t addr, size_t size);
+void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size);
 void ap_log_pc(uint64_t);
 void ap_exit(void);
+void ap_attach_pt(void);
 #if defined(__cplusplus)
 }
 #endif
