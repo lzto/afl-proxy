@@ -14,6 +14,7 @@ struct XXX {
   char path[128]; // the input data path
   uint8_t type;
   uint8_t data[128];
+  volatile uint8_t ready;
 };
 
 #if defined(__cplusplus)
@@ -27,6 +28,7 @@ void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size);
 void ap_log_pc(uint64_t);
 void ap_exit(void);
 void ap_attach_pt(void);
+void ap_reattach_pt(void);
 #if defined(__cplusplus)
 }
 #endif

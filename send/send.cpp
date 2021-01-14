@@ -22,6 +22,7 @@ struct XXX {
 };
 
 int main(int argc, char **argv) {
+
   SHM<struct XXX> shm("/afl-proxy");
   if (!shm.open(SHMOpenType::CONNECT)) {
     exit(1);
@@ -30,6 +31,10 @@ int main(int argc, char **argv) {
   // INFO("SHM cconnected @ " << sm);
   // INFO("Acquired SM, path=" << sm->path);
   srand(time(NULL));
+  if (argc > 1) {
+    if (!strcmp(argv[1], "exit"))
+      goto end;
+  }
   // send random IP
   for (int i = 0; i < 0; i++) {
     // send exit
@@ -44,23 +49,21 @@ int main(int argc, char **argv) {
       unreachable("error post semr");
     }
   }
-  // send start-pt
-  // send exit
-  if (sem_wait(&sm->semr) == -1) {
-    unreachable("error wait semr");
-  }
-  // INFO("send type 0xff msg");
-  sm->type = 0x02;
-  pid_t tid = gettid();
-  memcpy(sm->data, &tid, sizeof(pid_t));
-  if (sem_post(&sm->semw) == -1) {
-    unreachable("error post semr");
-  }
-
-  for (int i = 0; i < 10; i++) {
-    sleep(1);
+  if (1) {
+    // send start-pt
+    if (sem_wait(&sm->semr) == -1) {
+      unreachable("error wait semr");
+    }
+    // INFO("send type 0xff msg");
+    sm->type = 0x02;
+    pid_t tid = gettid();
+    memcpy(sm->data, &tid, sizeof(pid_t));
+    if (sem_post(&sm->semw) == -1) {
+      unreachable("error post semr");
+    }
   }
 
+end:
   // send exit
   if (sem_wait(&sm->semr) == -1) {
     unreachable("error wait semr");

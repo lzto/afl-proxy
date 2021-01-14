@@ -10,6 +10,10 @@
 #define LEFT(x) ((end - p) >= (x))
 #define BIT(x) (1u << (x))
 
+#include "aflclient.h"
+
+extern AFLClient *aflClient;
+
 class PTDecoder {
 public:
   PTDecoder(){};
@@ -35,15 +39,16 @@ public:
 
         if (*p == 2 && LEFT(2)) {
           if (p[1] == 0xa3 && LEFT(8)) { /* long TNT */
-            printf("tnt64 ");
-            print_multi_tnt(p + 2, 6);
-            printf("\n");
+            //printf("tnt64 ");
+            //print_multi_tnt(p + 2, 6);
+            //printf("\n");
             p += 8;
             continue;
           }
           if (p[1] == 0x43 && LEFT(8)) { /* PIP */
             p += 2;
-            printf("pip\t%lx\n", (get_val(&p, 6) >> 1) << 5);
+            auto val = (get_val(&p, 6) >> 1) << 5;
+            //printf("pip\t%lx\n", val);
             continue;
           }
           if (p[1] == 3 && LEFT(4) && p[3] == 0) { /* CBR */
@@ -52,33 +57,33 @@ public:
             continue;
           }
           if (p[1] == 0b10000011) {
-            printf("tracestop\n");
+            //printf("tracestop\n");
             p += 2;
             continue;
           }
           if (p[1] == 0b11110011 && LEFT(8)) { /* OVF */
-            printf("ovf\n");
+            //printf("ovf\n");
             p += 8;
             overflow++;
             continue;
           }
           if (p[1] == 0x82 && LEFT(16) && !memcmp(p, psb, 16)) { /* PSB */
-            printf("psb\n");
+            //printf("psb\n");
             p += 16;
             continue;
           }
           if (p[1] == 0b100011) { /* PSBEND */
-            printf("psbend\n");
+            //printf("psbend\n");
             p += 2;
             continue;
           }
           /* MNT */
           if (p[1] == 0b11000011 && LEFT(11) && p[2] == 0b10001000) {
-            printf("mnt\t%lx\n",
-                   p[3] | ((uint64_t)p[4] << 8) | ((uint64_t)p[5] << 16) |
-                       ((uint64_t)p[6] << 24) | ((uint64_t)p[7] << 32) |
-                       ((uint64_t)p[8] << 40) | ((uint64_t)p[9] << 48) |
-                       ((uint64_t)p[10] << 56));
+            //printf("mnt\t%lx\n",
+            //       p[3] | ((uint64_t)p[4] << 8) | ((uint64_t)p[5] << 16) |
+            //           ((uint64_t)p[6] << 24) | ((uint64_t)p[7] << 32) |
+            //           ((uint64_t)p[8] << 40) | ((uint64_t)p[9] << 48) |
+            //           ((uint64_t)p[10] << 56));
             p += 10;
             continue;
           }
@@ -91,10 +96,10 @@ public:
           }
           /* VMCS */
           if (p[1] == 0b11001000 && LEFT(7)) {
-            printf("vmcs\t%lx\n",
-                   ((uint64_t)p[2] << 12) | ((uint64_t)p[3] << 20) |
-                       ((uint64_t)p[4] << 28) | ((uint64_t)p[5] << 36) |
-                       ((uint64_t)p[6] << 44));
+            //printf("vmcs\t%lx\n",
+            //       ((uint64_t)p[2] << 12) | ((uint64_t)p[3] << 20) |
+            //           ((uint64_t)p[4] << 28) | ((uint64_t)p[5] << 36) |
+            //           ((uint64_t)p[6] << 44));
             p += 7;
             continue;
           }
@@ -131,25 +136,26 @@ public:
         if (name) {
           int ipl = *p >> 5;
           p++;
-          printf("%s\t%d: 0x%lx\n", name, ipl,
-                 get_ip_val(&p, end, ipl, &last_ip));
+          auto ip = get_ip_val(&p, end, ipl, &last_ip);
+          //printf("%s\t%d: 0x%lx\n", name, ipl, ip);
+          aflClient->AFLMaybeLog(ip);
           continue;
         }
         if (*p == 0x99 && LEFT(2)) { /* MODE */
           if ((p[1] >> 5) == 1) {
-            printf("mode.tsx");
-            if (p[1] & BIT(0))
-              printf(" intx");
-            if (p[1] & BIT(1))
-              printf(" txabort");
-            printf("\n");
+            //printf("mode.tsx");
+            //if (p[1] & BIT(0))
+            //  printf(" intx");
+            //if (p[1] & BIT(1))
+            //  printf(" txabort");
+            //printf("\n");
             p += 2;
             continue;
           } else if ((p[1] >> 5) == 0) {
-            printf("mode.exec");
-            printf(" lma=%d", (p[1] & BIT(0)));
-            printf(" cs.d=%d", !!(p[1] & BIT(1)));
-            printf("\n");
+            //printf("mode.exec");
+            //printf(" lma=%d", (p[1] & BIT(0)));
+            //printf(" cs.d=%d", !!(p[1] & BIT(1)));
+            //printf("\n");
             p += 2;
             continue;
           }
@@ -157,7 +163,8 @@ public:
 
         if (*p == 0x19 && LEFT(8)) { /* TSC */
           p++;
-          // printf("tsc\t%lu\n", get_val(&p, 7));
+          auto val = get_val(&p, 7);
+          // printf("tsc\t%lu\n", val);
           continue;
         }
         if (*p == 0b01011001 && LEFT(2)) { /* MTC */

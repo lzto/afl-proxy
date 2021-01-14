@@ -37,8 +37,9 @@ public:
       return;
     cur_loc = (cur_loc >> 4) ^ (cur_loc << 8);
     cur_loc &= MAP_SIZE - 1;
-    if (cur_loc >= afl_inst_rms)
+    if (cur_loc >= afl_inst_rms) {
       return;
+    }
     afl_area_ptr[cur_loc ^ prev_loc]++;
     prev_loc = cur_loc >> 1;
   };

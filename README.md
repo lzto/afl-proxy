@@ -1,2 +1,21 @@
-only single core is supported
-echo -1 > /proc/sys/kernel/perf_event_paranoid
+- only single core is supported
+
+----
+usage
+
+* first compile AFL
+```
+make
+cd aplib
+make
+```
+
+then compile QEMU sfpv2-fuzz branch
+
+run AFL daemon using
+```
+cd run
+./run.sh
+```
+
+

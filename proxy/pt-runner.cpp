@@ -152,9 +152,9 @@ void check_buffer(int fd) {
       uint64_t auxOffset = record->aux_offset;
       uint64_t auxSize = record->aux_size;
       size_t auxRingSize = AUX_RING_PAGES * 4096;
-      LOG_TO_FILE("afl.log", "AUX offset " << hexval(auxOffset) << ", size "
-                                           << hexval(auxSize) << ", flags "
-                                           << hexval(record->flags));
+      //LOG_TO_FILE("afl.log", "AUX offset " << hexval(auxOffset) << ", size "
+      //                                     << hexval(auxSize) << ", flags "
+      //                                     << hexval(record->flags));
       switch (record->flags) {
       case (PERF_AUX_FLAG_TRUNCATED):
         INFO("aux record truncated");
@@ -171,10 +171,10 @@ void check_buffer(int fd) {
       if (auxSize != 0) {
         PerfAuxBuffer ptrecord(auxRingBuffer, auxRingSize, auxOffset, auxSize);
         // decode_buffer(ptrecord.data(), ptrecord.size());
-        // PTDecoder decoder;
-        // decoder.decode(ptrecord.data(), ptrecord.size());
-        INFO("++ adjust aux_tail from " << hexval(pmap->aux_tail) << " to "
-                                        << hexval(pmap->aux_tail + auxSize));
+        PTDecoder decoder;
+        decoder.decode(ptrecord.data(), ptrecord.size());
+        // INFO("++ adjust aux_tail from " << hexval(pmap->aux_tail) << " to "
+        //                                 << hexval(pmap->aux_tail + auxSize));
         assert(pmap->aux_tail + auxSize <= pmap->aux_head);
         __sync_fetch_and_add((uint64_t *)&(pmap->aux_tail), auxSize);
       }
@@ -222,7 +222,7 @@ void check_buffer(int fd) {
 void ptWorker(pid_t tid) {
   pid_t pid = tid;
   int cpu = 0; // measure on cpu 0
-  LOG_TO_FILE("afl.log", "target CPU " << cpu << " PID " << pid);
+  // LOG_TO_FILE("afl.log", "target CPU " << cpu << " PID " << pid);
 
   // setup signal handler for receiving perf data signal
   struct sigaction sa;
@@ -275,7 +275,7 @@ void ptWorker(pid_t tid) {
           << "run perf record -e intel_pt// -vvv to confirm event type\n");
     exit(EXIT_FAILURE);
   }
-  LOG_TO_FILE("afl.log", "> perf fd =" << fd);
+  // LOG_TO_FILE("afl.log", "> perf fd =" << fd);
   if (setup_mmap(&attr, fd) < 0)
     return;
 

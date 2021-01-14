@@ -5,7 +5,7 @@ export AFL_SKIP_CPUFREQ=1
 rm dry_run_stamp*
 echo > afl.log
 
-/home/tong/AFL/afl-fuzz \
+sudo /home/tong/AFL/afl-fuzz \
   -b 2 \
   -t 500000000+ -m 256 \
   -i in -o out \

@@ -21,6 +21,7 @@ struct XXX {
   char path[128]; // the input data path
   uint8_t type;
   uint8_t data[128];
+  volatile uint8_t ready;
 };
 
 AFLClient *aflClient;
@@ -38,7 +39,7 @@ void handle_type_cov(struct XXX *sm) {
 void start_pt(struct XXX *sm) {
   pid_t tid;
   memcpy(&tid, &(sm->data), sizeof(pid_t));
-  LOG_TO_FILE("afl.log", "start PT for tid " << tid);
+  // LOG_TO_FILE("afl.log", "start PT for tid " << tid);
   aflClient->startPT(tid);
 }
 
@@ -80,8 +81,9 @@ int main(int argc, char **argv) {
   } else {
     INFO("no input file specified");
   }
-  LOG_TO_FILE("afl.log", "entering event loop");
+  // LOG_TO_FILE("afl.log", "entering event loop");
   bool run = true;
+  __sync_lock_test_and_set(&(sm->ready), 1);
   // event loop
   while (run) {
     if (sem_wait(&sm->semw) == -1) {
@@ -107,5 +109,6 @@ int main(int argc, char **argv) {
     }
   }
   shm.close();
+  shm_unlink("/afl-proxy");
   return 0;
 }
