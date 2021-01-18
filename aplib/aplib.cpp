@@ -1,3 +1,6 @@
+///
+/// 2020-2021 Tong Zhang<ztong0001@gmail.com>
+///
 #include "aplib.h"
 #include "shm.h"
 
@@ -20,11 +23,11 @@ static int gdb_attached;
 
 void ap_init(void) {
   if (!gdb_attached) {
-    char* s_waitgdb = getenv("WAITGDB");
+    char *s_waitgdb = getenv("WAITGDB");
     if (s_waitgdb) {
       int b_waitgdb = atoi(s_waitgdb);
       if (b_waitgdb) {
-        outs()<< "wait gdb, pid="<<getpid()<<"\n";
+        outs() << "wait gdb, pid=" << getpid() << "\n";
         getchar();
         gdb_attached = 1;
       }
@@ -62,7 +65,7 @@ again:
   fuzz_file_fd = open(sm->path, O_RDWR);
   fuzzdata = (uint8_t *)mmap(0, fuzzdatasize, PROT_READ | PROT_WRITE,
                              MAP_PRIVATE, fuzz_file_fd, 0);
-  if (fuzzdata==MAP_FAILED) {
+  if (fuzzdata == MAP_FAILED) {
     fuzzdata = nullptr;
     fuzzdatasize = 0;
   }

@@ -1,14 +1,17 @@
+///
+/// 2020-2021 Tong Zhang<ztong0001@gmail.com>
+///
 #ifndef _X_SHM_
 #define _X_SHM_
 #include "color.h"
 #include "logutil.h"
+#include <errno.h>
 #include <fcntl.h> /* For O_* constants */
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h> /* For mode constants */
 #include <sys/types.h>
 #include <unistd.h>
-#include <errno.h>
 
 enum class SHMOpenType { CREATE, CONNECT };
 template <typename T> class SHM {
@@ -33,7 +36,7 @@ public:
     if (smem)
       munmap(smem, sizeof(T));
     smem = nullptr;
-    if (fd>0)
+    if (fd > 0)
       ::close(fd);
 #if 0
     if ((fd > 0) && (mode == SHMOpenType::CREATE)) {
@@ -53,8 +56,7 @@ private:
 
   bool createOpen() {
     auto path = shmPath + ".temp";
-    fd = shm_open(path.c_str(), O_CREAT | O_RDWR | O_TRUNC,
-                  S_IRUSR | S_IWUSR);
+    fd = shm_open(path.c_str(), O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR);
     if (fd < 0) {
       // WARN("cannot open shm " << path);
       return false;

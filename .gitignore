@@ -1,0 +1,6 @@
+*.o
+*.so
+*.swp
+run/dry_run*
+run/afl.log
+run/seed

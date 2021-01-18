@@ -1,3 +1,6 @@
+///
+/// 2020-2021 Tong Zhang<ztong0001@gmail.com>
+///
 #ifndef _AFL_PROXY_LIB_H_
 #define _AFL_PROXY_LIB_H_
 

@@ -1,4 +1,5 @@
 ///
+/// 2020-2021 Tong Zhang<ztong0001@gmail.com>
 /// afl proxy
 /// - provide fuzz filename to s2e
 /// - receive and feed coverage info to AFL

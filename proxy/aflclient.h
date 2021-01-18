@@ -1,5 +1,6 @@
 ///
 /// setup afl client
+/// 2020-2021 Tong Zhang<ztong0001@gmail.com>
 ///
 #ifndef _AFL_CLIENT_
 #define _AFL_CLIENT_

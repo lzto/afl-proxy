@@ -1,5 +1,6 @@
 ///
 /// send exit
+/// 2020-2021 Tong Zhang<ztong0001@gmail.com>
 ///
 #include "logutil.h"
 #include "shm.h"

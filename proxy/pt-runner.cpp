@@ -152,7 +152,7 @@ void check_buffer(int fd) {
       uint64_t auxOffset = record->aux_offset;
       uint64_t auxSize = record->aux_size;
       size_t auxRingSize = AUX_RING_PAGES * 4096;
-      //LOG_TO_FILE("afl.log", "AUX offset " << hexval(auxOffset) << ", size "
+      // LOG_TO_FILE("afl.log", "AUX offset " << hexval(auxOffset) << ", size "
       //                                     << hexval(auxSize) << ", flags "
       //                                     << hexval(record->flags));
       switch (record->flags) {

@@ -1,3 +1,6 @@
+///
+/// 2020-2021 Tong Zhang<ztong0001@gmail.com>
+///
 #ifndef _PERF_AUX_BUFFER_H_
 #define _PERF_AUX_BUFFER_H_
 

@@ -1,3 +1,6 @@
+///
+/// 2019-2021 Tong Zhang<ztong0001@gmail.com>
+///
 #ifndef _LOG_UTIL_
 #define _LOG_UTIL_
 
