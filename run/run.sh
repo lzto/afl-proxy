@@ -1,5 +1,10 @@
 #!/bin/bash
 
+echo core | sudo tee /proc/sys/kernel/core_pattern
+pushd /sys/devices/system/cpu
+echo performance | sudo tee cpu*/cpufreq/scaling_governor
+popd
+
 export AFL_SKIP_CPUFREQ=1
 # ignore timeout and dryrun perform_dry_run 
 rm dry_run_stamp*

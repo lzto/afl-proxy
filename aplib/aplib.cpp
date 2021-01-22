@@ -4,8 +4,11 @@
 #include "aplib.h"
 #include "shm.h"
 
+#include <assert.h>
 #include <sys/mman.h>
 #include <sys/types.h>
+
+#include "hw_model.h"
 
 extern "C" {
 
@@ -20,8 +23,10 @@ static pid_t kvm_tid;
 int fuzz_file_fd;
 
 static int gdb_attached;
+// 0-not set 1-enabled 2-disabled
+static int dump_rw_addr;
 
-void ap_init(void) {
+void real_ap_init(void) {
   if (!gdb_attached) {
     char *s_waitgdb = getenv("WAITGDB");
     if (s_waitgdb) {
@@ -72,7 +77,25 @@ again:
   ap_reattach_pt();
 };
 
-const char *ap_get_fuzz_file(void) { return sm->path; }
+void ap_init(void) {
+  if (dump_rw_addr == 0) {
+    char *s_dump_rw_addr = getenv("AP_DUMP_RW");
+    if (s_dump_rw_addr)
+      dump_rw_addr = atoi(s_dump_rw_addr);
+    else
+      dump_rw_addr = 2;
+  }
+
+  char *disabled = getenv("AP_DISABLED");
+  if (disabled)
+    return;
+  real_ap_init();
+}
+
+const char *ap_get_fuzz_file(void) {
+  assert(sm);
+  return sm->path;
+}
 
 int ap_fetch_fuzz_data_rand(char *dest, uint64_t addr, size_t size) {
   uint64_t rand = random() | (random() << 16) | (random() << 24);
@@ -81,26 +104,34 @@ int ap_fetch_fuzz_data_rand(char *dest, uint64_t addr, size_t size) {
 }
 
 int ap_get_fuzz_data(char *dest, uint64_t addr, size_t size) {
-  // INFO("read @ " << hexval(addr) << "=" << hexval(*(uint64_t *)(dest)));
-  if (!sm)
-    return 0;
   static int counter;
+  // TODO: put what s2e told us here
+  //hw_model_r8169;
+
+  if (!sm) goto end;
   counter++;
   if (counter % 10 == 0)
     ap_exit();
   ap_init();
   if (!fuzzdatasize)
-    return 0;
+    goto end;
   addr = addr % fuzzdatasize;
   if (addr >= fuzzdatasize)
-    return 0;
+    goto end;
   memcpy(dest, fuzzdata + addr, size);
+end:
+  if (dump_rw_addr == 1)
+    INFO("read " << size << " byte @ " << hexval(addr) << "="
+                 << hexval(*(uint64_t *)(dest)));
   return size;
 }
 
 void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size) {
-  // INFO("write @ addr " << hexval(addr) << "=" << hexval(data) <<
-  // "size:"<<size);
+  if (dump_rw_addr == 1)
+    INFO("write " << size << " byte @ addr " << hexval(addr) << "="
+                  << hexval(data));
+  if (!sm)
+    return;
   addr = addr % fuzzdatasize;
   if (addr >= fuzzdatasize)
     return;
@@ -110,6 +141,8 @@ void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size) {
 void ap_log_pc(uint64_t rip) {
   if (!sm)
     ap_init();
+  if (!sm)
+    return;
   // INFO("ap_log_pc"<<hexval(rip));
   if (sem_wait(&sm->semr) == -1) {
     unreachable("error wait semr");
@@ -149,6 +182,8 @@ void ap_exit(void) {
 void ap_attach_pt(void) {
   if (!sm)
     ap_init();
+  if (!sm)
+    return;
   if (sem_wait(&sm->semr) == -1) {
     unreachable("error wait semr");
   }
@@ -162,10 +197,9 @@ void ap_attach_pt(void) {
 }
 
 void ap_reattach_pt(void) {
-  if (!sm)
-    ap_init();
   if (kvm_tid == 0)
     return;
+  assert(sm);
   // INFO("ap_reattach_pt:" << kvm_tid);
   if (sem_wait(&sm->semr) == -1) {
     unreachable("error wait semr");

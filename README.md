@@ -60,3 +60,11 @@ Limitations
 ------------
 
 - only single core/thread is supported when using PT
+
+
+APLib Environment Variables
+-----------
+* WAITGDB=1: stop and waiting for gdb to attach at launch, useful for debugging aplib
+* AP_DISABLED: disable ap library
+* AP_DUMP_RW=1: dump device memory read/write trace
+
