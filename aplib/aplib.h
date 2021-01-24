@@ -32,6 +32,7 @@ void ap_log_pc(uint64_t);
 void ap_exit(void);
 void ap_attach_pt(void);
 void ap_reattach_pt(void);
+bool ap_get_irq_status(void);
 #if defined(__cplusplus)
 }
 #endif

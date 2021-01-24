@@ -25,6 +25,9 @@ int fuzz_file_fd;
 static int gdb_attached;
 // 0-not set 1-enabled 2-disabled
 static int dump_rw_addr;
+// TODO: need to figure out the address of IRQ register
+static bool irq_status;
+static int irq_just_cleared;
 
 void real_ap_init(void) {
   if (!gdb_attached) {
@@ -106,9 +109,10 @@ int ap_fetch_fuzz_data_rand(char *dest, uint64_t addr, size_t size) {
 int ap_get_fuzz_data(char *dest, uint64_t addr, size_t size) {
   static int counter;
   // TODO: put what s2e told us here
-  //hw_model_r8169;
+  hw_model_r;
 
-  if (!sm) goto end;
+  if (!sm)
+    goto end;
   counter++;
   if (counter % 10 == 0)
     ap_exit();
@@ -130,6 +134,9 @@ void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size) {
   if (dump_rw_addr == 1)
     INFO("write " << size << " byte @ addr " << hexval(addr) << "="
                   << hexval(data));
+  // TODO: put what s2e told us here
+  hw_model_w;
+
   if (!sm)
     return;
   addr = addr % fuzzdatasize;
@@ -209,5 +216,18 @@ void ap_reattach_pt(void) {
   if (sem_post(&sm->semw) == -1) {
     unreachable("error post semr");
   }
+}
+///
+///
+///
+bool ap_get_irq_status() {
+  if (irq_just_cleared) {
+    irq_just_cleared = 0;
+    irq_status = false;
+    return false;
+  }
+  if (rand() % 100 > 95)
+    irq_status = true;
+  return irq_status;
 }
 }
