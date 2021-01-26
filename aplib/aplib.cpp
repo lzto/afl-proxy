@@ -8,6 +8,8 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 
+#include "EnvKnob.h"
+
 #include "hw_model.h"
 
 extern "C" {
@@ -22,25 +24,18 @@ static pid_t kvm_tid;
 
 int fuzz_file_fd;
 
+hw_model_dev_ram;
+
 static int gdb_attached;
-// 0-not set 1-enabled 2-disabled
+// 0-not set 1-r 2-w 3-rw
 static int dump_rw_addr;
 // TODO: need to figure out the address of IRQ register
 static bool irq_status;
 static int irq_just_cleared;
+static bool use_irq;
 
 void real_ap_init(void) {
-  if (!gdb_attached) {
-    char *s_waitgdb = getenv("WAITGDB");
-    if (s_waitgdb) {
-      int b_waitgdb = atoi(s_waitgdb);
-      if (b_waitgdb) {
-        outs() << "wait gdb, pid=" << getpid() << "\n";
-        getchar();
-        gdb_attached = 1;
-      }
-    }
-  }
+
   if (sm)
     return;
   fuzz_file_fd = -1;
@@ -81,18 +76,29 @@ again:
 };
 
 void ap_init(void) {
-  if (dump_rw_addr == 0) {
-    char *s_dump_rw_addr = getenv("AP_DUMP_RW");
-    if (s_dump_rw_addr)
-      dump_rw_addr = atoi(s_dump_rw_addr);
-    else
-      dump_rw_addr = 2;
-  }
+  static bool initialized;
+  static bool isEnabled;
+  if (!initialized) {
+    initialized = true;
+    EnvKnob knob0("WAITGDB");
+    if (knob0.isSet()) {
+      outs() << "wait gdb, pid=" << getpid() << "\n";
+      getchar();
+      gdb_attached = 1;
+    }
+    EnvKnob knob1("AP_DUMP_RW");
+    dump_rw_addr = knob1.getValue();
 
-  char *disabled = getenv("AP_DISABLED");
-  if (disabled)
-    return;
-  real_ap_init();
+    EnvKnob knob2("USE_IRQ");
+    use_irq = knob2.isSet();
+
+    EnvKnob knob3("AP_DISABLED");
+    if (knob3.isPresented() && knob3.isSet())
+      return;
+    isEnabled = true;
+  }
+  if (isEnabled)
+    real_ap_init();
 }
 
 const char *ap_get_fuzz_file(void) {
@@ -124,14 +130,14 @@ int ap_get_fuzz_data(char *dest, uint64_t addr, size_t size) {
     goto end;
   memcpy(dest, fuzzdata + addr, size);
 end:
-  if (dump_rw_addr == 1)
+  if ((dump_rw_addr & 0x01) == 0x01)
     INFO("read " << size << " byte @ " << hexval(addr) << "="
                  << hexval(*(uint64_t *)(dest)));
   return size;
 }
 
 void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size) {
-  if (dump_rw_addr == 1)
+  if ((dump_rw_addr & 0x02) == 0x02)
     INFO("write " << size << " byte @ addr " << hexval(addr) << "="
                   << hexval(data));
   // TODO: put what s2e told us here
@@ -221,6 +227,8 @@ void ap_reattach_pt(void) {
 ///
 ///
 bool ap_get_irq_status() {
+  if (!use_irq)
+    return false;
   if (irq_just_cleared) {
     irq_just_cleared = 0;
     irq_status = false;

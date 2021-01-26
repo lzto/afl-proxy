@@ -92,8 +92,6 @@
     INFO(">> RXDescAddrHigh:" << hexval(data));                                \
     break;                                                                     \
   default:                                                                     \
-    INFO("writing " << size << " bytes @ " << hexval(addr)                     \
-                    << " value = " << hexval(data));                           \
     break;                                                                     \
   }
 
