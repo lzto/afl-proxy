@@ -64,7 +64,8 @@ Limitations
 
 APLib Environment Variables
 -----------
-* WAITGDB=1: stop and waiting for gdb to attach at launch, useful for debugging aplib
-* AP_DISABLED: disable ap library
-* AP_DUMP_RW=1: dump device memory read/write trace
+* WAITGDB=0,1: stop and waiting for gdb to attach at launch, useful for debugging aplib
+* AP_DISABLED=0,1: disable ap proxy - some device probing logic still works but won't connect to ap for fuzzing
+* AP_DUMP_RW=0,1,2,3: dump device memory trace, nodump-0/r-1/w-2/rw-3
+* USE_IRQ=0,1: generate interrupt
 
