@@ -9,7 +9,8 @@
 //#include "nvme_hw_model.h"
 //#include "mlxsw_spectrum_hw_model.h"
 //#include "lpfc_hw_model.h"
-#include "mt76x0e_hw_model.h"
+//#include "mt76x0e_hw_model.h"
+//#include "ath10k_hw_model.h"
 
 /// handle read with random value using the following model
 #include "catch_all_hw_model.h"
