@@ -12,9 +12,10 @@
 //#include "mt76x0e_hw_model.h"
 //#include "ath10k_hw_model.h"
 //#include "net2272_hw_model.h"
+//#include "kpc2000_hw_model.h"
 
 /// handle read with random value using the following model
-#include "catch_all_hw_model.h"
+//#include "catch_all_hw_model.h"
 
 #ifndef hw_model_r
 #define hw_model_r
