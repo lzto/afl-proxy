@@ -4,18 +4,19 @@
 #ifndef _HW_MODEL_
 #define _HW_MODEL_
 
-//#include "r8169_hw_model.h"
-//#include "bnxt_hw_model.h"
-//#include "nvme_hw_model.h"
-//#include "mlxsw_spectrum_hw_model.h"
-//#include "lpfc_hw_model.h"
-//#include "mt76x0e_hw_model.h"
-//#include "ath10k_hw_model.h"
-//#include "net2272_hw_model.h"
-//#include "kpc2000_hw_model.h"
+//#include "hw_model_r8169.h"
+//#include "hw_model_bnxt.h"
+//#include "hw_model_nvme.h"
+//#include "hw_model_mlxsw_spectrum.h"
+//#include "hw_model_lpfc.h"
+//#include "hw_model_mt76x0e.h"
+//#include "hw_model_ath10kl.h"
+//#include "hw_model_net2272.h"
+//#include "hw_model_kpc2000.h"
+#include "hw_model_arcmsr.h"
 
 /// handle read with random value using the following model
-//#include "catch_all_hw_model.h"
+#include "hw_model_catch_all.h"
 
 #ifndef hw_model_r
 #define hw_model_r
