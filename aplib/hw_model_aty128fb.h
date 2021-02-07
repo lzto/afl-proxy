@@ -60,7 +60,6 @@
   }                                                                            \
   }
 
-
 #define hw_model_r hw_model_t_r
 #define hw_model_w hw_model_t_w
 

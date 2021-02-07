@@ -20,6 +20,7 @@
 //#include "hw_model_crypto-safexcel.h"
 //#include "hw_model_matrox.h"
 //#include "hw_model_aty128fb.h"
+//#include "hw_model_hfi1.h"
 
 /// handle read with random value using the following model
 #include "hw_model_catch_all.h"
