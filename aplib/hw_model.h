@@ -8,6 +8,7 @@
 //#include "hw_model_bnxt.h"
 //#include "hw_model_nvme.h"
 //#include "hw_model_mlxsw_spectrum.h"
+//#include "hw_model_mlx5.h"
 //#include "hw_model_lpfc.h"
 //#include "hw_model_mt76x0e.h"
 //#include "hw_model_ath10kl.h"
@@ -16,6 +17,9 @@
 //#include "hw_model_arcmsr.h"
 //#include "hw_model_qxl.h"
 //#include "hw_model_iwlwifi.h"
+//#include "hw_model_crypto-safexcel.h"
+//#include "hw_model_matrox.h"
+//#include "hw_model_aty128fb.h"
 
 /// handle read with random value using the following model
 #include "hw_model_catch_all.h"
