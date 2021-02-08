@@ -19,11 +19,15 @@
       *((uint32_t *)dest) = 0x196c6148;                                        \
       break;                                                                   \
     }                                                                          \
+    case (0x24): {                                                             \
+      *((uint32_t *)dest) = 0x80000000UL;                                               \
+      break;                                                                   \
+    }                                                                          \
     case (0x20): {                                                             \
       *((uint32_t *)dest) = 0x0;                                               \
       break;                                                                   \
     }                                                                          \
-    case (0x24): {                                                             \
+    case (0x28): {                                                             \
       *((uint32_t *)dest) = 0x0;                                               \
       break;                                                                   \
     }                                                                          \
@@ -55,8 +59,6 @@
 #define hw_model_t_w                                                           \
   switch (addr) {                                                              \
   default:                                                                     \
-    INFO("writing " << size << " bytes @ " << hexval(addr)                     \
-                    << " value = " << hexval(data));                           \
     break;                                                                     \
   }
 

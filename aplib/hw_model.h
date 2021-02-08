@@ -21,6 +21,8 @@
 //#include "hw_model_matrox.h"
 //#include "hw_model_aty128fb.h"
 //#include "hw_model_hfi1.h"
+//#include "hw_model_rtw88_8822ce.h"
+//#include "hw_model_megaraid_sas.h"
 
 /// handle read with random value using the following model
 #include "hw_model_catch_all.h"
