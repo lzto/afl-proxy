@@ -23,7 +23,8 @@
 //#include "hw_model_hfi1.h"
 //#include "hw_model_rtw88_8822ce.h"
 //#include "hw_model_megaraid_sas.h"
-#include "hw_model_hpsa.h"
+//#include "hw_model_hpsa.h"
+//#include "hw_model_mei_me.h"
 
 /// handle read with random value using the following model
 #include "hw_model_catch_all.h"
