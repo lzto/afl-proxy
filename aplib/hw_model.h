@@ -25,6 +25,10 @@
 //#include "hw_model_megaraid_sas.h"
 //#include "hw_model_hpsa.h"
 //#include "hw_model_mei_me.h"
+//#include "hw_model_mb862xxfb.h"
+//#include "hw_model_ipmi_si.h"
+//#include "hw_model_acp3x.h"
+//#include "hw_model_snd_intel8x0.h"
 
 /// handle read with random value using the following model
 #include "hw_model_catch_all.h"
