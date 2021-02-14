@@ -29,7 +29,12 @@
 //#include "hw_model_ipmi_si.h"
 //#include "hw_model_acp3x.h"
 //#include "hw_model_snd_intel8x0.h"
-#include "hw_model_earth_pt1.h"
+//#include "hw_model_earth_pt1.h"
+//#include "hw_model_cx18.h"
+//#include "hw_model_firestream.h"
+//#include "hw_model_nicstar.h"
+//#include "hw_model_eni.h"
+//#include "hw_model_fore_200e.h"
 
 /// handle read with random value using the following model
 #include "hw_model_catch_all.h"
