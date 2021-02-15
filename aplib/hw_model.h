@@ -35,9 +35,14 @@
 //#include "hw_model_nicstar.h"
 //#include "hw_model_eni.h"
 //#include "hw_model_fore_200e.h"
+//#include "hw_model_wanxl.h"
+//#include "hw_model_kvaser.h"
+//#include "hw_model_plx_pci.h"
+//#include "hw_model_ems_pci.h"
+//#include "hw_model_lmc.h"
 
 /// handle read with random value using the following model
-#include "hw_model_catch_all.h"
+//#include "hw_model_catch_all.h"
 
 #ifndef hw_model_r
 #define hw_model_r
