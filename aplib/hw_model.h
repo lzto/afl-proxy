@@ -40,6 +40,7 @@
 //#include "hw_model_plx_pci.h"
 //#include "hw_model_ems_pci.h"
 //#include "hw_model_lmc.h"
+//#include "hw_model_mgag200.h"
 
 /// handle read with random value using the following model
 //#include "hw_model_catch_all.h"

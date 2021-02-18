@@ -12,7 +12,7 @@
 
 #define hw_model_t_r                                                           \
   static int probe_len;                                                        \
-  if (probe_len < 100) {                                                      \
+  if (probe_len < 100) {                                                       \
     switch (addr) {                                                            \
     case (0x0):                                                                \
     case (0x100): {                                                            \

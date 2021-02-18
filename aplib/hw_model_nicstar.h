@@ -9,7 +9,7 @@
 
 #define hw_model_t_r                                                           \
   static int probe_len;                                                        \
-  if (probe_len < 10000000) {                                                  \
+  if (probe_len < 20) {                                                        \
     switch (addr) {                                                            \
     case (0): {                                                                \
       *((uint32_t *)dest) = 0x09;                                              \
