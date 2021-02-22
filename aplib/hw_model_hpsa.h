@@ -9,7 +9,7 @@
 
 #define hw_model_t_r                                                           \
   static int probe_len;                                                        \
-  if (probe_len < 10000000) {                                                  \
+  if (probe_len < 1000) {                                                      \
     switch (addr) {                                                            \
     case (0x0): {                                                              \
       *((uint8_t *)dest) = 'C';                                                \

@@ -41,9 +41,10 @@
 //#include "hw_model_ems_pci.h"
 //#include "hw_model_lmc.h"
 //#include "hw_model_mgag200.h"
+//#include "hw_model_pm2fb.h"
 
 /// handle read with random value using the following model
-//#include "hw_model_catch_all.h"
+#include "hw_model_catch_all.h"
 
 #ifndef hw_model_r
 #define hw_model_r

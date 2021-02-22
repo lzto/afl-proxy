@@ -9,26 +9,10 @@
 
 #define hw_model_t_r                                                           \
   static int probe_len;                                                        \
-  if (true) {                                                                  \
+  if (probe_len < 10000000) {                                                  \
     switch (addr) {                                                            \
-    case (0x1c): {                                                             \
-      *((uint32_t *)dest) = 0x80000000;                                        \
-      break;                                                                   \
-    }                                                                          \
-    case (0x2c): {                                                             \
-      *((uint32_t *)dest) = 0x80000000;                                        \
-      break;                                                                   \
-    }                                                                          \
-    case (0x30): {                                                             \
-      *((uint32_t *)dest) = 0xffffffff;                                        \
-      break;                                                                   \
-    }                                                                          \
-    case (0x34): {                                                             \
-      *((uint32_t *)dest) = 0x00000000;                                        \
-      break;                                                                   \
-    }                                                                          \
-    case 0xa3c ... 0xa64: {                                                    \
-      *((uint32_t *)dest) = 0x41414141;                                        \
+    case (0x18): {                                                             \
+      *((uint32_t *)dest) = 0x0000ffff;                                        \
       break;                                                                   \
     }                                                                          \
     default: {                                                                 \
