@@ -51,8 +51,6 @@
 #define hw_model_t_w                                                           \
   switch (addr) {                                                              \
   default:                                                                     \
-    INFO("writing " << size << " bytes @ " << hexval(addr)                     \
-                    << " value = " << hexval(data));                           \
     break;                                                                     \
   }
 

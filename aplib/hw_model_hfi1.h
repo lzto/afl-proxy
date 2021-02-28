@@ -19,6 +19,30 @@
       *((uint32_t *)dest) = 0x01;                                              \
       break;                                                                   \
     }                                                                          \
+    case (0x1800010): {                                                        \
+      *((uint32_t *)dest) = 0x10;                                              \
+      break;                                                                   \
+    }                                                                          \
+    case (0x1800014): {                                                        \
+      *((uint32_t *)dest) = 0x0;                                               \
+      break;                                                                   \
+    }                                                                          \
+    case (0x1800018): {                                                        \
+      *((uint32_t *)dest) = 0x10;                                              \
+      break;                                                                   \
+    }                                                                          \
+    case (0x180001c): {                                                        \
+      *((uint32_t *)dest) = 0x0;                                               \
+      break;                                                                   \
+    }                                                                          \
+    case (0x1000010): {                                                        \
+      *((uint32_t *)dest) = 0x10;                                              \
+      break;                                                                   \
+    }                                                                          \
+    case (0x1000014): {                                                        \
+      *((uint32_t *)dest) = 0x0;                                               \
+      break;                                                                   \
+    }                                                                          \
     case (0x1000018): {                                                        \
       *((uint32_t *)dest) = 0x1000;                                            \
       break;                                                                   \
@@ -51,6 +75,14 @@
       else                                                                     \
         *((uint32_t *)dest) = 0x0;                                             \
       rcnt = (rcnt + 1) % 2;                                                   \
+      break;                                                                   \
+    }                                                                          \
+    case (0x400040): {                                                         \
+      *((uint32_t *)dest) = 0x2;                                               \
+      break;                                                                   \
+    }                                                                          \
+    case (0x400044): {                                                         \
+      *((uint32_t *)dest) = 0x0;                                               \
       break;                                                                   \
     }                                                                          \
     default: {                                                                 \
