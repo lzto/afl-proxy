@@ -9,38 +9,18 @@
 
 #define hw_model_t_r                                                           \
   static int probe_len;                                                        \
-  if (probe_len < 10000000) {                                                  \
+  if (probe_len < 0x100000) {                                                  \
     switch (addr) {                                                            \
-    case (0xfff8): {                                                           \
-      *((uint32_t *)dest) = 0xa54b872d;                                        \
+    case (0): {                                                                \
+      *((uint32_t *)dest) = 0x00;                                              \
       break;                                                                   \
     }                                                                          \
-    case (0x20000): {                                                          \
-      *((uint32_t *)dest) = 0x0;                                               \
+    case (0x2c): {                                                             \
+      *((uint32_t *)dest) = 0x00;                                              \
       break;                                                                   \
     }                                                                          \
-    case (0x20200): {                                                          \
-      *((uint32_t *)dest) = 0x0;                                               \
-      break;                                                                   \
-    }                                                                          \
-    case (0x20118): {                                                          \
-      *((uint32_t *)dest) = 0x0;                                               \
-      break;                                                                   \
-    }                                                                          \
-    case (0x20184): {                                                          \
-      *((uint32_t *)dest) = 0x0;                                               \
-      break;                                                                   \
-    }                                                                          \
-    case (0x200f4): {                                                          \
-      *((uint32_t *)dest) = 0x0;                                               \
-      break;                                                                   \
-    }                                                                          \
-    case (0x200a0): {                                                          \
-      *((uint32_t *)dest) = 0x0;                                               \
-      break;                                                                   \
-    }                                                                          \
-    case (0x201a0): {                                                          \
-      *((uint32_t *)dest) = 0x0;                                               \
+    case 0x20000 ... 0x40000: {                                                \
+      *((uint32_t *)dest) = *((uint32_t *)&device_ram[addr]);                  \
       break;                                                                   \
     }                                                                          \
     default: {                                                                 \
@@ -70,6 +50,10 @@
 
 #define hw_model_t_w                                                           \
   switch (addr) {                                                              \
+  case 0x20000 ... 0x40000: {                                                  \
+    *((uint32_t *)&device_ram[addr]) = data;                                   \
+    break;                                                                     \
+  }                                                                            \
   default:                                                                     \
     break;                                                                     \
   }
