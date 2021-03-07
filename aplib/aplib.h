@@ -33,6 +33,10 @@ void ap_exit(void);
 void ap_attach_pt(void);
 void ap_reattach_pt(void);
 bool ap_get_irq_status(void);
+int ap_get_pci_bar_cnt(void);
+int ap_get_pci_bar_type(int idx);
+int ap_get_pci_bar_size(int idx);
+
 #if defined(__cplusplus)
 }
 #endif

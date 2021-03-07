@@ -238,4 +238,25 @@ bool ap_get_irq_status() {
     irq_status = true;
   return irq_status;
 }
+
+///
+/// PCI configuration
+///
+int ap_get_pci_bar_cnt() { return HW_MODEL_PCI_BAR_COUNT; }
+
+int ap_get_pci_bar_type(int idx) {
+  static int bartype[HW_MODEL_PCI_BAR_MAX_COUNT] = {
+      HW_MODEL_PCI_BAR_0_TYPE, HW_MODEL_PCI_BAR_1_TYPE,
+      HW_MODEL_PCI_BAR_2_TYPE, HW_MODEL_PCI_BAR_3_TYPE,
+      HW_MODEL_PCI_BAR_4_TYPE, HW_MODEL_PCI_BAR_5_TYPE};
+  return bartype[idx];
+}
+
+int ap_get_pci_bar_size(int idx) {
+  static int barsize[HW_MODEL_PCI_BAR_MAX_COUNT] = {
+      HW_MODEL_PCI_BAR_0_SIZE, HW_MODEL_PCI_BAR_1_SIZE,
+      HW_MODEL_PCI_BAR_2_SIZE, HW_MODEL_PCI_BAR_3_SIZE,
+      HW_MODEL_PCI_BAR_4_SIZE, HW_MODEL_PCI_BAR_5_SIZE};
+  return barsize[idx];
+}
 }

@@ -34,4 +34,27 @@
   }
 #endif
 
+// for PCI devices
+#define HW_MODEL_PCI_BAR_MAX_COUNT 6
+
+#ifndef HW_MODEL_PCI_BAR_COUNT
+#define HW_MODEL_PCI_BAR_COUNT 6
+// 0 - pio bar
+// 1 - mmio bar
+#define HW_MODEL_PCI_BAR_0_TYPE 1
+#define HW_MODEL_PCI_BAR_1_TYPE 1
+#define HW_MODEL_PCI_BAR_2_TYPE 1
+#define HW_MODEL_PCI_BAR_3_TYPE 1
+#define HW_MODEL_PCI_BAR_4_TYPE 1
+#define HW_MODEL_PCI_BAR_5_TYPE 1
+
+#define HW_MODEL_PCI_BAR_0_SIZE (64 * 1024 * 1024)
+#define HW_MODEL_PCI_BAR_1_SIZE (64 * 1024 * 1024)
+#define HW_MODEL_PCI_BAR_2_SIZE (128 * 1024 * 1024)
+#define HW_MODEL_PCI_BAR_3_SIZE (64 * 1024 * 1024)
+#define HW_MODEL_PCI_BAR_4_SIZE (64 * 1024 * 1024)
+#define HW_MODEL_PCI_BAR_5_SIZE (64 * 1024 * 1024)
+
+#endif
+
 #endif // _HW_MODEL_CATCHALL_
