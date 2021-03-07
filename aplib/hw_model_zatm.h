@@ -11,8 +11,16 @@
   static int probe_len;                                                        \
   if (probe_len < 10000000) {                                                  \
     switch (addr) {                                                            \
-    case (0): {                                                                \
-      *((uint32_t *)dest) = 0x01;                                              \
+    case (0x4): {                                                              \
+      *((uint32_t *)dest) = 0x01000000;                                        \
+      break;                                                                   \
+    }                                                                          \
+    case (0x20): {                                                             \
+      *((uint32_t *)dest) = *(uint32_t *)&device_ram[0x20];                    \
+      break;                                                                   \
+    }                                                                          \
+    case (0x28): {                                                             \
+      *((uint32_t *)dest) = *(uint32_t *)&device_ram[0x28];                    \
       break;                                                                   \
     }                                                                          \
     default: {                                                                 \
@@ -42,6 +50,14 @@
 
 #define hw_model_t_w                                                           \
   switch (addr) {                                                              \
+  case (0x20): {                                                               \
+    *((uint32_t *)&device_ram[0x20]) = data;                                   \
+    break;                                                                     \
+  }                                                                            \
+  case (0x28): {                                                               \
+    *((uint32_t *)&device_ram[0x28]) = data;                                   \
+    break;                                                                     \
+  }                                                                            \
   default:                                                                     \
     break;                                                                     \
   }
