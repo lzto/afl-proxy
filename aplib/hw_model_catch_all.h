@@ -55,6 +55,10 @@
 #define HW_MODEL_PCI_BAR_4_SIZE (64 * 1024 * 1024)
 #define HW_MODEL_PCI_BAR_5_SIZE (64 * 1024 * 1024)
 
+#ifndef DEV_MODEL_EXPANSION_ROM
+#define DEV_MODEL_EXPANSION_ROM NULL
+#endif
+
 #endif
 
 #endif // _HW_MODEL_CATCHALL_

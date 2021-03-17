@@ -259,4 +259,13 @@ int ap_get_pci_bar_size(int idx) {
       HW_MODEL_PCI_BAR_4_SIZE, HW_MODEL_PCI_BAR_5_SIZE};
   return barsize[idx];
 }
+
+const char* ap_get_rom_path() {
+#ifdef DEV_MODEL_EXPANSION_ROM
+  return DEV_MODEL_EXPANSION_ROM;
+#else
+  return NULL;
+#endif
+}
+
 }
