@@ -45,7 +45,8 @@
 //#include "hw_model_lanai.h"
 //#include "hw_model_zatm.h"
 //#include "hw_model_amd_xgbe.h"
-#include "hw_model_myrb.h"
+//#include "hw_model_myrb.h"
+#include "hw_model_tsi721.h"
 
 /// handle read with random value using the following model
 #include "hw_model_catch_all.h"
