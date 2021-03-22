@@ -260,12 +260,11 @@ int ap_get_pci_bar_size(int idx) {
   return barsize[idx];
 }
 
-const char* ap_get_rom_path() {
+const char *ap_get_rom_path() {
 #ifdef DEV_MODEL_EXPANSION_ROM
   return DEV_MODEL_EXPANSION_ROM;
 #else
   return NULL;
 #endif
 }
-
 }

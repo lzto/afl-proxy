@@ -11,8 +11,28 @@
   static int probe_len;                                                        \
   if (probe_len < 10000000) {                                                  \
     switch (addr) {                                                            \
-    case (0): {                                                                \
-      *((uint32_t *)dest) = 0x01;                                              \
+    case (0x50): {                                                             \
+      *((uint8_t *)dest) = 0x00;                                               \
+      break;                                                                   \
+    }                                                                          \
+    case (0x5e): {                                                             \
+      *((uint16_t *)dest) = 0x00;                                              \
+      break;                                                                   \
+    }                                                                          \
+    case (0x51): {                                                             \
+      *((uint8_t *)dest) = 0x00;                                               \
+      break;                                                                   \
+    }                                                                          \
+    case (0x60): {                                                             \
+      *((uint8_t *)dest) = 0x03;                                               \
+      break;                                                                   \
+    }                                                                          \
+    case (0x61): {                                                             \
+      *((uint8_t *)dest) = 0x03;                                               \
+      break;                                                                   \
+    }                                                                          \
+    case (0x63): {                                                             \
+      *((uint8_t *)dest) = 0x00;                                               \
       break;                                                                   \
     }                                                                          \
     default: {                                                                 \

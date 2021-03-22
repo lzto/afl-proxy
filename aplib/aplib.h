@@ -36,7 +36,7 @@ bool ap_get_irq_status(void);
 int ap_get_pci_bar_cnt(void);
 int ap_get_pci_bar_type(int idx);
 int ap_get_pci_bar_size(int idx);
-const char* ap_get_rom_path(void);
+const char *ap_get_rom_path(void);
 
 #if defined(__cplusplus)
 }
