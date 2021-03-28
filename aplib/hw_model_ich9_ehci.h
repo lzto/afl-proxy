@@ -11,44 +11,16 @@
   static int probe_len;                                                        \
   if (probe_len < 10000000) {                                                  \
     switch (addr) {                                                            \
-    case (0x5c): {                                                             \
-      *((uint32_t *)dest) = 0x0;                                               \
+    case (0xd9): {                                                             \
+      *((uint32_t *)dest) = 0x01;                                              \
       break;                                                                   \
     }                                                                          \
-    case (0x68): {                                                             \
-      *((uint32_t *)dest) = *((uint32_t *)&device_ram[0x68]);                  \
+    case (0xda): {                                                             \
+      *((uint32_t *)dest) = 0x01;                                              \
       break;                                                                   \
     }                                                                          \
-    case (0x158): {                                                            \
-      *((uint32_t *)dest) = 0x2;                                               \
-      break;                                                                   \
-    }                                                                          \
-    case (0x41300): {                                                          \
-      *((uint32_t *)dest) = 0x0;                                               \
-      break;                                                                   \
-    }                                                                          \
-    case (0x58000): {                                                          \
-      *((uint32_t *)dest) = *((uint32_t *)&device_ram[0x58000]);               \
-      break;                                                                   \
-    }                                                                          \
-    case (0x58004): {                                                          \
-      *((uint32_t *)dest) = 0x0;                                               \
-      break;                                                                   \
-    }                                                                          \
-    case (0x58008): {                                                          \
-      *((uint32_t *)dest) = 0x0;                                               \
-      break;                                                                   \
-    }                                                                          \
-    case (0x5800c): {                                                          \
-      *((uint32_t *)dest) = 0x0;                                               \
-      break;                                                                   \
-    }                                                                          \
-    case (0x58014): {                                                          \
-      *((uint32_t *)dest) = 0x0;                                               \
-      break;                                                                   \
-    }                                                                          \
-    case (0x5803c): {                                                          \
-      *((uint32_t *)dest) = 0x0;                                               \
+    case (0xdc): {                                                             \
+      *((uint32_t *)dest) = 0x01;                                              \
       break;                                                                   \
     }                                                                          \
     default: {                                                                 \
@@ -78,14 +50,6 @@
 
 #define hw_model_t_w                                                           \
   switch (addr) {                                                              \
-  case (0x68): {                                                               \
-    *((uint32_t *)&device_ram[0x68]) = data;                                   \
-    break;                                                                     \
-  }                                                                            \
-  case (0x58000): {                                                            \
-    *((uint32_t *)&device_ram[0x58000]) = data;                                \
-    break;                                                                     \
-  }                                                                            \
   default:                                                                     \
     break;                                                                     \
   }

@@ -4,6 +4,10 @@
 #ifndef _HW_MODEL_
 #define _HW_MODEL_
 
+///
+/// PCI Devices which can be used in mmio or pio mode
+///
+
 //#include "hw_model_r8169.h"
 //#include "hw_model_bnxt.h"
 //#include "hw_model_nvme.h"
@@ -46,7 +50,8 @@
 //#include "hw_model_zatm.h"
 //#include "hw_model_amd_xgbe.h"
 //#include "hw_model_myrb.h"
-#include "hw_model_tsi721.h"
+//#include "hw_model_tsi721.h"
+//#include "hw_model_ich9_ehci.h"
 
 /// handle read with random value using the following model
 #include "hw_model_catch_all.h"
@@ -62,5 +67,11 @@
 #ifndef hw_model_dev_ram
 #define hw_model_dev_ram
 #endif
+
+///
+/// USB devices
+///
+
+#include "hw_model_usb_dln2.h"
 
 #endif //_HW_MODEL_

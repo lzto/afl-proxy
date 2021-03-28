@@ -33,10 +33,14 @@ void ap_exit(void);
 void ap_attach_pt(void);
 void ap_reattach_pt(void);
 bool ap_get_irq_status(void);
+// for PCI devices
 int ap_get_pci_bar_cnt(void);
 int ap_get_pci_bar_type(int idx);
 int ap_get_pci_bar_size(int idx);
 const char *ap_get_rom_path(void);
+
+// specialized for USB devices
+void *ap_get_usb_desc(void);
 
 #if defined(__cplusplus)
 }

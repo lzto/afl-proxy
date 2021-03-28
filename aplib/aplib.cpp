@@ -267,4 +267,6 @@ const char *ap_get_rom_path() {
   return NULL;
 #endif
 }
+
+void *ap_get_usb_desc(void) { return HW_MODEL_USB_DESC; }
 }
