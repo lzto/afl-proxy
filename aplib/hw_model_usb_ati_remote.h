@@ -6,13 +6,13 @@
 #ifndef _HW_MODEL_USB_
 #define _HW_MODEL_USB_
 
-#define HW_MODEL_USB_DESC hw_model_usb_gen_desc_dln2();
+#define HW_MODEL_USB_DESC hw_model_usb_gen_desc();
 
 #include "include/usb/desc.h"
 #include "include/usb/usb.h"
 
-#define USB_SFP_VID 0xa257
-#define USB_SFP_PID 0x2013
+#define USB_SFP_VID 0xbc7
+#define USB_SFP_PID 0x0002
 
 #define STRING_MANUFACTURER 1
 #define STRING_PRODUCT 2
@@ -23,9 +23,9 @@ static USBDescStrings usb_sfp_stringtable;
 static USBDescIface desc_iface_sfp[] = {
     {/* CDC Control Interface */
      .bInterfaceNumber = 0,
-     .bNumEndpoints = 4,
+     .bNumEndpoints = 2,
      .bInterfaceClass = USB_CLASS_VENDOR_SPEC,
-     .bInterfaceSubClass = 1,
+     .bInterfaceSubClass = 0,
      .bInterfaceProtocol = 0,
      .iInterface = STRING_CONTROL,
      .ndesc = 4,
@@ -74,25 +74,13 @@ static USBDescIface desc_iface_sfp[] = {
          },
      .eps = (USBDescEndpoint[]){
          {
-             .bEndpointAddress = USB_DIR_OUT | 0x01,
-             .bmAttributes = USB_ENDPOINT_XFER_BULK,
-             .wMaxPacketSize = 0x10,
-             .bInterval = 1,
-         },
-         {
              .bEndpointAddress = USB_DIR_IN | 0x01,
-             .bmAttributes = USB_ENDPOINT_XFER_BULK,
-             .wMaxPacketSize = 0x10,
-             .bInterval = 1,
-         },
-         {
-             .bEndpointAddress = USB_DIR_OUT | 0x02,
              .bmAttributes = USB_ENDPOINT_XFER_INT,
              .wMaxPacketSize = 0x10,
              .bInterval = 1,
          },
          {
-             .bEndpointAddress = USB_DIR_IN | 0x02,
+             .bEndpointAddress = USB_DIR_OUT | 0x01,
              .bmAttributes = USB_ENDPOINT_XFER_INT,
              .wMaxPacketSize = 0x10,
              .bInterval = 1,
@@ -131,7 +119,7 @@ static USBDesc desc = {
     .str = usb_sfp_stringtable,
 };
 
-static void *hw_model_usb_gen_desc_dln2() {
+static void *hw_model_usb_gen_desc() {
   static bool initialized;
   if (!initialized) {
     initialized = true;

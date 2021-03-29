@@ -6,13 +6,13 @@
 #ifndef _HW_MODEL_USB_
 #define _HW_MODEL_USB_
 
-#define HW_MODEL_USB_DESC hw_model_usb_gen_desc_dln2();
+#define HW_MODEL_USB_DESC hw_model_usb_gen_desc();
 
 #include "include/usb/desc.h"
 #include "include/usb/usb.h"
 
-#define USB_SFP_VID 0xa257
-#define USB_SFP_PID 0x2013
+#define USB_SFP_VID 0x077d
+#define USB_SFP_PID 0x627a
 
 #define STRING_MANUFACTURER 1
 #define STRING_PRODUCT 2
@@ -24,8 +24,8 @@ static USBDescIface desc_iface_sfp[] = {
     {/* CDC Control Interface */
      .bInterfaceNumber = 0,
      .bNumEndpoints = 4,
-     .bInterfaceClass = USB_CLASS_VENDOR_SPEC,
-     .bInterfaceSubClass = 1,
+     .bInterfaceClass = USB_CLASS_HID,
+     .bInterfaceSubClass = 0,
      .bInterfaceProtocol = 0,
      .iInterface = STRING_CONTROL,
      .ndesc = 4,
@@ -121,7 +121,7 @@ static USBDesc desc = {
         {
             .idVendor = USB_SFP_VID,
             .idProduct = USB_SFP_PID,
-            .bcdDevice = 0,
+            .bcdDevice = 0x0010,
             .iManufacturer = STRING_MANUFACTURER,
             .iProduct = STRING_PRODUCT,
             .iSerialNumber = STRING_SERIALNUMBER,
@@ -131,7 +131,7 @@ static USBDesc desc = {
     .str = usb_sfp_stringtable,
 };
 
-static void *hw_model_usb_gen_desc_dln2() {
+static void *hw_model_usb_gen_desc() {
   static bool initialized;
   if (!initialized) {
     initialized = true;
