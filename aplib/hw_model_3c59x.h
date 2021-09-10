@@ -9,22 +9,14 @@
 
 #define hw_model_t_r                                                           \
   static int probe_len;                                                        \
-  if (probe_len < 10000) {                                                     \
+  if (probe_len < 10000000) {                                                  \
     switch (addr) {                                                            \
-    case (0x02): {                                                             \
-      *((uint32_t *)dest) = 0x40;                                              \
-      break;                                                                   \
-    }                                                                          \
-    case (0x32): {                                                             \
-      *((uint32_t *)dest) = 0x40;                                              \
+    case (0x68): {                                                             \
+      *((uint32_t *)dest) = 0x0;                                               \
       break;                                                                   \
     }                                                                          \
     case (0xf8): {                                                             \
       *((uint32_t *)dest) = 0x0;                                               \
-      break;                                                                   \
-    }                                                                          \
-    case (0x68): {                                                             \
-      *((uint32_t *)dest) = 0x00;                                              \
       break;                                                                   \
     }                                                                          \
     case (0x800): {                                                            \
@@ -32,7 +24,14 @@
       break;                                                                   \
     }                                                                          \
     case (0x3a): {                                                             \
-      *((uint8_t *)dest) = device_ram[0x3a];                                   \
+      static int cnt = 0;                                                      \
+      if (cnt == 0)                                                            \
+        *((uint8_t *)dest) = 0x0;                                              \
+      if (cnt == 1)                                                            \
+        *((uint8_t *)dest) = 0x0;                                              \
+      if (cnt == 2)                                                            \
+        *((uint8_t *)dest) = 0x8;                                              \
+      cnt++;                                                                   \
       break;                                                                   \
     }                                                                          \
     default: {                                                                 \
@@ -62,10 +61,6 @@
 
 #define hw_model_t_w                                                           \
   switch (addr) {                                                              \
-  case (0x3a): {                                                               \
-    device_ram[0x3a] = data;                                                   \
-    break;                                                                     \
-  }                                                                            \
   default:                                                                     \
     break;                                                                     \
   }

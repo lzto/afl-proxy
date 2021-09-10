@@ -11,6 +11,22 @@
   static int probe_len;                                                        \
   if (probe_len < 100) {                                                       \
     switch (addr) {                                                            \
+    case (0x0): {                                                              \
+      *((uint32_t *)dest) = 0x01;                                              \
+      break;                                                                   \
+    }                                                                          \
+    case (0x20): {                                                             \
+      *((uint32_t *)dest) = 0x01;                                              \
+      break;                                                                   \
+    }                                                                          \
+    case (0x40): {                                                             \
+      *((uint32_t *)dest) = 0x01;                                              \
+      break;                                                                   \
+    }                                                                          \
+    case (0x60): {                                                             \
+      *((uint32_t *)dest) = 0x01;                                              \
+      break;                                                                   \
+    }                                                                          \
     case (0x1fc00): {                                                          \
       *((uint32_t *)dest) = 0x14;                                              \
       break;                                                                   \

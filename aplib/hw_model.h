@@ -52,6 +52,13 @@
 //#include "hw_model_myrb.h"
 //#include "hw_model_tsi721.h"
 //#include "hw_model_ich9_ehci.h"
+//#include "hw_model_3c59x.h"
+//#include "hw_model_vxge.h"
+//#include "hw_model_tlan.h"
+//#include "hw_model_via-rhine.h"
+//#include "hw_model_via-velocity.h"
+//#include "hw_model_s2io.h"
+#include "hw_model_sky2.h"
 
 /// handle read with random value using the following model
 #include "hw_model_catch_all.h"
