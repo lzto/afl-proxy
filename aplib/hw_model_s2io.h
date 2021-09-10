@@ -29,8 +29,8 @@
         *((uint32_t *)dest) = 0x8954cdef;                                      \
       if (cnt == 5)                                                            \
         *((uint32_t *)dest) = 0x89abcd10;                                      \
-      if (cnt == 6)                                                            \
-        *((uint32_t *)dest) = 0x0;                                             \
+      if (cnt >= 6)                                                            \
+        *((uint32_t *)dest) = 0x89abcdef;                                      \
       cnt++;                                                                   \
       break;                                                                   \
     }                                                                          \
@@ -44,8 +44,8 @@
         *((uint32_t *)dest) = 0x01234567;                                      \
       if (cnt == 5)                                                            \
         *((uint32_t *)dest) = 0x01234567;                                      \
-      if (cnt == 6)                                                            \
-        *((uint32_t *)dest) = 0x0;                                             \
+      if (cnt >= 6)                                                            \
+        *((uint32_t *)dest) = 0x01234567;                                      \
       cnt++;                                                                   \
       break;                                                                   \
     }                                                                          \
@@ -56,7 +56,7 @@
       static int cnt = 0;                                                      \
       if (cnt == 0)                                                            \
         *((uint32_t *)dest) = 0x01dc4567;                                      \
-      if (cnt == 1)                                                            \
+      if (cnt >= 1)                                                            \
         *((uint32_t *)dest) = 0x01234567;                                      \
       cnt++;                                                                   \
       break;                                                                   \
@@ -123,7 +123,7 @@
 #define HW_MODEL_PCI_BAR_4_TYPE 1
 #define HW_MODEL_PCI_BAR_5_TYPE 1
 
-#define HW_MODEL_PCI_BAR_0_SIZE (4 * 1024)
+#define HW_MODEL_PCI_BAR_0_SIZE (64 * 1024 * 1024)
 #define HW_MODEL_PCI_BAR_1_SIZE (64 * 1024 * 1024)
 #define HW_MODEL_PCI_BAR_2_SIZE (128 * 1024 * 1024)
 #define HW_MODEL_PCI_BAR_3_SIZE (64 * 1024 * 1024)
