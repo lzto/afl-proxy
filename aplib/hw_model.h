@@ -58,7 +58,10 @@
 //#include "hw_model_via-rhine.h"
 //#include "hw_model_via-velocity.h"
 //#include "hw_model_s2io.h"
-#include "hw_model_sky2.h"
+//#include "hw_model_sky2.h"
+//#include "hw_model_sfc.h"
+//#include "hw_model_skge.h"
+//#include "hw_model_amdgpu.h"
 
 /// handle read with random value using the following model
 #include "hw_model_catch_all.h"
