@@ -9,29 +9,30 @@
 
 #define hw_model_t_r                                                           \
   static int probe_len;                                                        \
-  if (probe_len < 10000000) {                                                  \
+  if (probe_len < 200) {                                                       \
     switch (addr) {                                                            \
-    case (0x68): {                                                             \
-      *((uint32_t *)dest) = 0x0;                                               \
+    case (0x0): {                                                              \
+      *((uint32_t *)dest) = 0x70707070;                                        \
       break;                                                                   \
     }                                                                          \
-    case (0xf8): {                                                             \
-      *((uint32_t *)dest) = 0x0;                                               \
+    case (0xa): {                                                              \
+      static int cnt;                                                          \
+      if (cnt++ == 63)                                                         \
+        *((uint16_t *)dest) = 0x8080;                                          \
+      else                                                                     \
+        *((uint16_t *)dest) = 0x0;                                             \
       break;                                                                   \
     }                                                                          \
-    case (0x800): {                                                            \
+    case (0xc): {                                                              \
+      *((uint16_t *)dest) = 0x0;                                               \
+      break;                                                                   \
+    }                                                                          \
+    case (0x6): {                                                              \
       *((uint8_t *)dest) = 0x0;                                                \
       break;                                                                   \
     }                                                                          \
-    case (0x3a): {                                                             \
-      static int cnt = 0;                                                      \
-      if (cnt == 0)                                                            \
-        *((uint8_t *)dest) = 0x0;                                              \
-      if (cnt == 1)                                                            \
-        *((uint8_t *)dest) = 0x0;                                              \
-      if (cnt == 2)                                                            \
-        *((uint8_t *)dest) = 0x8;                                              \
-      cnt++;                                                                   \
+    case (0x8): {                                                              \
+      *((uint32_t *)dest) = 0x0;                                               \
       break;                                                                   \
     }                                                                          \
     default: {                                                                 \

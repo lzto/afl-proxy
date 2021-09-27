@@ -14,13 +14,13 @@
     case (0x10): {                                                             \
       static int cnt;                                                          \
       if (cnt == 0)                                                            \
-        *((uint32_t *)dest) = 0x4f070707;                                      \
+        *((uint32_t *)dest) = 0xb0b0f8b0;                                      \
       if (cnt == 1)                                                            \
-        *((uint32_t *)dest) = 0xb0070000;                                      \
+        *((uint32_t *)dest) = 0x0707074f;                                      \
       if (cnt == 2)                                                            \
-        *((uint32_t *)dest) = 0xb0070000;                                      \
+        *((uint32_t *)dest) = 0x0707074f;                                      \
       if (cnt == 3)                                                            \
-        *((uint32_t *)dest) = 0x4f070707;                                      \
+        *((uint32_t *)dest) = 0xb0b0f8b0;                                      \
       if (cnt == 4)                                                            \
         *((uint32_t *)dest) = 0xb0f8b0b0;                                      \
       if (cnt == 5)                                                            \

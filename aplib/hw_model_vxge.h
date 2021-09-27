@@ -30,6 +30,7 @@
       break;                                                                   \
     }                                                                          \
     case (0x38):                                                               \
+    case (0x3c):                                                               \
     case (0x42):                                                               \
     case (0x50):                                                               \
     case (0x54):                                                               \
@@ -98,11 +99,11 @@
 #define HW_MODEL_PCI_BAR_4_TYPE 1
 #define HW_MODEL_PCI_BAR_5_TYPE 1
 
-#define HW_MODEL_PCI_BAR_0_SIZE (4 * 1024)
-#define HW_MODEL_PCI_BAR_1_SIZE (64 * 1024 * 1024)
-#define HW_MODEL_PCI_BAR_2_SIZE (128 * 1024 * 1024)
-#define HW_MODEL_PCI_BAR_3_SIZE (64 * 1024 * 1024)
-#define HW_MODEL_PCI_BAR_4_SIZE (64 * 1024 * 1024)
-#define HW_MODEL_PCI_BAR_5_SIZE (64 * 1024 * 1024)
+#define HW_MODEL_PCI_BAR_0_SIZE (16 * 1024)
+#define HW_MODEL_PCI_BAR_1_SIZE (16 * 1024 * 1024)
+#define HW_MODEL_PCI_BAR_2_SIZE (16 * 1024 * 1024)
+#define HW_MODEL_PCI_BAR_3_SIZE (16 * 1024 * 1024)
+#define HW_MODEL_PCI_BAR_4_SIZE (16 * 1024 * 1024)
+#define HW_MODEL_PCI_BAR_5_SIZE (16 * 1024 * 1024)
 
 #endif // _HW_MODEL_TEMPLATE_

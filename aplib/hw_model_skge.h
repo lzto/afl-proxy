@@ -11,15 +11,32 @@
   static int probe_len;                                                        \
   if (probe_len < 100) {                                                       \
     switch (addr) {                                                            \
-    case (0x10): {                                                             \
-      static int cnt;                                                          \
-      if (cnt == 0)                                                            \
-        *((uint32_t *)dest) = 0xb0070707;                                      \
-      if (cnt == 1)                                                            \
-        *((uint32_t *)dest) = 0xb0f8b0b0;                                      \
-      if (cnt == 2)                                                            \
-        *((uint32_t *)dest) = 0x4f070707;                                      \
-      cnt++;                                                                   \
+    case (0x4): {                                                              \
+      *((uint16_t *)dest) = 0x0;                                               \
+      break;                                                                   \
+    }                                                                          \
+    case (0x119): {                                                            \
+      *((uint8_t *)dest) = 0x0;                                                \
+      break;                                                                   \
+    }                                                                          \
+    case (0x11b): {                                                            \
+      *((uint8_t *)dest) = 0xa;                                                \
+      break;                                                                   \
+    }                                                                          \
+    case (0x11c): {                                                            \
+      *((uint8_t *)dest) = 0xfc;                                               \
+      break;                                                                   \
+    }                                                                          \
+    case (0x11d): {                                                            \
+      *((uint8_t *)dest) = 0x0;                                                \
+      break;                                                                   \
+    }                                                                          \
+    case (0x2400): {                                                           \
+      *((uint16_t *)dest) = 0x3030;                                            \
+      break;                                                                   \
+    }                                                                          \
+    case (0x3400): {                                                           \
+      *((uint16_t *)dest) = 0x3030;                                            \
       break;                                                                   \
     }                                                                          \
     default: {                                                                 \
