@@ -44,9 +44,11 @@ for line in Lines:
         data.append(int(arr1[1],16))
         if len(data) == size:
             adata = 0
+            nshift = 0
             for d in data:
-                adata = adata << 8
+                d = d << nshift
                 adata += d
+                nshift += 8
             if addr not in reg_model:
                 reg_model[addr] = []
             reg_data = reg_model[addr]
