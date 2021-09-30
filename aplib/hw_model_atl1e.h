@@ -11,6 +11,93 @@
   static int probe_len;                                                        \
   if (probe_len < 200) {                                                       \
     switch (addr) {                                                            \
+    case (0x1418): {                                                           \
+      static int cnt;                                                          \
+      if (cnt == 0)                                                            \
+        *((uint32_t *)dest) = 0x0;                                             \
+      if (cnt == 1)                                                            \
+        *((uint32_t *)dest) = 0x0;                                             \
+      cnt++;                                                                   \
+      break;                                                                   \
+    }                                                                          \
+    case (0x1414): {                                                           \
+      static int cnt;                                                          \
+      if (cnt == 0)                                                            \
+        *((uint32_t *)dest) = 0x0;                                             \
+      if (cnt == 1)                                                            \
+        *((uint32_t *)dest) = 0x0;                                             \
+      if (cnt == 2)                                                            \
+        *((uint32_t *)dest) = 0x0;                                             \
+      if (cnt == 3)                                                            \
+        *((uint32_t *)dest) = 0x0;                                             \
+      if (cnt == 4)                                                            \
+        *((uint32_t *)dest) = 0x0;                                             \
+      if (cnt == 5)                                                            \
+        *((uint32_t *)dest) = 0x8000000;                                       \
+      if (cnt == 6)                                                            \
+        *((uint32_t *)dest) = 0x0;                                             \
+      if (cnt == 7)                                                            \
+        *((uint32_t *)dest) = 0x0;                                             \
+      if (cnt == 8)                                                            \
+        *((uint32_t *)dest) = 0x0;                                             \
+      if (cnt == 9)                                                            \
+        *((uint32_t *)dest) = 0x0;                                             \
+      if (cnt == 10)                                                           \
+        *((uint32_t *)dest) = 0x0;                                             \
+      if (cnt == 11)                                                           \
+        *((uint32_t *)dest) = 0x0;                                             \
+      if (cnt == 12)                                                           \
+        *((uint32_t *)dest) = 0x0;                                             \
+      if (cnt == 13)                                                           \
+        *((uint32_t *)dest) = 0x0;                                             \
+      if (cnt == 14)                                                           \
+        *((uint32_t *)dest) = 0x0;                                             \
+      cnt++;                                                                   \
+      break;                                                                   \
+    }                                                                          \
+    case (0x1410): {                                                           \
+      static int cnt;                                                          \
+      if (cnt == 0)                                                            \
+        *((uint32_t *)dest) = 0x0;                                             \
+      cnt++;                                                                   \
+      break;                                                                   \
+    }                                                                          \
+    case (0x200): {                                                            \
+      static int cnt;                                                          \
+      if (cnt == 0)                                                            \
+        *((uint32_t *)dest) = 0x0;                                             \
+      if (cnt == 1)                                                            \
+        *((uint32_t *)dest) = 0x0;                                             \
+      if (cnt == 2)                                                            \
+        *((uint32_t *)dest) = 0x0;                                             \
+      cnt++;                                                                   \
+      break;                                                                   \
+    }                                                                          \
+    case (0x58): {                                                             \
+      static int cnt;                                                          \
+      if (cnt == 0)                                                            \
+        *((uint16_t *)dest) = 0x9393;                                          \
+      if (cnt == 1)                                                            \
+        *((uint16_t *)dest) = 0x9393;                                          \
+      if (cnt == 2)                                                            \
+        *((uint16_t *)dest) = 0x9393;                                          \
+      cnt++;                                                                   \
+      break;                                                                   \
+    }                                                                          \
+    case (0x1488): {                                                           \
+      static int cnt;                                                          \
+      if (cnt == 0)                                                            \
+        *((uint32_t *)dest) = 0xe002038;                                       \
+      cnt++;                                                                   \
+      break;                                                                   \
+    }                                                                          \
+    case (0x148c): {                                                           \
+      static int cnt;                                                          \
+      if (cnt == 0)                                                            \
+        *((uint32_t *)dest) = 0x48480048;                                      \
+      cnt++;                                                                   \
+      break;                                                                   \
+    }                                                                          \
     default: {                                                                 \
       switch (size) {                                                          \
       case (1):                                                                \

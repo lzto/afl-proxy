@@ -81,7 +81,8 @@
 //#include "hw_model_atl1c.h"
 //#include "hw_model_atl1e.h"
 //#include "hw_model_atl1.h"
-#include "hw_model_atl2.h"
+//#include "hw_model_atl2.h"
+//#include "hw_model_avmfritz.h"
 
 /// handle read with random value using the following model
 #include "hw_model_catch_all.h"
