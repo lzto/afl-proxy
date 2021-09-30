@@ -52,7 +52,7 @@
 //#include "hw_model_myrb.h"
 //#include "hw_model_tsi721.h"
 //#include "hw_model_ich9_ehci.h"
-#include "hw_model_3c59x.h"
+//#include "hw_model_3c59x.h"
 //#include "hw_model_vxge.h"
 //#include "hw_model_tlan.h"
 //#include "hw_model_via-rhine.h"
@@ -67,6 +67,12 @@
 //#include "hw_model_solo6x10.h"
 //#include "hw_model_mantis.h"
 //#include "hw_model_macb_pci.h"
+//#include "hw_model_emu10k1-gp.h"
+//#include "hw_model_fm801-gp.h"
+//#include "hw_model_de2104x.h"
+//#include "hw_model_hfi1.h"
+//#include "hw_model_i82092aa.h"
+#include "hw_model_netjet.h"
 
 /// handle read with random value using the following model
 #include "hw_model_catch_all.h"
