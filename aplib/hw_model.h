@@ -37,7 +37,7 @@
 //#include "hw_model_cx18.h"
 //#include "hw_model_firestream.h"
 //#include "hw_model_nicstar.h"
-//#include "hw_model_eni.h"
+#include "hw_model_eni.h"
 //#include "hw_model_fore_200e.h"
 //#include "hw_model_wanxl.h"
 //#include "hw_model_kvaser.h"
@@ -83,6 +83,11 @@
 //#include "hw_model_atl1.h"
 //#include "hw_model_atl2.h"
 //#include "hw_model_avmfritz.h"
+//#include "hw_model_gve.h"
+//#include "hw_model_dw_dmac_pci.h"
+//#include "hw_model_isst_if_pci.h"
+//#include "hw_model_snd-ad1889.h"
+//#include "hw_model_isp1760.h"
 
 /// handle read with random value using the following model
 #include "hw_model_catch_all.h"
