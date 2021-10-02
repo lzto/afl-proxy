@@ -89,7 +89,9 @@
 //#include "hw_model_snd-ad1889.h"
 //#include "hw_model_isp1760.h"
 //#include "hw_model_ionic.h"
-#include "hw_model_iphase.h"
+//#include "hw_model_iphase.h"
+//#include "hw_model_mISDNinfineon.h"
+#include "hw_model_ufshcd-pci.h"
 
 /// handle read with random value using the following model
 #include "hw_model_catch_all.h"
