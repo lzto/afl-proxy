@@ -33,6 +33,8 @@ reg_model = {}
 for line in Lines:
     line = line.strip()
     r = re.search("mmio",line)
+    if not r:
+        r = re.search("pio",line)
     if r:
         arr1 = re.split("___",line)
         arr2 = re.split("_",arr1[1])

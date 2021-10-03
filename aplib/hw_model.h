@@ -91,7 +91,16 @@
 //#include "hw_model_ionic.h"
 //#include "hw_model_iphase.h"
 //#include "hw_model_mISDNinfineon.h"
-#include "hw_model_ufshcd-pci.h"
+//#include "hw_model_ufshcd-pci.h"
+//#include "hw_model_cafe_ccic.h"
+//#include "hw_model_cx18.h"
+//#include "hw_model_atlantic.h"
+//#include "hw_model_snd-trident.h"
+//#include "hw_model_pcnet32.h"
+//#include "hw_model_pc300too.h"
+//#include "hw_model_via-rhine.h"
+//#include "hw_model_firestream.h"
+#include "hw_model_applicom.h"
 
 /// handle read with random value using the following model
 #include "hw_model_catch_all.h"

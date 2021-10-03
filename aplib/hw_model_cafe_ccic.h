@@ -11,6 +11,38 @@
   static int probe_len;                                                        \
   if (probe_len < 10000000) {                                                  \
     switch (addr) {                                                            \
+    case (0x300c): {                                                           \
+      static int cnt;                                                          \
+      if (cnt == 0)                                                            \
+        *((uint32_t *)dest) = 0x0;                                             \
+      cnt++;                                                                   \
+      break;                                                                   \
+    }                                                                          \
+    case (0x2c): {                                                             \
+      static int cnt;                                                          \
+      if (cnt == 0)                                                            \
+        *((uint32_t *)dest) = 0x0;                                             \
+      cnt++;                                                                   \
+      break;                                                                   \
+    }                                                                          \
+    case (0x40): {                                                             \
+      static int cnt;                                                          \
+      if (cnt == 0)                                                            \
+        *((uint32_t *)dest) = 0x0;                                             \
+      cnt++;                                                                   \
+      break;                                                                   \
+    }                                                                          \
+    case (0xbc): {                                                             \
+      static int cnt;                                                          \
+      if (cnt == 0)                                                            \
+        *((uint32_t *)dest) = 0x0;                                             \
+      if (cnt == 1)                                                            \
+        *((uint32_t *)dest) = 0x8080808;                                       \
+      if (cnt == 2)                                                            \
+        *((uint32_t *)dest) = 0x2020202;                                       \
+      cnt++;                                                                   \
+      break;                                                                   \
+    }                                                                          \
     default: {                                                                 \
       switch (size) {                                                          \
       case (1):                                                                \
@@ -53,17 +85,17 @@
 #define hw_model_r hw_model_t_r
 #define hw_model_w hw_model_t_w
 
-#define HW_MODEL_PCI_BAR_COUNT 1
+#define HW_MODEL_PCI_BAR_COUNT 6
 // 0 - pio bar
 // 1 - mmio bar
-#define HW_MODEL_PCI_BAR_0_TYPE 1
+#define HW_MODEL_PCI_BAR_0_TYPE 0
 #define HW_MODEL_PCI_BAR_1_TYPE 1
 #define HW_MODEL_PCI_BAR_2_TYPE 1
 #define HW_MODEL_PCI_BAR_3_TYPE 1
 #define HW_MODEL_PCI_BAR_4_TYPE 1
 #define HW_MODEL_PCI_BAR_5_TYPE 1
 
-#define HW_MODEL_PCI_BAR_0_SIZE (0x04000000)
+#define HW_MODEL_PCI_BAR_0_SIZE (4 * 1024)
 #define HW_MODEL_PCI_BAR_1_SIZE (64 * 1024 * 1024)
 #define HW_MODEL_PCI_BAR_2_SIZE (128 * 1024 * 1024)
 #define HW_MODEL_PCI_BAR_3_SIZE (64 * 1024 * 1024)
