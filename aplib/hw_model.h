@@ -100,7 +100,11 @@
 //#include "hw_model_pc300too.h"
 //#include "hw_model_via-rhine.h"
 //#include "hw_model_firestream.h"
-#include "hw_model_applicom.h"
+//#include "hw_model_applicom.h"
+//#include "hw_model_pci200syn.h"
+//#include "hw_model_snd-intel8x0m.h"
+//#include "hw_model_snd-hda-intel.h"
+#include "hw_model_com20020-pci.h"
 
 /// handle read with random value using the following model
 #include "hw_model_catch_all.h"

@@ -11,42 +11,23 @@
   static int probe_len;                                                        \
   if (probe_len < 10000000) {                                                  \
     switch (addr) {                                                            \
-    case (0x1c): {                                                             \
-      static int cnt;                                                          \
-      if (cnt == 0)                                                            \
-        *((uint32_t *)dest) = 0xffffff;                                        \
-      if (cnt == 1)                                                            \
-        *((uint32_t *)dest) = 0x0;                                             \
-      if (cnt == 2)                                                            \
-        *((uint32_t *)dest) = 0xffffff00;                                      \
-      cnt++;                                                                   \
-      break;                                                                   \
-    }                                                                          \
     case (0x0): {                                                              \
       static int cnt;                                                          \
       if (cnt == 0)                                                            \
-        *((uint32_t *)dest) = 0x30303ff;                                       \
-      cnt++;                                                                   \
-      break;                                                                   \
-    }                                                                          \
-    case (0x4): {                                                              \
-      static int cnt;                                                          \
-      if (cnt == 0)                                                            \
-        *((uint32_t *)dest) = 0x101010;                                        \
-      cnt++;                                                                   \
-      break;                                                                   \
-    }                                                                          \
-    case (0x3c): {                                                             \
-      static int cnt;                                                          \
-      if (cnt == 0)                                                            \
-        *((uint32_t *)dest) = 0x0;                                             \
+        *((uint16_t *)dest) = 0x0;                                             \
       cnt++;                                                                   \
       break;                                                                   \
     }                                                                          \
     case (0x8): {                                                              \
       static int cnt;                                                          \
       if (cnt == 0)                                                            \
-        *((uint32_t *)dest) = 0x18000;                                         \
+        *((uint32_t *)dest) = 0x0;                                             \
+      if (cnt == 1)                                                            \
+        *((uint8_t *)dest) = 0x0;                                              \
+      if (cnt == 2)                                                            \
+        *((uint8_t *)dest) = 0x0;                                              \
+      if (cnt == 3)                                                            \
+        *((uint8_t *)dest) = 0xff;                                             \
       cnt++;                                                                   \
       break;                                                                   \
     }                                                                          \
@@ -95,18 +76,18 @@
 #define HW_MODEL_PCI_BAR_COUNT 6
 // 0 - pio bar
 // 1 - mmio bar
-#define HW_MODEL_PCI_BAR_0_TYPE 1
+#define HW_MODEL_PCI_BAR_0_TYPE 0
 #define HW_MODEL_PCI_BAR_1_TYPE 1
 #define HW_MODEL_PCI_BAR_2_TYPE 1
 #define HW_MODEL_PCI_BAR_3_TYPE 1
 #define HW_MODEL_PCI_BAR_4_TYPE 1
 #define HW_MODEL_PCI_BAR_5_TYPE 1
 
-#define HW_MODEL_PCI_BAR_0_SIZE (0x80000)
-#define HW_MODEL_PCI_BAR_1_SIZE (0x80000)
-#define HW_MODEL_PCI_BAR_2_SIZE (0x80000)
-#define HW_MODEL_PCI_BAR_3_SIZE (0x80000)
-#define HW_MODEL_PCI_BAR_4_SIZE (0x80000)
-#define HW_MODEL_PCI_BAR_5_SIZE (0x80000)
+#define HW_MODEL_PCI_BAR_0_SIZE (4 * 1024)
+#define HW_MODEL_PCI_BAR_1_SIZE (64 * 1024 * 1024)
+#define HW_MODEL_PCI_BAR_2_SIZE (128 * 1024 * 1024)
+#define HW_MODEL_PCI_BAR_3_SIZE (64 * 1024 * 1024)
+#define HW_MODEL_PCI_BAR_4_SIZE (64 * 1024 * 1024)
+#define HW_MODEL_PCI_BAR_5_SIZE (64 * 1024 * 1024)
 
 #endif // _HW_MODEL_TEMPLATE_
