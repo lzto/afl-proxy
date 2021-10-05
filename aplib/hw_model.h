@@ -110,7 +110,8 @@
 //#include "hw_model_fealnx.h"
 //#include "hw_model_pata_pdc202xx_old.h"
 //#include "hw_model_isci.h"
-#include "hw_model_sis190.h"
+//#include "hw_model_sis190.h"
+#include "hw_model_epic100.h"
 
 /// handle read with random value using the following model
 #include "hw_model_catch_all.h"
