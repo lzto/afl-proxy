@@ -8,6 +8,7 @@
  * sudo rdmsr --processor 0 0x571
  *
  */
+#ifdef __linux__
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -297,3 +298,4 @@ void ptWorker(pid_t tid) {
   ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
   close(fd);
 }
+#endif

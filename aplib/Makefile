@@ -2,9 +2,20 @@ CC=clang
 CXX=clang++
 LINK=clang++
 
+UNAME_S := $(shell uname -s)
+
 CFLAGS=-g -I../ -fPIC
 CXXFLAGS=-g -std=c++14 -I../ -fPIC
-LDFLAGS=-lrt -lpthread -std=c++14 -fPIC
+
+LDFLAGS=-lpthread -std=c++14 -fPIC
+
+ifeq ($(UNAME_S),Linux)
+  LDFLAGS += -lrt
+endif
+ifeq ($(UNAME_S),Darwin)
+  LDFLAGS += 
+endif
+
 
 aplib.so:
 	$(CXX) aplib.cpp $(CXXFLAGS) -c

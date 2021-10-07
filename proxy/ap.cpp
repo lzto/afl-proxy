@@ -14,6 +14,7 @@
 #include <semaphore.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <signal.h>
 
 // TODO: should implement a lock free queue here ...
 struct XXX {

@@ -191,6 +191,7 @@ void ap_exit(void) {
   shm = nullptr;
 }
 
+#ifdef __linux__
 // call this from KVM thread to start coverage collection using PT
 void ap_attach_pt(void) {
   if (!sm)
@@ -208,7 +209,15 @@ void ap_attach_pt(void) {
   }
   // TODO: need to wait proxy ack back here
 }
-
+#else
+void ap_attach_pt(void) {
+  static int print_once;
+  if (!print_once) {
+    print_once = 1;
+    fprintf(stderr,"PT is not supported\n");
+  }
+}
+#endif
 void ap_reattach_pt(void) {
   if (kvm_tid == 0)
     return;
