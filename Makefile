@@ -1,4 +1,11 @@
-SUBDIRS := proxy send aplib
+SUBDIRS := proxy aplib
+
+ifeq ($(UNAME_S),Linux)
+  SUBDIRS += send
+endif
+ifeq ($(UNAME_S),Darwin)
+  LDFLAGS += 
+endif
 
 all: $(SUBDIRS)
 
