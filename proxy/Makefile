@@ -7,6 +7,8 @@ CXXFLAGS=-g -std=c++14 -I../
 LDFLAGS= -lpthread -std=c++14
 TARGET_EXEC=ap
 
+UNAME_S := $(shell uname -s)
+
 ifeq ($(UNAME_S),Linux)
   LDFLAGS += -lrt
 endif
