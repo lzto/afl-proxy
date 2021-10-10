@@ -56,7 +56,7 @@ for line in ${data[@]};do
     PI="0"
   fi
   sdone=`curl "http://ubuntu-server:3000/qsolved?p=${KO}"`
-  if [ "$sdone" == "0" ];then
+  if [ "$sdone" != "0" ];then
     continue
   fi
   PCI_CLASS=`/usr/bin/printf "0x%02x%02x%02x" "0x${BC}" "0x${SC}" "0x${PI}"`
