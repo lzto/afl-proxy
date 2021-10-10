@@ -18,7 +18,7 @@ if [ -f "$name" ]; then
   exit
 fi
 
-cp -rv a $name
+cp -rv template $name
 cp /home/tong/shf/a.sh /home/tong/shf/$name.sh
 sed -i s/KONAME/$name/g /home/tong/shf/$name.sh
 
