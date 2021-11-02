@@ -5,6 +5,7 @@ for line in *;do
   if [ "$r" != "0" ]; then
 	  rm -rf ${line}
     echo ${line}
+    rm -rf ${line}
   fi
 done
 
