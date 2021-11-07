@@ -24,10 +24,11 @@ public:
       return true;
     return false;
   };
-  int getValue() {
+  int getIntValue() {
     assert(value.length() != 0);
     return atoi(value.c_str());
   };
+  std::string getStringValue() { return value; }
 
 private:
   const std::string name;

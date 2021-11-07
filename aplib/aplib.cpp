@@ -1,4 +1,5 @@
 ///
+/// afl proxy library
 /// 2020-2021 Tong Zhang<ztong0001@gmail.com>
 ///
 #include "aplib.h"
@@ -14,6 +15,7 @@
 
 extern "C" {
 
+// shared memory
 struct XXX *sm = nullptr;
 SHM<struct XXX> *shm = nullptr;
 
@@ -23,8 +25,6 @@ uint8_t *fuzzdata;
 static pid_t kvm_tid;
 
 int fuzz_file_fd;
-
-hw_model_dev_ram;
 
 static int gdb_attached;
 // 0-not set 1-r 2-w 3-rw
@@ -80,20 +80,24 @@ void ap_init(void) {
   static bool isEnabled;
   if (!initialized) {
     initialized = true;
-    EnvKnob knob0("WAITGDB");
-    if (knob0.isSet()) {
+    EnvKnob knob0("SFP_DEV_MODEL");
+    assert(knob0.isPresented() && "SFP_DEV_MODEL is not set");
+    init_hw_instance(knob0.getStringValue());
+
+    EnvKnob knob1("WAITGDB");
+    if (knob1.isSet()) {
       outs() << "wait gdb, pid=" << getpid() << "\n";
       getchar();
       gdb_attached = 1;
     }
-    EnvKnob knob1("AP_DUMP_RW");
-    dump_rw_addr = knob1.getValue();
+    EnvKnob knob2("AP_DUMP_RW");
+    dump_rw_addr = knob2.getIntValue();
 
-    EnvKnob knob2("USE_IRQ");
-    use_irq = knob2.isSet();
+    EnvKnob knob3("USE_IRQ");
+    use_irq = knob3.isSet();
 
-    EnvKnob knob3("AP_DISABLED");
-    if (knob3.isPresented() && knob3.isSet())
+    EnvKnob knob4("AP_DISABLED");
+    if (knob4.isPresented() && knob4.isSet())
       return;
     isEnabled = true;
   }
@@ -112,10 +116,11 @@ int ap_fetch_fuzz_data_rand(char *dest, uint64_t addr, size_t size) {
   return size;
 }
 
-int ap_get_fuzz_data(char *dest, uint64_t addr, size_t size) {
+int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size) {
   static int counter;
-  // TODO: put what s2e told us here
-  hw_model_r;
+  // for probing
+  if (get_hw_instance()->read(dest, addr, size))
+    goto end;
 
   if (!sm)
     goto end;
@@ -140,8 +145,8 @@ void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size) {
   if ((dump_rw_addr & 0x02) == 0x02)
     INFO("write " << size << " byte @ addr " << hexval(addr) << "="
                   << hexval(data));
-  // TODO: put what s2e told us here
-  hw_model_w;
+  // for probing
+  get_hw_instance()->write(data, addr, size);
 
   if (!sm)
     return;
@@ -214,7 +219,7 @@ void ap_attach_pt(void) {
   static int print_once;
   if (!print_once) {
     print_once = 1;
-    fprintf(stderr,"PT is not supported\n");
+    fprintf(stderr, "PT is not supported\n");
   }
 }
 #endif
@@ -247,26 +252,28 @@ bool ap_get_irq_status() {
     irq_status = true;
   return irq_status;
 }
+const char *ap_get_dev_name() { return get_hw_instance()->getName().c_str(); }
+///
+/// device generic information
+///
+uint16_t ap_get_pci_vid() { return get_hw_instance()->getVid(); }
+uint16_t ap_get_pci_pid() { return get_hw_instance()->getPid(); }
+uint16_t ap_get_pci_subvid() { return get_hw_instance()->getSubVid(); }
+uint16_t ap_get_pci_subpid() { return get_hw_instance()->getSubPid(); }
+uint32_t ap_get_pci_class() { return get_hw_instance()->getClass(); }
+uint16_t ap_get_pci_rev() { return get_hw_instance()->getRev(); }
 
 ///
 /// PCI configuration
 ///
-int ap_get_pci_bar_cnt() { return HW_MODEL_PCI_BAR_COUNT; }
+int ap_get_pci_bar_cnt() { return get_hw_instance()->getPCIBarCnt(); }
 
 int ap_get_pci_bar_type(int idx) {
-  static int bartype[HW_MODEL_PCI_BAR_MAX_COUNT] = {
-      HW_MODEL_PCI_BAR_0_TYPE, HW_MODEL_PCI_BAR_1_TYPE,
-      HW_MODEL_PCI_BAR_2_TYPE, HW_MODEL_PCI_BAR_3_TYPE,
-      HW_MODEL_PCI_BAR_4_TYPE, HW_MODEL_PCI_BAR_5_TYPE};
-  return bartype[idx];
+  return get_hw_instance()->getPCIBarType(idx);
 }
 
 int ap_get_pci_bar_size(int idx) {
-  static int barsize[HW_MODEL_PCI_BAR_MAX_COUNT] = {
-      HW_MODEL_PCI_BAR_0_SIZE, HW_MODEL_PCI_BAR_1_SIZE,
-      HW_MODEL_PCI_BAR_2_SIZE, HW_MODEL_PCI_BAR_3_SIZE,
-      HW_MODEL_PCI_BAR_4_SIZE, HW_MODEL_PCI_BAR_5_SIZE};
-  return barsize[idx];
+  return get_hw_instance()->getPCIBarSize(idx);
 }
 
 const char *ap_get_rom_path() {
@@ -277,5 +284,6 @@ const char *ap_get_rom_path() {
 #endif
 }
 
-void *ap_get_usb_desc(void) { return HW_MODEL_USB_DESC; }
+// void *ap_get_usb_desc(void) { return HW_MODEL_USB_DESC; }
+void *ap_get_usb_desc(void) { return nullptr; }
 }

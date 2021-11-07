@@ -15,7 +15,7 @@
 
 void ptWorker(pid_t tid);
 #else
-static void ptWorker(pid_t tid){}
+static void ptWorker(pid_t tid) {}
 #endif
 
 #endif

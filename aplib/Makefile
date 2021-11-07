@@ -1,3 +1,7 @@
+#
+# makefile for aplib 
+# 2019-2021 Tong Zhang<ztong0001@gmail.com>
+#
 CC=clang
 CXX=clang++
 LINK=clang++
@@ -18,15 +22,17 @@ endif
 
 
 aplib.so:
+	$(CXX) hw_model.cpp $(CXXFLAGS) -c
 	$(CXX) aplib.cpp $(CXXFLAGS) -c
-	$(LINK) aplib.o -shared -o aplib.so $(LDFLAGS)
+	$(LINK) aplib.o hw_model.o -shared -o aplib.so $(LDFLAGS)
 
 clean:
-	rm -f aplib.so aplib.o test
+	rm -f aplib.so aplib.o hw_model.o test
 
 test: aplib.so
 	$(CXX) test.cpp $(CXXFLAGS) -c
-	$(CXX) test.o aplib.o $(LDFLAGS) -o test
+	$(CXX) hw_model.cpp $(CXXFLAGS) -c
+	$(CXX) test.o aplib.o hw_model.o $(LDFLAGS) -o test
 
 indent:
 	clang-format -i -style=file `find $d -name '*.cpp' -or -name "*.h" -or -name "*.c" -or -name "*.cc"`

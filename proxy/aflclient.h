@@ -7,13 +7,13 @@
 
 #include "logutil.h"
 #include "pt-runner.h"
+#include <signal.h>
 #include <stdlib.h>
 #include <sys/shm.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <thread>
 #include <unistd.h>
-#include <signal.h>
 #define SHM_ENV_VAR "__AFL_SHM_ID"
 #define PERSIST_ENV_VAR "__AFL_PERSISTENT"
 #define MAP_SIZE_POW2 16
