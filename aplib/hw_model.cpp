@@ -12,9 +12,19 @@ static HWModel *instance;
 HWModel *init_hw_instance(const std::string &name) {
   if (instance)
     return instance;
-  if (name == "3c59x") {
+  if (name == "3c59x")
     instance = new HWModel_3c59x();
-  } else
+  else if (name == "acp3x")
+    instance = new HWModel_acp3x();
+  else if (name == "adv_pci1760")
+    instance = new HWModel_adv_pci1760();
+  else if (name == "aic7xxx")
+    instance = new HWModel_aic7xxx();
+  else if (name == "zatm")
+    instance = new HWModel_zatm();
+  else if (name == "wanxl")
+    instance = new HWModel_wanxl();
+  else
     assert(0 && "unknown hw");
   return instance;
 }
