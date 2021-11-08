@@ -9,6 +9,9 @@
 #include "HWModel_acp3x.h"
 #include "HWModel_adv_pci1760.h"
 #include "HWModel_aic7xxx.h"
+#include "HWModel_applicom.h"
+#include "HWModel_vxge.h"
+#include "HWModel_w6692.h"
 #include "HWModel_wanxl.h"
 #include "HWModel_zatm.h"
 

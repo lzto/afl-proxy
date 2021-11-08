@@ -24,6 +24,12 @@ HWModel *init_hw_instance(const std::string &name) {
     instance = new HWModel_zatm();
   else if (name == "wanxl")
     instance = new HWModel_wanxl();
+  else if (name == "w6692")
+    instance = new HWModel_w6692();
+  else if (name == "applicom")
+    instance = new HWModel_applicom();
+  else if (name == "vxge")
+    instance = new HWModel_vxge();
   else
     assert(0 && "unknown hw");
   return instance;
