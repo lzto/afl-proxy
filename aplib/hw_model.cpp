@@ -30,6 +30,12 @@ HWModel *init_hw_instance(const std::string &name) {
     instance = new HWModel_applicom();
   else if (name == "vxge")
     instance = new HWModel_vxge();
+  else if (name == "vmxnet3")
+    instance = new HWModel_vmxnet3();
+  else if (name == "vmw_pvrdma")
+    instance = new HWModel_vmw_pvrdma();
+  else if (name == "vme_tsi148")
+    instance = new HWModel_vme_tsi148();
   else
     assert(0 && "unknown hw");
   return instance;
