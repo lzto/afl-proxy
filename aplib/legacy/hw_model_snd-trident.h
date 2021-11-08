@@ -11,7 +11,6 @@
   static int probe_len;                                                        \
   if (probe_len < 10000000) {                                                  \
     switch (addr) {                                                            \
-    default: {                                                                 \
     case (0x48): {                                                             \
       static int cnt;                                                          \
       if (cnt == 0)                                                            \
@@ -5241,6 +5240,7 @@
       cnt++;                                                                   \
       break;                                                                   \
     }                                                                          \
+    default: {                                                                 \
       switch (size) {                                                          \
       case (1):                                                                \
         *((uint8_t *)dest) = rand();                                           \
