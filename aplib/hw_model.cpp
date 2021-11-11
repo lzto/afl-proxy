@@ -116,6 +116,58 @@ HWModel *init_hw_instance(const std::string &name) {
     instance = new HWModel_mISDNinfineon();
   else if (name == "mgag200")
     instance = new HWModel_mgag200();
+  else if (name == "macb_pci")
+    instance = new HWModel_macb_pci();
+  else if (name == "mantis")
+    instance = new HWModel_mantis();
+  else if (name == "matroxfb")
+    instance = new HWModel_matroxfb();
+  else if (name == "mb862xxfb")
+    instance = new HWModel_mb862xxfb();
+  else if (name == "mei_me")
+    instance = new HWModel_mei_me();
+  else if (name == "megaraid_sas")
+    instance = new HWModel_megaraid_sas();
+  else if (name == "lpfc")
+    instance = new HWModel_lpfc();
+  else if (name == "lmc")
+    instance = new HWModel_lmc();
+  else if (name == "lanai")
+    instance = new HWModel_lanai();
+  else if (name == "kvaser")
+    instance = new HWModel_kvaser();
+  else if (name == "kpc2000")
+    instance = new HWModel_kpc2000();
+  else if (name == "isst_if_pci")
+    instance = new HWModel_isst_if_pci();
+  else if (name == "iwlwifi")
+    instance = new HWModel_iwlwifi();
+  else if (name == "isp1760")
+    instance = new HWModel_isp1760();
+  else if (name == "isci")
+    instance = new HWModel_isci();
+  else if (name == "ipmi_si")
+    instance = new HWModel_ipmi_si();
+  else if (name == "iphase")
+    instance = new HWModel_iphase();
+  else if (name == "ionic")
+    instance = new HWModel_ionic();
+  else if (name == "ich9_ehci")
+    instance = new HWModel_ich9_ehci();
+  else if (name == "i82092aa")
+    instance = new HWModel_i82092aa();
+  else if (name == "hpsa")
+    instance = new HWModel_hpsa();
+  else if (name == "hfi1")
+    instance = new HWModel_hfi1();
+  else if (name == "gve")
+    instance = new HWModel_gve();
+  else if (name == "fore_200e")
+    instance = new HWModel_fore_200e();
+  else if (name == "fm801_gp")
+    instance = new HWModel_fm801_gp();
+  else if (name == "firestream")
+    instance = new HWModel_firestream();
 
   else
     assert(0 && "unknown hw");
