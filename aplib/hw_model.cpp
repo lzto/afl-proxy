@@ -7,6 +7,7 @@
 #include "HWModel_3c59x.h"
 #include "HWModel_3w_9xxx.h"
 #include "HWModel_acp3x.h"
+#include "HWModel_adm8211.h"
 #include "HWModel_adv_pci1760.h"
 #include "HWModel_aic7xxx.h"
 #include "HWModel_alcor_pci.h"
@@ -35,10 +36,14 @@
 #include "HWModel_cafe_ccic.h"
 #include "HWModel_cobalt.h"
 #include "HWModel_com20020_pci.h"
+#include "HWModel_cpcihp_zt5550.h"
 #include "HWModel_crypto_safexcel.h"
 #include "HWModel_cx18.h"
+#include "HWModel_cxgb4vf.h"
 #include "HWModel_cyber2000fb.h"
+#include "HWModel_dc395x.h"
 #include "HWModel_de2104x.h"
+#include "HWModel_denali_pci.h"
 #include "HWModel_dw_dmac_pci.h"
 #include "HWModel_earth_pt1.h"
 #include "HWModel_ems_pci.h"
@@ -88,6 +93,7 @@
 #include "HWModel_myrb.h"
 #include "HWModel_net2272.h"
 #include "HWModel_netjet.h"
+#include "HWModel_netup_unidvb.h"
 #include "HWModel_nicstar.h"
 #include "HWModel_nouveau.h"
 #include "HWModel_nozomi.h"
@@ -98,12 +104,14 @@
 #include "HWModel_pci200syn.h"
 #include "HWModel_pcnet32.h"
 #include "HWModel_pcwd_pci.h"
+#include "HWModel_peak_pci.h"
 #include "HWModel_plx_pci.h"
 #include "HWModel_pm2fb.h"
 #include "HWModel_qxl.h"
 #include "HWModel_r8169.h"
 #include "HWModel_radeon_fb.h"
 #include "HWModel_rivafb.h"
+#include "HWModel_rp2.h"
 #include "HWModel_rtsx_pci.h"
 #include "HWModel_rtw88_8822ce.h"
 #include "HWModel_s2io.h"
@@ -155,6 +163,14 @@ static HWModel *instance;
   modelMap[#NAME] = []() { return new HWModel_##NAME(); };
 
 void hw_model_internal_init() {
+  INSERT_MODEL(peak_pci);
+  INSERT_MODEL(rp2);
+  INSERT_MODEL(denali_pci);
+  INSERT_MODEL(dc395x);
+  INSERT_MODEL(netup_unidvb);
+  INSERT_MODEL(cxgb4vf);
+  INSERT_MODEL(cpcihp_zt5550);
+  INSERT_MODEL(adm8211);
   INSERT_MODEL(3c59x);
   INSERT_MODEL(3w_9xxx);
   INSERT_MODEL(acp3x);
