@@ -168,6 +168,54 @@ HWModel *init_hw_instance(const std::string &name) {
     instance = new HWModel_fm801_gp();
   else if (name == "firestream")
     instance = new HWModel_firestream();
+  else if (name == "fealnx")
+    instance = new HWModel_fealnx();
+  else if (name == "epic100")
+    instance = new HWModel_epic100();
+  else if (name == "eni")
+    instance = new HWModel_eni();
+  else if (name == "emu10k1_gp")
+    instance = new HWModel_emu10k1_gp();
+  else if (name == "ems_pci")
+    instance = new HWModel_ems_pci();
+  else if (name == "earth_pt1")
+    instance = new HWModel_earth_pt1();
+  else if (name == "dw_dmac_pci")
+    instance = new HWModel_dw_dmac_pci();
+  else if (name == "de2104x")
+    instance = new HWModel_de2104x();
+  else if (name == "cx18")
+    instance = new HWModel_cx18();
+  else if (name == "crypto_safexcel")
+    instance = new HWModel_crypto_safexcel();
+  else if (name == "com20020_pci")
+    instance = new HWModel_com20020_pci();
+  else if (name == "cafe_ccic")
+    instance = new HWModel_cafe_ccic();
+  else if (name == "bnxt")
+    instance = new HWModel_bnxt();
+  else if (name == "avmfritz")
+    instance = new HWModel_avmfritz();
+  else if (name == "aty128fb")
+    instance = new HWModel_aty128fb();
+  else if (name == "atl1e")
+    instance = new HWModel_atl1e();
+  else if (name == "atl1")
+    instance = new HWModel_atl1();
+  else if (name == "atl2")
+    instance = new HWModel_atl2();
+  else if (name == "atl1c")
+    instance = new HWModel_atl1c();
+  else if (name == "atlantic")
+    instance = new HWModel_atlantic();
+  else if (name == "ath10k")
+    instance = new HWModel_ath10k();
+  else if (name == "nvme")
+    instance = new HWModel_nvme();
+  else if (name == "qxl")
+    instance = new HWModel_qxl();
+  else if (name == "s3fb")
+    instance = new HWModel_s3fb();
 
   else
     assert(0 && "unknown hw");
