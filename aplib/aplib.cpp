@@ -79,6 +79,7 @@ void ap_init(void) {
   static bool initialized;
   static bool isEnabled;
   if (!initialized) {
+    hw_model_internal_init();
     initialized = true;
     EnvKnob knob0("SFP_DEV_MODEL");
     assert(knob0.isPresented() && "SFP_DEV_MODEL is not set");
