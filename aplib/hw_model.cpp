@@ -216,6 +216,78 @@ HWModel *init_hw_instance(const std::string &name) {
     instance = new HWModel_qxl();
   else if (name == "s3fb")
     instance = new HWModel_s3fb();
+  else if (name == "bttv")
+    instance = new HWModel_bttv();
+  else if (name == "sisfb")
+    instance = new HWModel_sisfb();
+  else if (name == "atyfb")
+    instance = new HWModel_atyfb();
+  else if (name == "sm712fb")
+    instance = new HWModel_sm712fb();
+  else if (name == "sm750fb")
+    instance = new HWModel_sm750fb();
+  else if (name == "radeon_fb")
+    instance = new HWModel_radeon_fb();
+  else if (name == "nouveau")
+    instance = new HWModel_nouveau();
+  else if (name == "nvidiafb")
+    instance = new HWModel_nvidiafb();
+  else if (name == "ast")
+    instance = new HWModel_ast();
+  else if (name == "i915")
+    instance = new HWModel_i915();
+  else if (name == "i810")
+    instance = new HWModel_i810();
+  else if (name == "i710fb")
+    instance = new HWModel_i710fb();
+  else if (name == "ivtv")
+    instance = new HWModel_ivtv();
+  else if (name == "cyber2000fb")
+    instance = new HWModel_cyber2000fb();
+  else if (name == "sstfb")
+    instance = new HWModel_sstfb();
+  else if (name == "hypervfb")
+    instance = new HWModel_hypervfb();
+  else if (name == "vt8623fb")
+    instance = new HWModel_vt8623fb();
+  else if (name == "arkfb")
+    instance = new HWModel_arkfb();
+  else if (name == "rivafb")
+    instance = new HWModel_rivafb();
+  else if (name == "vmwgfx")
+    instance = new HWModel_vmwgfx();
+  else if (name == "tg3")
+    instance = new HWModel_tg3();
+  else if (name == "bcma")
+    instance = new HWModel_bcma();
+  else if (name == "3w_9xxx")
+    instance = new HWModel_3w_9xxx();
+  else if (name == "budget_av")
+    instance = new HWModel_budget_av();
+  else if (name == "c_can_pci")
+    instance = new HWModel_c_can_pci();
+  else if (name == "f81601")
+    instance = new HWModel_f81601();
+  else if (name == "sbni")
+    instance = new HWModel_sbni();
+  else if (name == "farsync")
+    instance = new HWModel_farsync();
+  else if (name == "bt878")
+    instance = new HWModel_bt878();
+  else if (name == "skfp")
+    instance = new HWModel_skfp();
+  else if (name == "hpilo")
+    instance = new HWModel_hpilo();
+  else if (name == "viafb")
+    instance = new HWModel_viafb();
+  else if (name == "alcor_pci")
+    instance = new HWModel_alcor_pci();
+  else if (name == "cobalt")
+    instance = new HWModel_cobalt();
+  else if (name == "bochs_drm")
+    instance = new HWModel_bochs_drm();
+  else if (name == "nozomi")
+    instance = new HWModel_nozomi();
 
   else
     assert(0 && "unknown hw");

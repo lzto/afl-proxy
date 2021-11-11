@@ -1,13 +1,13 @@
 ///
-/// hardware model for mb862xxfb
+/// hardware model for hpilo
 /// 2021 Tong Zhang<ztong0001@gmail.com>
-/// - also carminefb
+/// /dev/hpilo
 
 #include "HWModel.h"
 
-class HWModel_mb862xxfb : public HWModel {
+class HWModel_hpilo : public HWModel {
 public:
-  HWModel_mb862xxfb() : HWModel("mb862xxfb", 0x10cf, 0x202b), probe_len(0) {
+  HWModel_hpilo() : HWModel("hpilo", 0x103c, 0x3307), probe_len(0) {
     pciBarCnt = 6;
     barType[0] = PCI_BAR_TYPE_MMIO;
     barType[1] = PCI_BAR_TYPE_MMIO;
@@ -22,33 +22,11 @@ public:
     barSize[4] = 64 * 1024 * 1024;
     barSize[5] = 64 * 1024 * 1024;
   }
-  virtual ~HWModel_mb862xxfb(){};
+  virtual ~HWModel_hpilo(){};
   virtual void restart_device() final { probe_len = 0; };
   virtual int read(uint8_t *dest, uint64_t addr, size_t size) final {
-    if (probe_len > 1)
+    if (probe_len > -1)
       return 0;
-    switch (addr) {
-    case (0x204b4): {
-      *((uint32_t *)dest) = 0x24240200;
-      break;
-    }
-    default: {
-      switch (size) {
-      case (1):
-        *((uint8_t *)dest) = rand();
-        break;
-      case (2):
-        *((uint16_t *)dest) = rand();
-        break;
-      case (4):
-        *((uint32_t *)dest) = rand();
-        break;
-      default:
-        break;
-      }
-    }
-    }
-
     probe_len++;
     return size;
   };
