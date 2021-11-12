@@ -50,6 +50,7 @@
 #include "HWModel_denali_pci.h"
 #include "HWModel_dw_dmac_pci.h"
 #include "HWModel_earth_pt1.h"
+#include "HWModel_efa.h"
 #include "HWModel_ems_pci.h"
 #include "HWModel_emu10k1_gp.h"
 #include "HWModel_eni.h"
@@ -64,6 +65,7 @@
 #include "HWModel_geode.h"
 #include "HWModel_gve.h"
 #include "HWModel_gxt4500.h"
+#include "HWModel_habanalabs.h"
 #include "HWModel_he.h"
 #include "HWModel_hfi1.h"
 #include "HWModel_hns3_enet.h"
@@ -77,6 +79,8 @@
 #include "HWModel_i915.h"
 #include "HWModel_ich9_ehci.h"
 #include "HWModel_idt77252.h"
+#include "HWModel_intel_rng.h"
+#include "HWModel_intel_th_pci.h"
 #include "HWModel_intelfb.h"
 #include "HWModel_ionic.h"
 #include "HWModel_iphase.h"
@@ -86,6 +90,7 @@
 #include "HWModel_isst_if_pci.h"
 #include "HWModel_ivtv.h"
 #include "HWModel_iwlwifi.h"
+#include "HWModel_k10temp.h"
 #include "HWModel_kpc2000.h"
 #include "HWModel_kvaser.h"
 #include "HWModel_kyro.h"
@@ -102,6 +107,8 @@
 #include "HWModel_mgag200.h"
 #include "HWModel_mlx5.h"
 #include "HWModel_mlxsw_spectrum.h"
+#include "HWModel_mt7615e.h"
+#include "HWModel_mt76x0.h"
 #include "HWModel_mt76x0e.h"
 #include "HWModel_myrb.h"
 #include "HWModel_ne2k.h"
@@ -111,6 +118,7 @@
 #include "HWModel_nicstar.h"
 #include "HWModel_nouveau.h"
 #include "HWModel_nozomi.h"
+#include "HWModel_ntb_hw_amd.h"
 #include "HWModel_nvidiafb.h"
 #include "HWModel_nvme.h"
 #include "HWModel_pata_pdc202xx_old.h"
@@ -121,6 +129,8 @@
 #include "HWModel_peak_pci.h"
 #include "HWModel_plx_pci.h"
 #include "HWModel_pm2fb.h"
+#include "HWModel_qla2xxx.h"
+#include "HWModel_qtnfmac_pcie.h"
 #include "HWModel_qxl.h"
 #include "HWModel_r8169.h"
 #include "HWModel_radeon_fb.h"
@@ -128,6 +138,8 @@
 #include "HWModel_rivafb.h"
 #include "HWModel_rp2.h"
 #include "HWModel_rtsx_pci.h"
+#include "HWModel_rtw88_8723de.h"
+#include "HWModel_rtw88_8822be.h"
 #include "HWModel_rtw88_8822ce.h"
 #include "HWModel_s2io.h"
 #include "HWModel_s3fb.h"
@@ -135,6 +147,7 @@
 #include "HWModel_sbni.h"
 #include "HWModel_sfc.h"
 #include "HWModel_sis190.h"
+#include "HWModel_sis5595.h"
 #include "HWModel_sisfb.h"
 #include "HWModel_skfp.h"
 #include "HWModel_skge.h"
@@ -142,11 +155,18 @@
 #include "HWModel_sm712fb.h"
 #include "HWModel_sm750fb.h"
 #include "HWModel_snd_ad1889.h"
+#include "HWModel_snd_atiixp.h"
+#include "HWModel_snd_bt87x.h"
 #include "HWModel_snd_fm801.h"
 #include "HWModel_snd_hda_intel.h"
 #include "HWModel_snd_intel8x0.h"
 #include "HWModel_snd_intel8x0m.h"
+#include "HWModel_snd_maestro3.h"
+#include "HWModel_snd_mia.h"
+#include "HWModel_snd_rme32.h"
+#include "HWModel_snd_rme96.h"
 #include "HWModel_snd_trident.h"
+#include "HWModel_snd_vx222.h"
 #include "HWModel_solo6x10.h"
 #include "HWModel_sstfb.h"
 #include "HWModel_sundance.h"
@@ -182,6 +202,26 @@ static HWModel *instance;
   modelMap[#NAME] = []() { return new HWModel_##NAME(); };
 
 void hw_model_internal_init() {
+  INSERT_MODEL(qla2xxx);
+  INSERT_MODEL(mt76x0);
+  INSERT_MODEL(mt7615e);
+  INSERT_MODEL(habanalabs);
+  INSERT_MODEL(k10temp);
+  INSERT_MODEL(rtw88_8723de);
+  INSERT_MODEL(rtw88_8822be);
+  INSERT_MODEL(ntb_hw_amd);
+  INSERT_MODEL(qtnfmac_pcie);
+  INSERT_MODEL(efa);
+  INSERT_MODEL(sis5595);
+  INSERT_MODEL(snd_rme96);
+  INSERT_MODEL(snd_rme32);
+  INSERT_MODEL(snd_bt87x);
+  INSERT_MODEL(snd_maestro3);
+  INSERT_MODEL(intel_th_pci);
+  INSERT_MODEL(intel_rng);
+  INSERT_MODEL(snd_vx222);
+  INSERT_MODEL(snd_mia);
+  INSERT_MODEL(snd_atiixp)
   INSERT_MODEL(hns3_enet);
   INSERT_MODEL(apex);
   INSERT_MODEL(radio_maxiradio);
