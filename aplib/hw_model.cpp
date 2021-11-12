@@ -11,8 +11,10 @@
 #include "HWModel_adv_pci1760.h"
 #include "HWModel_aic7xxx.h"
 #include "HWModel_alcor_pci.h"
+#include "HWModel_ambassador.h"
 #include "HWModel_amd_xgbe.h"
 #include "HWModel_amdgpu.h"
+#include "HWModel_apex.h"
 #include "HWModel_applicom.h"
 #include "HWModel_arcmsr.h"
 #include "HWModel_arkfb.h"
@@ -34,6 +36,8 @@
 #include "HWModel_budget_av.h"
 #include "HWModel_c_can_pci.h"
 #include "HWModel_cafe_ccic.h"
+#include "HWModel_cb710.h"
+#include "HWModel_cirrus.h"
 #include "HWModel_cobalt.h"
 #include "HWModel_com20020_pci.h"
 #include "HWModel_cpcihp_zt5550.h"
@@ -53,11 +57,17 @@
 #include "HWModel_f81601.h"
 #include "HWModel_farsync.h"
 #include "HWModel_fealnx.h"
+#include "HWModel_felix_vsc9959.h"
 #include "HWModel_firestream.h"
 #include "HWModel_fm801_gp.h"
 #include "HWModel_fore_200e.h"
+#include "HWModel_geode.h"
 #include "HWModel_gve.h"
+#include "HWModel_gxt4500.h"
+#include "HWModel_he.h"
 #include "HWModel_hfi1.h"
+#include "HWModel_hns3_enet.h"
+#include "HWModel_horizon.h"
 #include "HWModel_hpilo.h"
 #include "HWModel_hpsa.h"
 #include "HWModel_hypervfb.h"
@@ -66,6 +76,8 @@
 #include "HWModel_i82092aa.h"
 #include "HWModel_i915.h"
 #include "HWModel_ich9_ehci.h"
+#include "HWModel_idt77252.h"
+#include "HWModel_intelfb.h"
 #include "HWModel_ionic.h"
 #include "HWModel_iphase.h"
 #include "HWModel_ipmi_si.h"
@@ -76,6 +88,7 @@
 #include "HWModel_iwlwifi.h"
 #include "HWModel_kpc2000.h"
 #include "HWModel_kvaser.h"
+#include "HWModel_kyro.h"
 #include "HWModel_lanai.h"
 #include "HWModel_lmc.h"
 #include "HWModel_lpfc.h"
@@ -91,6 +104,7 @@
 #include "HWModel_mlxsw_spectrum.h"
 #include "HWModel_mt76x0e.h"
 #include "HWModel_myrb.h"
+#include "HWModel_ne2k.h"
 #include "HWModel_net2272.h"
 #include "HWModel_netjet.h"
 #include "HWModel_netup_unidvb.h"
@@ -110,12 +124,14 @@
 #include "HWModel_qxl.h"
 #include "HWModel_r8169.h"
 #include "HWModel_radeon_fb.h"
+#include "HWModel_radio_maxiradio.h"
 #include "HWModel_rivafb.h"
 #include "HWModel_rp2.h"
 #include "HWModel_rtsx_pci.h"
 #include "HWModel_rtw88_8822ce.h"
 #include "HWModel_s2io.h"
 #include "HWModel_s3fb.h"
+#include "HWModel_saa7134.h"
 #include "HWModel_sbni.h"
 #include "HWModel_sfc.h"
 #include "HWModel_sis190.h"
@@ -126,6 +142,7 @@
 #include "HWModel_sm712fb.h"
 #include "HWModel_sm750fb.h"
 #include "HWModel_snd_ad1889.h"
+#include "HWModel_snd_fm801.h"
 #include "HWModel_snd_hda_intel.h"
 #include "HWModel_snd_intel8x0.h"
 #include "HWModel_snd_intel8x0m.h"
@@ -134,11 +151,13 @@
 #include "HWModel_sstfb.h"
 #include "HWModel_sundance.h"
 #include "HWModel_tg3.h"
+#include "HWModel_tifm_7xx1.h"
 #include "HWModel_tlan.h"
 #include "HWModel_tsi721.h"
 #include "HWModel_ufshcd_pci.h"
 #include "HWModel_via_rhine.h"
 #include "HWModel_via_velocity.h"
+#include "HWModel_via_wdt.h"
 #include "HWModel_viafb.h"
 #include "HWModel_vme_ca91cx42.h"
 #include "HWModel_vme_tsi148.h"
@@ -163,6 +182,25 @@ static HWModel *instance;
   modelMap[#NAME] = []() { return new HWModel_##NAME(); };
 
 void hw_model_internal_init() {
+  INSERT_MODEL(hns3_enet);
+  INSERT_MODEL(apex);
+  INSERT_MODEL(radio_maxiradio);
+  INSERT_MODEL(via_wdt);
+  INSERT_MODEL(felix_vsc9959);
+  INSERT_MODEL(geode);
+  INSERT_MODEL(snd_fm801);
+  INSERT_MODEL(tifm_7xx1);
+  INSERT_MODEL(cb710);
+  INSERT_MODEL(ne2k);
+  INSERT_MODEL(kyro);
+  INSERT_MODEL(gxt4500);
+  INSERT_MODEL(he);
+  INSERT_MODEL(horizon);
+  INSERT_MODEL(intelfb);
+  INSERT_MODEL(ambassador);
+  INSERT_MODEL(idt77252);
+  INSERT_MODEL(saa7134);
+  INSERT_MODEL(cirrus);
   INSERT_MODEL(peak_pci);
   INSERT_MODEL(rp2);
   INSERT_MODEL(denali_pci);
