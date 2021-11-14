@@ -126,7 +126,7 @@ int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size) {
   if (!sm)
     goto end;
   counter++;
-  if (counter % 10 == 0)
+  if (counter % 100 == 0)
     ap_exit();
   ap_init();
   if (!fuzzdatasize)
@@ -150,6 +150,8 @@ void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size) {
   get_hw_instance()->write(data, addr, size);
 
   if (!sm)
+    return;
+  if (!fuzzdatasize)
     return;
   addr = addr % fuzzdatasize;
   if (addr >= fuzzdatasize)

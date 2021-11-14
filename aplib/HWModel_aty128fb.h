@@ -25,6 +25,7 @@ public:
   virtual ~HWModel_aty128fb(){};
   virtual void restart_device() final { probe_len = 0; };
   virtual int read(uint8_t *dest, uint64_t addr, size_t size) final {
+    addr = addr % 1024000;
     if (probe_len > 10000)
       return 0;
     switch (addr) {
@@ -53,6 +54,7 @@ public:
     return size;
   };
   virtual void write(uint64_t data, uint64_t addr, size_t size) final {
+    addr = addr % 1024000;
     switch (addr) {
     default: {
       switch (size) {
