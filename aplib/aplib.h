@@ -42,7 +42,7 @@ void ap_reattach_pt(void);
 bool ap_get_irq_status(void);
 
 // SHM IPC stuff
-void shm_ipc_read_data(uint8_t* dest, uint64_t addr, size_t size);
+void shm_ipc_read_data(uint8_t *dest, uint64_t addr, size_t size);
 void shm_ipc_write_data(uint64_t data, uint64_t addr, size_t size);
 
 const char *ap_get_dev_name(void);

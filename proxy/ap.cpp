@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
     INFO("AFLClient is alive");
   }
   skip_dry_run();
-  SHM<struct XXX> shm("/afl-proxy");
+  SHM<struct XXX> shm("/afl-proxy-0");
   if (shm.open(SHMOpenType::CREATE)) {
     auto *sm = shm.getMem();
     INFO("SHM created @ " << sm);
@@ -118,6 +118,6 @@ int main(int argc, char **argv) {
     }
   }
   shm.close();
-  shm_unlink("/afl-proxy");
+  shm_unlink("/afl-proxy-0");
   return 0;
 }

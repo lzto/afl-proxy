@@ -9,6 +9,8 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 
+#include <string>
+
 #include "EnvKnob.h"
 
 #include "hw_model.h"
@@ -41,7 +43,9 @@ void real_ap_init(void) {
   fuzz_file_fd = -1;
 again:
   srand(time(NULL));
-  shm = new SHM<struct XXX>("/afl-proxy");
+  string shmname = "/afl-proxy-";
+  shmname += string(getenv("SFP_SHMID"));
+  shm = new SHM<struct XXX>(shmname.c_str());
   if (!shm->open(SHMOpenType::CONNECT)) {
     // WARN("cannot connect tp /afl-proxy. retry.. ");
     usleep(100);
@@ -49,7 +53,7 @@ again:
     goto again;
   }
   sm = shm->getMem();
-  // INFO("connected /afl-proxy");
+  INFO("connected " << shmname);
 
   // wait till this is ready
   if (!sm->ready) {
@@ -125,7 +129,7 @@ int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size) {
 
   if (!sm)
     goto end;
-  if (ap_get_fuzz_file()[0]==0) {
+  if (ap_get_fuzz_file()[0] == 0) {
     // read data using IPC
     shm_ipc_read_data(dest, addr, size);
     return size;
@@ -156,7 +160,7 @@ void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size) {
 
   if (!sm)
     return;
-  if (ap_get_fuzz_file()[0]==0) {
+  if (ap_get_fuzz_file()[0] == 0) {
     // write data using IPC
     shm_ipc_write_data(data, addr, size);
     return;
@@ -302,9 +306,8 @@ const char *ap_get_rom_path() {
 void *ap_get_usb_desc(void) { return nullptr; }
 }
 
-
 // shared memory IPC stuff
-void shm_ipc_read_data(uint8_t* dest, uint64_t addr, size_t size) {
+void shm_ipc_read_data(uint8_t *dest, uint64_t addr, size_t size) {
   if (sem_wait(&sm->semr) == -1) {
     unreachable("error wait semr");
   }
@@ -336,4 +339,3 @@ void shm_ipc_write_data(uint64_t data, uint64_t addr, size_t size) {
     unreachable("error post semr");
   }
 }
-

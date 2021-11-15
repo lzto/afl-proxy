@@ -21,5 +21,5 @@ clean:
   done
 
 indent:
-	clang-format -i -style=file `find $d -name '*.cpp' -or -name "*.h" -or -name "*.c" -or -name "*.cc"`
+	clang-format -i -style=file `find $d -name '*.cpp' -or -name "*.h" -or -name "*.c" -or -name "*.cc" -or -name "*.cpp"`
 
