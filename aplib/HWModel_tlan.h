@@ -25,7 +25,7 @@ public:
   virtual ~HWModel_tlan(){};
   virtual void restart_device() final { probe_len = 0; };
   virtual int read(uint8_t *dest, uint64_t addr, size_t size) final {
-    if (probe_len > 761)
+    if (probe_len > -1)
       return 0;
     probe_len++;
     return size;

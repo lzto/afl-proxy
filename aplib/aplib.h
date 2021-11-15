@@ -16,7 +16,14 @@ struct XXX {
   sem_t semw;
   char path[128]; // the input data path
   uint8_t type;
-  uint8_t data[128];
+  union {
+    uint8_t data[128];
+    struct {
+      uint8_t req_type; // request type 0 read 1 write
+      uint64_t address; // requested address
+      uint64_t size;    // requested size;
+    } rwreq; // for requesting data directly from us instead of using file
+  };
   volatile uint8_t ready;
 };
 
@@ -33,6 +40,10 @@ void ap_exit(void);
 void ap_attach_pt(void);
 void ap_reattach_pt(void);
 bool ap_get_irq_status(void);
+
+// SHM IPC stuff
+void shm_ipc_read_data(uint8_t* dest, uint64_t addr, size_t size);
+void shm_ipc_write_data(uint64_t data, uint64_t addr, size_t size);
 
 const char *ap_get_dev_name(void);
 // device generic information

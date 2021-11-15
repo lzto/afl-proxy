@@ -125,6 +125,11 @@ int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size) {
 
   if (!sm)
     goto end;
+  if (ap_get_fuzz_file()[0]==0) {
+    // read data using IPC
+    shm_ipc_read_data(dest, addr, size);
+    return size;
+  }
   counter++;
   if (counter % 100 == 0)
     ap_exit();
@@ -151,6 +156,12 @@ void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size) {
 
   if (!sm)
     return;
+  if (ap_get_fuzz_file()[0]==0) {
+    // write data using IPC
+    shm_ipc_write_data(data, addr, size);
+    return;
+  }
+
   if (!fuzzdatasize)
     return;
   addr = addr % fuzzdatasize;
@@ -290,3 +301,39 @@ const char *ap_get_rom_path() {
 // void *ap_get_usb_desc(void) { return HW_MODEL_USB_DESC; }
 void *ap_get_usb_desc(void) { return nullptr; }
 }
+
+
+// shared memory IPC stuff
+void shm_ipc_read_data(uint8_t* dest, uint64_t addr, size_t size) {
+  if (sem_wait(&sm->semr) == -1) {
+    unreachable("error wait semr");
+  }
+  sm->type = 0x03;
+  sm->rwreq.req_type = 0;
+  sm->rwreq.address = addr;
+  sm->rwreq.size = size;
+  if (sem_post(&sm->semw) == -1) {
+    unreachable("error post semr");
+  }
+  if (sem_wait(&sm->semr) == -1) {
+    unreachable("error wait semr");
+  }
+  memcpy(dest, sm->data, size);
+  if (sem_post(&sm->semr) == -1) {
+    unreachable("error post semr");
+  }
+}
+
+void shm_ipc_write_data(uint64_t data, uint64_t addr, size_t size) {
+  if (sem_wait(&sm->semr) == -1) {
+    unreachable("error wait semr");
+  }
+  sm->type = 0x03;
+  sm->rwreq.req_type = 1;
+  sm->rwreq.address = addr;
+  sm->rwreq.size = size;
+  if (sem_post(&sm->semw) == -1) {
+    unreachable("error post semr");
+  }
+}
+

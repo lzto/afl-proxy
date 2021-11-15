@@ -22,7 +22,14 @@ struct XXX {
   sem_t semw;
   char path[128]; // the input data path
   uint8_t type;
-  uint8_t data[128];
+  union {
+    uint8_t data[128];
+    struct {
+      uint8_t req_type; // request type 0 read 1 write
+      uint64_t address; // requested address
+      uint64_t size;    // requested size;
+    } rwreq; // for requesting data directly from us instead of using file
+  };
   volatile uint8_t ready;
 };
 
