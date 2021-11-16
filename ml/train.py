@@ -12,11 +12,13 @@ pyaplib = ctypes.cdll.LoadLibrary('pylib/build/pyaplib.so')
 
 #import visualize
 
+qemutimeout = 120
+
 # 3 input: addr, size, total count
 # 65 output: 64bit data + interrupt trigger
 # fitness is total count
 
-def eval_single_genome(genome_id, genome, config, output):
+def eval_single_genome(genome_id, genome, config, out):
     #print("id:{}".format(genome_id))
     pyaplib.init(genome_id)
     pyaplib.launch_qemu(genome_id)
@@ -44,11 +46,11 @@ def eval_single_genome(genome_id, genome, config, output):
             cnt = cnt+1
             pyaplib.do_respond(genome_id)
         etime = time.time()
-        if (int(etime - stime)>120):
+        if (int(etime - stime)>qemutimeout):
             break
     fitness = cnt/100
-    #output.put(fitness)
-    genome.fitness = fitness
+    out.put(fitness)
+    #genome.fitness = fitness
     print("Fitness gen {}={}".format(genome_id, fitness));
     # kill qemu
     pyaplib.kill_qemu(genome_id)
@@ -65,9 +67,9 @@ def eval_genomes_parallel(genomes, config):
         processes = [mp.Process(target=eval_single_genome, args=(genome_id, genome, config, output)) for genome_id, genome in genomes [i:i+parallel_size]]
         [p.start() for p in processes]
         [p.join() for p in processes]
-        #results = [output.get() for p in processes]
-        #for n, r in enumerate(results):
-        #    genomes[i+n][1].fitness = r
+        results = [output.get() for p in processes]
+        for n, r in enumerate(results):
+            genomes[i+n][1].fitness = r
     
 def eval_genomes(genomes, config):
     for genome_id, genome in genomes:
