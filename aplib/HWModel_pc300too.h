@@ -8,19 +8,12 @@
 class HWModel_pc300too : public HWModel {
 public:
   HWModel_pc300too() : HWModel("pc300too", 0x120e, 0x0301), probe_len(0) {
-    pciBarCnt = 6;
-    barType[0] = PCI_BAR_TYPE_MMIO;
-    barType[1] = PCI_BAR_TYPE_MMIO;
-    barType[2] = PCI_BAR_TYPE_MMIO;
-    barType[3] = PCI_BAR_TYPE_MMIO;
-    barType[4] = PCI_BAR_TYPE_MMIO;
-    barType[5] = PCI_BAR_TYPE_MMIO;
-    barSize[0] = 0x80;
-    barSize[1] = 0x400;
-    barSize[2] = 0x400;
-    barSize[3] = 0x8000;
-    barSize[4] = 64 * 1024 * 1024;
-    barSize[5] = 64 * 1024 * 1024;
+    setupBar({{PCI_BAR_TYPE_MMIO, 0x80},
+              {PCI_BAR_TYPE_MMIO, 0x400},
+              {PCI_BAR_TYPE_MMIO, 0x400},
+              {PCI_BAR_TYPE_MMIO, 0x8000},
+              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
+              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024}});
   }
   virtual ~HWModel_pc300too(){};
   virtual void restart_device() final { probe_len = 0; };

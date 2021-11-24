@@ -9,19 +9,12 @@ class HWModel_mISDNinfineon : public HWModel {
 public:
   HWModel_mISDNinfineon()
       : HWModel("mISDNinfineon", 0x1048, 0x1000), probe_len(0) {
-    pciBarCnt = 6;
-    barType[0] = PCI_BAR_TYPE_PIO;
-    barType[1] = PCI_BAR_TYPE_PIO;
-    barType[2] = PCI_BAR_TYPE_PIO;
-    barType[3] = PCI_BAR_TYPE_PIO;
-    barType[4] = PCI_BAR_TYPE_PIO;
-    barType[5] = PCI_BAR_TYPE_PIO;
-    barSize[0] = 128;
-    barSize[1] = 128;
-    barSize[2] = 128;
-    barSize[3] = 128;
-    barSize[4] = 128;
-    barSize[5] = 128;
+    setupBar({{PCI_BAR_TYPE_PIO, 128},
+              {PCI_BAR_TYPE_PIO, 128},
+              {PCI_BAR_TYPE_PIO, 128},
+              {PCI_BAR_TYPE_PIO, 128},
+              {PCI_BAR_TYPE_PIO, 128},
+              {PCI_BAR_TYPE_PIO, 128}});
   }
   virtual ~HWModel_mISDNinfineon(){};
   virtual void restart_device() final { probe_len = 0; };

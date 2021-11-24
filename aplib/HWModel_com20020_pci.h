@@ -9,19 +9,12 @@ class HWModel_com20020_pci : public HWModel {
 public:
   HWModel_com20020_pci()
       : HWModel("com20020_pci", 0x10b5, 0x2200), probe_len(0) {
-    pciBarCnt = 6;
-    barType[0] = PCI_BAR_TYPE_PIO;
-    barType[1] = PCI_BAR_TYPE_MMIO;
-    barType[2] = PCI_BAR_TYPE_PIO;
-    barType[3] = PCI_BAR_TYPE_MMIO;
-    barType[4] = PCI_BAR_TYPE_MMIO;
-    barType[5] = PCI_BAR_TYPE_MMIO;
-    barSize[0] = 1024;
-    barSize[1] = 64 * 1024 * 1024;
-    barSize[2] = 1024;
-    barSize[3] = 64 * 1024 * 1024;
-    barSize[4] = 64 * 1024 * 1024;
-    barSize[5] = 64 * 1024 * 1024;
+    setupBar({{PCI_BAR_TYPE_PIO, 1024},
+              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
+              {PCI_BAR_TYPE_PIO, 1024},
+              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
+              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
+              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024}});
   }
   virtual ~HWModel_com20020_pci(){};
   virtual void restart_device() final { probe_len = 0; };

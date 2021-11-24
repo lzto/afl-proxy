@@ -9,19 +9,12 @@ class HWModel_amdgpu : public HWModel {
 public:
   HWModel_amdgpu()
       : HWModel("amdgpu", 0x1002, 0x1304, 0, 0, 0x30000), probe_len(0) {
-    pciBarCnt = 6;
-    barType[0] = PCI_BAR_TYPE_PIO;
-    barType[1] = PCI_BAR_TYPE_MMIO;
-    barType[2] = PCI_BAR_TYPE_MMIO;
-    barType[3] = PCI_BAR_TYPE_MMIO;
-    barType[4] = PCI_BAR_TYPE_MMIO;
-    barType[5] = PCI_BAR_TYPE_MMIO;
-    barSize[0] = 16 * 1024;
-    barSize[1] = 8 * 1024 * 1024;
-    barSize[2] = 128 * 1024 * 1024;
-    barSize[3] = 256 * 1024 * 1024;
-    barSize[4] = 4 * 1024 * 1024;
-    barSize[5] = 1024 * 1024;
+    setupBar({{PCI_BAR_TYPE_PIO, 16 * 1024},
+              {PCI_BAR_TYPE_MMIO, 8 * 1024 * 1024},
+              {PCI_BAR_TYPE_MMIO, 128 * 1024 * 1024},
+              {PCI_BAR_TYPE_MMIO, 256 * 1024 * 1024},
+              {PCI_BAR_TYPE_MMIO, 4 * 1024 * 1024},
+              {PCI_BAR_TYPE_MMIO, 1024 * 1024}});
   }
   virtual ~HWModel_amdgpu(){};
   virtual void restart_device() final { probe_len = 0; };

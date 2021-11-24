@@ -9,19 +9,7 @@
 class HWModel_w6692 : public HWModel {
 public:
   HWModel_w6692() : HWModel("w6692", 0x0675, 0x1702), probe_len(0) {
-    pciBarCnt = 2;
-    barType[0] = PCI_BAR_TYPE_PIO;
-    barType[1] = PCI_BAR_TYPE_PIO;
-    barType[2] = PCI_BAR_TYPE_MMIO;
-    barType[3] = PCI_BAR_TYPE_MMIO;
-    barType[4] = PCI_BAR_TYPE_MMIO;
-    barType[5] = PCI_BAR_TYPE_MMIO;
-    barSize[0] = 256;
-    barSize[1] = 256;
-    barSize[2] = 64 * 1024 * 1024;
-    barSize[3] = 64 * 1024 * 1024;
-    barSize[4] = 64 * 1024 * 1024;
-    barSize[5] = 64 * 1024 * 1024;
+    setupBar({{PCI_BAR_TYPE_PIO, 256}, {PCI_BAR_TYPE_PIO, 256}});
   }
   virtual ~HWModel_w6692(){};
   virtual void restart_device() final { probe_len = 0; };
