@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <sys/mman.h>
 #include <sys/types.h>
+#include <time.h>
 
 #include <map>
 #include <set>
@@ -49,6 +50,9 @@ static int dump_rw_addr;
 #define IS_DUMP_R (dump_rw_addr & 1)
 #define IS_DUMP_W (dump_rw_addr & 2)
 #define IS_DUMP_RW (IS_DUMP_R || IS_DUMP_W)
+
+// whether should we use DMA
+static int use_dma;
 
 // TODO: need to figure out the address of IRQ register
 static bool use_irq;
@@ -98,8 +102,9 @@ again:
 
 thread *trigger_irq_thread;
 void ti_worker() {
+  sleep(10);
   while (1) {
-    sleep(1);
+    sleep(10);
     ap_trigger_irq();
   }
 }
@@ -133,9 +138,11 @@ void ap_init(void) {
     }
     // test code
     /////////////////////////
+    EnvKnob knob4("USE_DMA");
+    use_dma = knob4.isSet();
 
-    EnvKnob knob4("AP_DISABLED");
-    if (knob4.isPresented() && knob4.isSet())
+    EnvKnob knob5("AP_DISABLED");
+    if (knob5.isPresented() && knob5.isSet())
       return;
     isEnabled = true;
   }
@@ -189,25 +196,25 @@ void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size) {
     INFO("write " << size << " byte @ addr " << hexval(addr) << "="
                   << hexval(data));
   // DMA address detection
-  if (size == 4) {
+  if ((use_dma) && (size == 4)) {
     // check if this looks like a DMA address
     uint32_t dma_addr = data & 0xffffffff;
     if (!ap_is_ram(dma_addr)) {
-      goto bailout;
+      goto out;
     }
     // apply some more filters here -- they should be in e820 but I don't know
     // why qemu is telling us partial info probably the rest of the table is set
     // by bios
     // ignore first 1M
     if (dma_addr < 0x00100000) {
-      goto bailout;
+      goto out;
     } else {
       INFO(ANSI_COLOR_GREEN << "Detected writing valid physical address "
                             << hexval(dma_addr) << " could be DMA address?"
                             << ANSI_COLOR_RESET);
       dma_addrs.insert(dma_addr);
     }
-  bailout:;
+  out:;
   }
 
   // for probing
@@ -317,19 +324,21 @@ void ap_reattach_pt(void) {
 void ap_trigger_irq() {
   if (!use_irq)
     return;
-  ///
-  /// write random data in the DMA region --
-  /// DMA region is expected to be synchronized(visible) after the interrupt
-  /// so we can safely assume we need to write DMA first then do IRQ
-  uint8_t *buffer = (uint8_t *)malloc(4096);
-  for (auto addr : dma_addrs) {
-    // we dont know the size of the dma region -- assuming 4k
-    for (int i = 0; i < 4096; i++)
-      buffer[i] = rand();
-    INFO("DMA to " << hexval(addr));
-    cpu_physical_memory_rw(addr, buffer, 4096, true);
+  if (use_dma) {
+    ///
+    /// write random data in the DMA region --
+    /// DMA region is expected to be synchronized(visible) after the interrupt
+    /// so we can safely assume we need to write DMA first then do IRQ
+    uint8_t *buffer = (uint8_t *)malloc(4096);
+    for (auto addr : dma_addrs) {
+      // we dont know the size of the dma region -- assuming 4k
+      for (int i = 0; i < 4096; i++)
+        buffer[i] = rand();
+      INFO("DMA to " << hexval(addr));
+      cpu_physical_memory_rw(addr, buffer, 4096, true);
+    }
+    free(buffer);
   }
-  free(buffer);
   // trigger irq
   sfp_set_irq(1);
 }
