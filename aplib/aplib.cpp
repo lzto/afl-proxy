@@ -9,13 +9,28 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 
+#include <map>
+#include <set>
 #include <string>
+#include <thread>
+#include <vector>
 
 #include "EnvKnob.h"
 
 #include "hw_model.h"
 
+using namespace std;
+
+// a list of dma addresses -- those are physical addresses
+set<uint64_t> dma_addrs;
+
 extern "C" {
+
+// function inside hw/sfp/sfp-pci.c
+extern void sfp_set_irq(int isset);
+// function inside include/exec/cpu-common.h
+extern void cpu_physical_memory_rw(uint64_t addr, void *buf, uint64_t len,
+                                   bool is_write);
 
 // shared memory
 struct XXX *sm = nullptr;
@@ -31,9 +46,11 @@ int fuzz_file_fd;
 static int gdb_attached;
 // 0-not set 1-r 2-w 3-rw
 static int dump_rw_addr;
+#define IS_DUMP_R (dump_rw_addr & 1)
+#define IS_DUMP_W (dump_rw_addr & 2)
+#define IS_DUMP_RW (IS_DUMP_R || IS_DUMP_W)
+
 // TODO: need to figure out the address of IRQ register
-static bool irq_status;
-static int irq_just_cleared;
 static bool use_irq;
 
 void real_ap_init(void) {
@@ -79,10 +96,19 @@ again:
   ap_reattach_pt();
 };
 
+thread *trigger_irq_thread;
+void ti_worker() {
+  while (1) {
+    sleep(1);
+    ap_trigger_irq();
+  }
+}
+
 void ap_init(void) {
   static bool initialized;
   static bool isEnabled;
   if (!initialized) {
+    srand(time(0));
     hw_model_internal_init();
     initialized = true;
     EnvKnob knob0("SFP_DEV_MODEL");
@@ -100,6 +126,13 @@ void ap_init(void) {
 
     EnvKnob knob3("USE_IRQ");
     use_irq = knob3.isSet();
+    //////////////////////////
+    // test code
+    if (use_irq) {
+      trigger_irq_thread = new thread(ti_worker);
+    }
+    // test code
+    /////////////////////////
 
     EnvKnob knob4("AP_DISABLED");
     if (knob4.isPresented() && knob4.isSet())
@@ -145,16 +178,38 @@ int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size) {
     goto end;
   memcpy(dest, fuzzdata + addr, size);
 end:
-  if ((dump_rw_addr & 0x01) == 0x01)
+  if (IS_DUMP_R)
     INFO("read " << size << " byte @ " << hexval(addr) << "="
                  << hexval(*(uint64_t *)(dest)));
   return size;
 }
 
 void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size) {
-  if ((dump_rw_addr & 0x02) == 0x02)
+  if (IS_DUMP_W)
     INFO("write " << size << " byte @ addr " << hexval(addr) << "="
                   << hexval(data));
+  // DMA address detection
+  if (size == 4) {
+    // check if this looks like a DMA address
+    uint32_t dma_addr = data & 0xffffffff;
+    if (!ap_is_ram(dma_addr)) {
+      goto bailout;
+    }
+    // apply some more filters here -- they should be in e820 but I don't know
+    // why qemu is telling us partial info probably the rest of the table is set
+    // by bios
+    // ignore first 1M
+    if (dma_addr < 0x00100000) {
+      goto bailout;
+    } else {
+      INFO(ANSI_COLOR_GREEN << "Detected writing valid physical address "
+                            << hexval(dma_addr) << " could be DMA address?"
+                            << ANSI_COLOR_RESET);
+      dma_addrs.insert(dma_addr);
+    }
+  bailout:;
+  }
+
   // for probing
   get_hw_instance()->write(data, addr, size);
 
@@ -255,21 +310,30 @@ void ap_reattach_pt(void) {
     unreachable("error post semr");
   }
 }
+
 ///
+/// trigger one-shot irq
 ///
-///
-bool ap_get_irq_status() {
+void ap_trigger_irq() {
   if (!use_irq)
-    return false;
-  if (irq_just_cleared) {
-    irq_just_cleared = 0;
-    irq_status = false;
-    return false;
+    return;
+  ///
+  /// write random data in the DMA region --
+  /// DMA region is expected to be synchronized(visible) after the interrupt
+  /// so we can safely assume we need to write DMA first then do IRQ
+  uint8_t *buffer = (uint8_t *)malloc(4096);
+  for (auto addr : dma_addrs) {
+    // we dont know the size of the dma region -- assuming 4k
+    for (int i = 0; i < 4096; i++)
+      buffer[i] = rand();
+    INFO("DMA to " << hexval(addr));
+    cpu_physical_memory_rw(addr, buffer, 4096, true);
   }
-  if (rand() % 100 > 95)
-    irq_status = true;
-  return irq_status;
+  free(buffer);
+  // trigger irq
+  sfp_set_irq(1);
 }
+
 const char *ap_get_dev_name() { return get_hw_instance()->getName().c_str(); }
 ///
 /// device generic information
@@ -338,4 +402,37 @@ void shm_ipc_write_data(uint64_t data, uint64_t addr, size_t size) {
   if (sem_post(&sm->semw) == -1) {
     unreachable("error post semr");
   }
+}
+
+// get some idea of the system memory layout
+#define E820_RAM 1
+struct e820_entry {
+  uint64_t addr;
+  uint64_t len;
+  uint32_t type;
+} __attribute__((__packed__)) __attribute((__aligned__(4)));
+
+static struct e820_entry *e820_table;
+int e820_table_cnt;
+
+void ap_set_e820(void *_e, int count) {
+  e820_table_cnt = count;
+  if (!e820_table)
+    free(e820_table);
+  e820_table = (struct e820_entry *)malloc(sizeof(struct e820_entry) * count);
+  memcpy(e820_table, _e, sizeof(struct e820_entry) * count);
+
+  for (int i = 0; i < count; i++)
+    INFO(ANSI_COLOR_RED << "e820: "
+                        << " type " << e820_table[i].type << " - addr "
+                        << hexval(e820_table[i].addr) << " - "
+                        << hexval((e820_table[i].len)) << ANSI_COLOR_RESET);
+}
+
+bool ap_is_ram(uintptr_t addr) {
+  for (int i = 0; i < e820_table_cnt; i++)
+    if ((addr >= e820_table[i].addr) &&
+        (addr < (e820_table[i].addr + e820_table[i].len)))
+      return e820_table[i].type == E820_RAM;
+  return false;
 }

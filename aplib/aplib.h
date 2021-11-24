@@ -39,7 +39,12 @@ void ap_log_pc(uint64_t);
 void ap_exit(void);
 void ap_attach_pt(void);
 void ap_reattach_pt(void);
-bool ap_get_irq_status(void);
+void ap_trigger_irq(void);
+
+// set system memory map -- called by qemu
+void ap_set_e820(void *qemu_e820_table, int count);
+// our utility function
+bool ap_is_ram(uintptr_t addr);
 
 // SHM IPC stuff
 void shm_ipc_read_data(uint8_t *dest, uint64_t addr, size_t size);

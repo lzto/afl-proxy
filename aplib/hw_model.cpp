@@ -170,6 +170,7 @@
 #include "HWModel_solo6x10.h"
 #include "HWModel_sstfb.h"
 #include "HWModel_sundance.h"
+#include "HWModel_test.h"
 #include "HWModel_tg3.h"
 #include "HWModel_tifm_7xx1.h"
 #include "HWModel_tlan.h"
@@ -387,6 +388,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(w6692);
   INSERT_MODEL(wanxl);
   INSERT_MODEL(zatm);
+  INSERT_MODEL(test);
 }
 
 ///
