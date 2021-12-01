@@ -1,5 +1,5 @@
 """
-device simulation - sundance
+device simulation - nozomi
 """
 
 from __future__ import print_function
@@ -8,6 +8,8 @@ import neat
 import time
 import ctypes
 import multiprocessing as mp
+import pickle
+
 pyaplib = ctypes.cdll.LoadLibrary('pylib/build/pyaplib.so')
 
 #import visualize
@@ -33,8 +35,8 @@ def eval_single_genome(genome_id, genome, config, out):
                 # read addr and size from shm
                 addr = pyaplib.get_req_addr(genome_id)
                 size = pyaplib.get_req_size(genome_id)
-                i = (addr, size, cnt)
-                output = net.activate(i)
+                network_input = (addr, size, cnt)
+                output = net.activate(network_input)
                 #print(output)
                 dev_data = 0
                 for x in range(64):
@@ -89,8 +91,15 @@ def eval_genomes(genomes, config):
                     # read addr and size from shm
                     addr = pyaplib.get_req_addr(0)
                     size = pyaplib.get_req_size(0)
-                    i = (addr, size, cnt)
-                    output = net.activate(i)
+                    network_input = (addr, size)
+                    devmcnt = pyaplib.get_devmem_cnt(0)
+                    for dmi in range(devmcnt):
+                        devmsize = pyaplib.get_devmem_size(0, dmi)
+                        c8_devm = pyaplib.get_devmem(0, dmi)
+                        devm = c8_devm[:devmsize]
+                        # now append to the network_input
+                        network_input = network_input + devm
+                    output = net.activate(network_input)
                     #print(output)
                     dev_data = 0
                     for x in range(64):
@@ -101,6 +110,7 @@ def eval_genomes(genomes, config):
                     pyaplib.set_data(0,dev_data)
                 cnt = cnt+1
                 pyaplib.do_respond(0)
+            # do a 10 sec test
             etime = time.time()
             if (int(etime - stime)>10):
                 break
@@ -121,6 +131,8 @@ def run(config_file):
     # Create the population, which is the top-level object for a NEAT run.
     p = neat.Population(config)
 
+    #p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-1")
+
     # Add a stdout reporter to show progress in the terminal.
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
@@ -128,8 +140,11 @@ def run(config_file):
     p.add_reporter(neat.Checkpointer(5))
 
     # Run for up to 300 generations.
-    #winner = p.run(eval_genomes, 300)
-    winner = p.run(eval_genomes_parallel, 300)
+    winner = p.run(eval_genomes, 300)
+    #winner = p.run(eval_genomes_parallel, 300)
+    win = p.best_genome
+    pickle.dump(winner, open('winner.pkl', 'wb'))
+    pickle.dump(win, open('real_winner.pkl', 'wb'))
 
     # Display the winning genome.
     print('\nBest genome:\n{!s}'.format(winner))

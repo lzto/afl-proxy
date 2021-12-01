@@ -38,11 +38,36 @@ struct XXX {
 
 // lock for shms
 static mutex shmslock;
-// SHM<struct XXX> shm("/afl-proxy");
-// struct XXX *sm;
+
+class DeviceShmPack {
+public:
+  DeviceShmPack() : master(nullptr){};
+  ~DeviceShmPack() {
+    for (auto p : devmemShms)
+      delete p;
+  };
+  /// push one item to the devmem list
+  void pushDevmem(SHM<uint8_t> *dsm) { devmemShms.push_back(dsm); }
+  /// total number of devmem mapped
+  auto getDevmemCnt() { return devmemShms.size(); };
+  /// the devmem itself
+  auto *getDevmem(int devmid) { return devmemShms[devmid]->getMem(); };
+  /// size of this devmem
+  auto getDevmemSize(int devmid) { return devmemShms[devmid]->getSize(); };
+  // getter/setter for master shm
+  void setMaster(SHM<struct XXX> *m) { master = m; };
+  auto *getMaster() { return master; };
+  auto *getMasterMem() { return master->getMem(); };
+
+private:
+  SHM<struct XXX> *master;
+  // we expect qemu to expose device memory through shared memory so that we can
+  // use them here
+  vector<SHM<uint8_t> *> devmemShms;
+};
 
 // shm id, SHM object,
-map<int, SHM<struct XXX> *> shms;
+map<int, DeviceShmPack *> shms;
 
 extern "C" {
 
@@ -51,9 +76,22 @@ void init(uint64_t shmid) {
   if (shms.find(shmid) == shms.end()) {
     string shmname("/afl-proxy-");
     shmname += to_string(shmid);
-    shms[shmid] = new SHM<struct XXX>(shmname);
+    auto *dsp = new DeviceShmPack;
+    shms[shmid] = dsp;
+    // initialize master
+    dsp->setMaster(new SHM<struct XXX>(shmname));
+    // scan devmem -- current support bar mem detection - 6 max
+    for (int i = 0; i < 6; i++) {
+      string dspName = shmname;
+      dspName += "-bar-" + to_string(i);
+      auto *dspShm = new SHM<uint8_t>(dspName);
+      if (dspShm->open(SHMOpenType::CONNECT))
+        dsp->pushDevmem(dspShm);
+      else
+        delete dspShm;
+    }
   }
-  auto *shm = shms[shmid];
+  auto *shm = shms[shmid]->getMaster();
   if (shm->open(SHMOpenType::CREATE)) {
     auto *sm = shm->getMem();
     // INFO("SHM created @ " << sm);
@@ -72,7 +110,6 @@ void init(uint64_t shmid) {
 void uninit(uint64_t shmid) {
   shmslock.lock();
   assert(shms.find(shmid) != shms.end());
-  shms[shmid]->close();
   delete shms[shmid];
   shms.erase(shmid);
   string shmname("/afl-proxy-");
@@ -82,43 +119,56 @@ void uninit(uint64_t shmid) {
 }
 
 void check_new_request(uint64_t shmid) {
-  auto *sm = shms[shmid]->getMem();
+  auto *sm = shms[shmid]->getMasterMem();
   if (sem_wait(&sm->semw) == -1)
     unreachable("error wait semw");
 }
 
 uint8_t get_msg_type(uint64_t shmid) {
-  auto *sm = shms[shmid]->getMem();
+  auto *sm = shms[shmid]->getMasterMem();
   return sm->type;
 }
 
 uint8_t get_req_type(uint64_t shmid) {
-  auto *sm = shms[shmid]->getMem();
+  auto *sm = shms[shmid]->getMasterMem();
   return sm->rwreq.req_type;
 }
 
 uint64_t get_req_addr(uint64_t shmid) {
-  auto *sm = shms[shmid]->getMem();
+  auto *sm = shms[shmid]->getMasterMem();
   return sm->rwreq.address;
 }
 
 uint64_t get_req_size(uint64_t shmid) {
-  auto *sm = shms[shmid]->getMem();
+  auto *sm = shms[shmid]->getMasterMem();
   return sm->rwreq.size;
 }
 
 void set_data(uint64_t shmid, uint64_t data) {
-  auto *sm = shms[shmid]->getMem();
+  auto *sm = shms[shmid]->getMasterMem();
   // printf("%s:%d 0x%lx\n", __FILE__,__LINE__,data);
   *((uint64_t *)(sm->data)) = data;
 }
 
 void do_respond(uint64_t shmid) {
-  auto *sm = shms[shmid]->getMem();
+  auto *sm = shms[shmid]->getMasterMem();
   // reset the flag
   sm->type = 0;
   if (sem_post(&sm->semr) == -1)
     unreachable("error post semr");
+}
+
+// get number of device memory chunks
+int get_devmem_cnt(uint64_t shmid) { return shms[shmid]->getDevmemCnt(); }
+
+// get pointer to the device memory
+uint8_t *get_devmem(uint64_t shmid, int devmid) {
+  return shms[shmid]->getDevmem(devmid);
+}
+
+// get the device memory size in byte
+int get_devmem_size(uint64_t shmid, int devmid) {
+  return shms[shmid]->getDevmemSize(devmid);
 }
 
 void launch_qemu(uint64_t shmid) {

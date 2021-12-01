@@ -408,3 +408,11 @@ HWModel *init_hw_instance(const char *name) {
 }
 
 HWModel *get_hw_instance() { return instance; }
+
+///
+/// expose device memory through shared memory /dev/shm/
+/// name - is prefix
+///
+void hw_instance_export_devmem(const std::string &prefix) {
+  instance->swithToSHM(prefix);
+}

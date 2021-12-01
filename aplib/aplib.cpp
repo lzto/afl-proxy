@@ -141,8 +141,16 @@ void ap_init(void) {
     EnvKnob knob4("USE_DMA");
     use_dma = knob4.isSet();
 
-    EnvKnob knob5("AP_DISABLED");
-    if (knob5.isPresented() && knob5.isSet())
+    // export device memory through shared memory
+    EnvKnob knob5("EXPORT_DEVMEM");
+    if (knob5.isPresented() && knob5.isSet()) {
+      string shmname = "/afl-proxy-";
+      shmname += string(getenv("SFP_SHMID"));
+      hw_instance_export_devmem(shmname);
+    }
+
+    EnvKnob knob6("AP_DISABLED");
+    if (knob6.isPresented() && knob6.isSet())
       return;
     isEnabled = true;
   }
@@ -161,10 +169,10 @@ int ap_fetch_fuzz_data_rand(char *dest, uint64_t addr, size_t size) {
   return size;
 }
 
-int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size) {
+int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size, int bar) {
   static int counter;
   // for probing
-  if (get_hw_instance()->read(dest, addr, size))
+  if (get_hw_instance()->read(dest, addr, size, bar))
     goto end;
 
   if (!sm)
@@ -191,7 +199,7 @@ end:
   return size;
 }
 
-void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size) {
+void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size, int bar) {
   if (IS_DUMP_W)
     INFO("write " << size << " byte @ addr " << hexval(addr) << "="
                   << hexval(data));
@@ -218,7 +226,7 @@ void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size) {
   }
 
   // for probing
-  get_hw_instance()->write(data, addr, size);
+  get_hw_instance()->write(data, addr, size, bar);
 
   if (!sm)
     return;

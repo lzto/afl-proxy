@@ -6,6 +6,7 @@
 #ifndef _HW_MODEL_H_
 #define _HW_MODEL_H_
 
+#include "shm.h"
 #include <assert.h>
 #include <cstdint>
 #include <iostream>
@@ -22,10 +23,15 @@ using namespace std;
 class Bar {
 public:
   Bar(int barType = PCI_BAR_TYPE_MMIO, int barIdx = 0, int barSize = 4096)
-      : barType(barType), barIdx(barIdx), barSize(barSize) {
+      : barType(barType), barIdx(barIdx), barSize(barSize), shm(nullptr) {
     data = (uint8_t *)malloc(barSize);
   }
-  ~Bar() { free(data); }
+  ~Bar() {
+    if (shm)
+      delete shm;
+    else
+      free(data);
+  }
   uint8_t &operator[](std::size_t idx) {
     assert(idx < barSize);
     return data[idx];
@@ -34,6 +40,42 @@ public:
     assert(idx < barSize);
     return data[idx];
   }
+  // expose this bar through shared memory,
+  // name - set the prefix
+  void swithToSHM(const string &name) {
+    string realName = name;
+    realName += "-bar-";
+    realName += to_string(barIdx);
+    shm = new SHM<uint8_t>(realName);
+    assert(shm);
+    assert(shm->open(SHMOpenType::CREATE, barSize));
+    free(data);
+    data = shm->getMem();
+  }
+
+  // getter/setter
+  uint8_t get1B(int addr) { return data[addr]; }
+  uint16_t get2B(int addr) { return *((uint16_t *)&data[addr]); }
+  uint32_t get4B(int addr) { return *((uint32_t *)&data[addr]); }
+  uint64_t get8B(int addr) { return *((uint64_t *)&data[addr]); }
+  void set1B(int addr, uint8_t d) { data[addr] = d; }
+  void set2B(int addr, uint16_t d) { *((uint16_t *)&data[addr]) = d; }
+  void set4B(int addr, uint32_t d) { *((uint32_t *)&data[addr]) = d; }
+  void set8B(int addr, uint64_t d) { *((uint64_t *)&data[addr]) = d; }
+
+  //
+  int read(uint8_t *dest, uint64_t addr, size_t size) {
+    for (int i = 0; i < size; i++)
+      dest[i] = data[addr + i];
+    return size;
+  }
+
+  void write(uint64_t d, uint64_t addr, size_t size) {
+    uint8_t *p = (uint8_t *)&d;
+    for (int i = 0; i < size; i++)
+      data[addr + i] = p[i];
+  }
+
   void setType(int t) { barType = t; };
   int getType() { return barType; };
   void setIdx(int i) { barIdx = i; };
@@ -51,6 +93,7 @@ private:
   int barSize;
   // where we store data
   uint8_t *data;
+  SHM<uint8_t> *shm;
 };
 
 class HWModel {
@@ -72,8 +115,24 @@ public:
     }
   };
 
+  // expose bar through shared memory
+  // name - set the prefix
+  void swithToSHM(const string &name) {
+    for (auto p : bars)
+      p->swithToSHM(name);
+  };
+
+  // rw without knowing the bar
   virtual int read(uint8_t *dest, uint64_t addr, size_t size) = 0;
   virtual void write(uint64_t data, uint64_t addr, size_t size) = 0;
+  // specify the bar -- we ignore them in the base class
+  virtual int read(uint8_t *dest, uint64_t addr, size_t size, int bar) {
+    return read(dest, addr, size);
+  };
+  virtual void write(uint64_t data, uint64_t addr, size_t size, int bar) {
+    write(data, addr, size);
+  }
+
   const string &getName() { return name; };
 
   uint16_t getVid() { return vid; }
@@ -101,8 +160,6 @@ protected:
   const uint16_t revision;
   int pciBarCnt;
   vector<Bar *> bars;
-  int barSize[6];
-  int barType[6];
 
 private:
   const string name;

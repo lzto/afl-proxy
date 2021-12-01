@@ -12,6 +12,7 @@ public:
   }
   virtual ~HWModel_nozomi(){};
   virtual void restart_device() final { probe_len = 0; };
+
   virtual int read(uint8_t *dest, uint64_t addr, size_t size) final {
     if (probe_len > -1)
       return 0;
@@ -19,6 +20,13 @@ public:
     return size;
   };
   virtual void write(uint64_t data, uint64_t addr, size_t size) final{};
+
+  virtual int read(uint8_t *dest, uint64_t addr, size_t size, int bar) {
+    return read(dest, addr, size);
+  };
+  virtual void write(uint64_t data, uint64_t addr, size_t size, int bar) {
+    write(data, addr, size);
+  }
 
 private:
   int probe_len;

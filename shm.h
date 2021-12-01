@@ -16,17 +16,18 @@
 enum class SHMOpenType { CREATE, CONNECT };
 template <typename T> class SHM {
 public:
-  SHM(const std::string shmPath) : shmPath(shmPath), fd(0), smem(nullptr) {}
+  SHM(const std::string shmPath)
+      : shmPath(shmPath), fd(0), smem(nullptr), mappedSize(0) {}
   ~SHM() { close(); };
 
   bool isOpen() { return fd > 0; }
-  bool open(SHMOpenType t) {
+  bool open(SHMOpenType t, size_t size = 0) {
     mode = t;
     switch (t) {
     case (SHMOpenType::CREATE):
-      return createOpen();
+      return createOpen(size);
     case (SHMOpenType::CONNECT):
-      return connectOpen();
+      return connectOpen(size);
     default:
       return false;
     }
@@ -34,7 +35,7 @@ public:
 
   void close() {
     if (smem)
-      munmap(smem, sizeof(T));
+      munmap(smem, mappedSize);
     smem = nullptr;
     if (fd > 0)
       ::close(fd);
@@ -48,20 +49,31 @@ public:
 
   T *getMem() { return (T *)smem; }
 
+  auto getSize() { return mappedSize; }
+
 private:
   const std::string shmPath;
   int fd;
   void *smem;
   SHMOpenType mode;
+  size_t mappedSize;
 
-  bool createOpen() {
+  size_t detectSize(int fd) {
+    struct stat buf;
+    fstat(fd, &buf);
+    return (size_t)buf.st_size;
+  }
+
+  bool createOpen(size_t s = 0) {
     auto path = shmPath + ".temp";
     fd = shm_open(path.c_str(), O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR);
     if (fd < 0) {
       // WARN("cannot open shm " << path);
       return false;
     }
-    constexpr size_t size = sizeof(T);
+    size_t size = sizeof(T);
+    if (s != 0)
+      size = s;
     if (ftruncate(fd, size) < 0) {
       // WARN("ftruncate failed!");
       close();
@@ -77,17 +89,24 @@ private:
     auto from = "/dev/shm/" + path;
     auto to = "/dev/shm/" + shmPath;
     rename(from.c_str(), to.c_str());
+    mappedSize = size;
     return true;
   }
-  bool connectOpen() {
+  bool connectOpen(size_t s = 0) {
     fd = shm_open(shmPath.c_str(), O_RDWR, S_IRUSR | S_IWUSR);
     if (fd < 0) {
       // WARN("cannot open shm " << shmPath<<" error "<<errno);
       return false;
     }
+    size_t size = s;
+    if (s == 0) {
+      // size = sizeof(T);
+      auto detected_size = detectSize(fd);
+      size = detected_size;
+    }
     // INFO("shm_fd = "<<fd);
-    smem = (uint8_t *)mmap(nullptr, sizeof(T), PROT_READ | PROT_WRITE,
-                           MAP_SHARED, fd, 0);
+    smem = (uint8_t *)mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED,
+                           fd, 0);
 
     if (smem == MAP_FAILED) {
       // WARN("cannot mmap shm " << shmPath);
@@ -95,6 +114,7 @@ private:
       close();
       return false;
     }
+    mappedSize = size;
     return true;
   }
 };

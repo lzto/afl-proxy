@@ -9,12 +9,7 @@ class HWModel_sundance : public HWModel {
 public:
   HWModel_sundance()
       : HWModel("sundance", 0x1186, 0x1002, 0x1186, 0x1002), probe_len(0) {
-    setupBar({{PCI_BAR_TYPE_PIO, 4 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024}});
+    setupBar({{PCI_BAR_TYPE_PIO, 0x80}});
   }
   virtual ~HWModel_sundance(){};
   virtual void restart_device() final { probe_len = 0; };
@@ -11939,6 +11934,16 @@ public:
     return size;
   };
   virtual void write(uint64_t data, uint64_t addr, size_t size) final{};
+
+  virtual int read(uint8_t *dest, uint64_t addr, size_t size, int bar) {
+    if (read(dest, addr, size))
+      return size;
+    bars[bar]->read(dest, addr, size);
+    return size;
+  };
+  virtual void write(uint64_t data, uint64_t addr, size_t size, int bar) {
+    bars[bar]->write(data, addr, size);
+  }
 
 private:
   int probe_len;
