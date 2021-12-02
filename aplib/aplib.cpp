@@ -180,7 +180,7 @@ int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size, int bar) {
   if (ap_get_fuzz_file()[0] == 0) {
     // read data using IPC
     shm_ipc_read_data(dest, addr, size);
-    return size;
+    goto end;
   }
   counter++;
   if (counter % 100 == 0)
@@ -194,15 +194,15 @@ int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size, int bar) {
   memcpy(dest, fuzzdata + addr, size);
 end:
   if (IS_DUMP_R)
-    INFO("read " << size << " byte @ " << hexval(addr) << "="
+    INFO("read " << size << " byte, bar " << bar << " @ " << hexval(addr) << "="
                  << hexval(*(uint64_t *)(dest)));
   return size;
 }
 
 void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size, int bar) {
   if (IS_DUMP_W)
-    INFO("write " << size << " byte @ addr " << hexval(addr) << "="
-                  << hexval(data));
+    INFO("write " << size << " byte, bar " << bar << " @ addr " << hexval(addr)
+                  << "=" << hexval(data));
   // DMA address detection
   if ((use_dma) && (size == 4)) {
     // check if this looks like a DMA address

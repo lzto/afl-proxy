@@ -11,6 +11,8 @@ import multiprocessing as mp
 import pickle
 
 pyaplib = ctypes.cdll.LoadLibrary('pylib/build/pyaplib.so')
+pyaplib.get_devmem_size.restype = ctypes.c_int
+pyaplib.get_devmem.restype = ctypes.c_char_p
 
 #import visualize
 
@@ -95,10 +97,12 @@ def eval_genomes(genomes, config):
                     devmcnt = pyaplib.get_devmem_cnt(0)
                     for dmi in range(devmcnt):
                         devmsize = pyaplib.get_devmem_size(0, dmi)
-                        c8_devm = pyaplib.get_devmem(0, dmi)
-                        devm = c8_devm[:devmsize]
+                        c8_devm = ctypes.cast(pyaplib.get_devmem(0, dmi), ctypes.POINTER(ctypes.c_char))
+                        devm = [ c8_devm[i] for i in range(devmsize) ]
+                        print(devm)
                         # now append to the network_input
-                        network_input = network_input + devm
+                        network_input = network_input + tuple(devm)
+                    print(network_input)
                     output = net.activate(network_input)
                     #print(output)
                     dev_data = 0
@@ -112,7 +116,7 @@ def eval_genomes(genomes, config):
                 pyaplib.do_respond(0)
             # do a 10 sec test
             etime = time.time()
-            if (int(etime - stime)>10):
+            if (int(etime - stime)>30):
                 break
         genome.fitness = cnt/100
         print('Fitness:{}'.format(genome.fitness))

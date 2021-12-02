@@ -6,6 +6,7 @@
 #ifndef _HW_MODEL_H_
 #define _HW_MODEL_H_
 
+#include "EnvKnob.h"
 #include "shm.h"
 #include <assert.h>
 #include <cstdint>
@@ -74,6 +75,9 @@ public:
     uint8_t *p = (uint8_t *)&d;
     for (int i = 0; i < size; i++)
       data[addr + i] = p[i];
+    // need to flush to mem so that other process can see it
+    if (shm)
+      __sync_synchronize();
   }
 
   void setType(int t) { barType = t; };
@@ -102,7 +106,11 @@ public:
           uint16_t subpid = 0, uint32_t devclass = 0xff0000,
           uint16_t revision = 2)
       : vid(vid), pid(pid), subvid(subvid), subpid(subpid), devclass(devclass),
-        revision(revision), name(name){};
+        revision(revision), name(name), redirectR(true) {
+    EnvKnob knob("NO_REDIRECT_READ");
+    if (knob.isPresented() && knob.isSet())
+      redirectR = false;
+  };
   virtual ~HWModel(){};
   virtual void restart_device() = 0;
 
@@ -123,14 +131,23 @@ public:
   };
 
   // rw without knowing the bar
+  // TODO: need to separate this into probe_read probe_write
   virtual int read(uint8_t *dest, uint64_t addr, size_t size) = 0;
   virtual void write(uint64_t data, uint64_t addr, size_t size) = 0;
   // specify the bar -- we ignore them in the base class
   virtual int read(uint8_t *dest, uint64_t addr, size_t size, int bar) {
-    return read(dest, addr, size);
+    // for probing, we call those without bar
+    int ret = read(dest, addr, size);
+    if (ret)
+      return ret;
+    // this is handled by aplib.cpp
+    if (redirectR)
+      return 0;
+    // otherwise fallback to reading out device mem(bar)
+    return bars[bar]->read(dest, addr, size);
   };
   virtual void write(uint64_t data, uint64_t addr, size_t size, int bar) {
-    write(data, addr, size);
+    bars[bar]->write(data, addr, size);
   }
 
   const string &getName() { return name; };
@@ -163,6 +180,8 @@ protected:
 
 private:
   const string name;
+  // redirect read to counter part once probe is done
+  bool redirectR;
 };
 
 #endif

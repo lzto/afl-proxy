@@ -2,8 +2,11 @@
 /// handle environment knobs
 /// 2021 Tong Zhang <ztong0001@gmail.com>
 ///
-
+#ifndef _ENV_KNOB_
+#define _ENV_KNOB_
+#include <assert.h>
 #include <stdlib.h>
+#include <string>
 
 class EnvKnob {
 public:
@@ -34,3 +37,4 @@ private:
   const std::string name;
   std::string value;
 };
+#endif

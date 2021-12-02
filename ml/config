@@ -37,7 +37,7 @@ enabled_default         = True
 enabled_mutate_rate     = 0.01
 
 feed_forward            = True
-initial_connection      = full_direct
+initial_connection      = unconnected
 
 # node add/remove rates
 node_add_prob           = 0.25
@@ -46,7 +46,7 @@ node_delete_prob        = 0.1
 # network parameters
 num_hidden              = 1000
 # 1 for addr, 1 for size, 1 for timer, 128 for bar(8192B), 
-num_inputs              = 130
+num_inputs              = 8194
 # 64bit - data, 1 bit for trigger interrupt
 num_outputs             = 65
 

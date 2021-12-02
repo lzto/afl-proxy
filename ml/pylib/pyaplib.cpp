@@ -41,7 +41,7 @@ static mutex shmslock;
 
 class DeviceShmPack {
 public:
-  DeviceShmPack() : master(nullptr){};
+  DeviceShmPack() : master(nullptr), devmemAcquired(false){};
   ~DeviceShmPack() {
     for (auto p : devmemShms)
       delete p;
@@ -58,12 +58,17 @@ public:
   void setMaster(SHM<struct XXX> *m) { master = m; };
   auto *getMaster() { return master; };
   auto *getMasterMem() { return master->getMem(); };
+  ///
+  void setDevmAcquired(bool d) { devmemAcquired = d; };
+  bool getDevmAcquired() { return devmemAcquired; };
 
 private:
   SHM<struct XXX> *master;
   // we expect qemu to expose device memory through shared memory so that we can
   // use them here
   vector<SHM<uint8_t> *> devmemShms;
+  // meaning that we have got the devmem
+  bool devmemAcquired;
 };
 
 // shm id, SHM object,
@@ -80,16 +85,6 @@ void init(uint64_t shmid) {
     shms[shmid] = dsp;
     // initialize master
     dsp->setMaster(new SHM<struct XXX>(shmname));
-    // scan devmem -- current support bar mem detection - 6 max
-    for (int i = 0; i < 6; i++) {
-      string dspName = shmname;
-      dspName += "-bar-" + to_string(i);
-      auto *dspShm = new SHM<uint8_t>(dspName);
-      if (dspShm->open(SHMOpenType::CONNECT))
-        dsp->pushDevmem(dspShm);
-      else
-        delete dspShm;
-    }
   }
   auto *shm = shms[shmid]->getMaster();
   if (shm->open(SHMOpenType::CREATE)) {
@@ -116,6 +111,25 @@ void uninit(uint64_t shmid) {
   shmname += to_string(shmid);
   shm_unlink(shmname.c_str());
   shmslock.unlock();
+}
+
+void scan_devmem(uint64_t shmid) {
+  auto *dsp = shms[shmid];
+  if (dsp->getDevmAcquired())
+    return;
+  string shmname("/afl-proxy-");
+  shmname += to_string(shmid);
+  // scan devmem -- current support bar mem detection - 6 max
+  for (int i = 0; i < 6; i++) {
+    string dspName = shmname;
+    dspName += "-bar-" + to_string(i);
+    auto *dspShm = new SHM<uint8_t>(dspName);
+    if (dspShm->open(SHMOpenType::CONNECT))
+      dsp->pushDevmem(dspShm);
+    else
+      delete dspShm;
+  }
+  dsp->setDevmAcquired(true);
 }
 
 void check_new_request(uint64_t shmid) {
@@ -159,7 +173,10 @@ void do_respond(uint64_t shmid) {
 }
 
 // get number of device memory chunks
-int get_devmem_cnt(uint64_t shmid) { return shms[shmid]->getDevmemCnt(); }
+int get_devmem_cnt(uint64_t shmid) {
+  scan_devmem(shmid);
+  return shms[shmid]->getDevmemCnt();
+}
 
 // get pointer to the device memory
 uint8_t *get_devmem(uint64_t shmid, int devmid) {
