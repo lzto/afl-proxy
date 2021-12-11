@@ -9,11 +9,9 @@ class HWModel_pc300too : public HWModel {
 public:
   HWModel_pc300too() : HWModel("pc300too", 0x120e, 0x0301), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 0x80},
+              {PCI_BAR_TYPE_MMIO, 0x8},
               {PCI_BAR_TYPE_MMIO, 0x400},
-              {PCI_BAR_TYPE_MMIO, 0x400},
-              {PCI_BAR_TYPE_MMIO, 0x8000},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024}});
+              {PCI_BAR_TYPE_MMIO, 0x8000}});
   }
   virtual ~HWModel_pc300too(){};
   virtual void restart_device() final { probe_len = 0; };

@@ -8,12 +8,7 @@
 class HWModel_netjet : public HWModel {
 public:
   HWModel_netjet() : HWModel("netjet", 0xe159, 0x0001), probe_len(0) {
-    setupBar({{PCI_BAR_TYPE_PIO, 4 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024}});
+    setupBar({{PCI_BAR_TYPE_PIO, 4 * 1024}});
   }
   virtual ~HWModel_netjet(){};
   virtual void restart_device() final { probe_len = 0; };

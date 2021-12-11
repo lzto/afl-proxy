@@ -22,7 +22,8 @@
 
 #define unreachable(XXX)                                                       \
   {                                                                            \
-    errs() << ANSI_COLOR_RED << XXX << ANSI_COLOR_RESET << "\n";               \
+    errs() << ANSI_COLOR_RED << __FILE__ << ":" << __LINE__ << " " << XXX      \
+           << ANSI_COLOR_RESET << "\n";                                        \
     throw;                                                                     \
   }
 

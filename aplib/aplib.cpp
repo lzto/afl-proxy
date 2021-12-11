@@ -102,10 +102,11 @@ again:
 
 thread *trigger_irq_thread;
 void ti_worker() {
-  sleep(10);
+  sleep(3);
   while (1) {
-    sleep(10);
+    //INFO("Inject IRQ");
     ap_trigger_irq();
+    sleep(1);
   }
 }
 
