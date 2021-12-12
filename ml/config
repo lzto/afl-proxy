@@ -1,7 +1,7 @@
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = 400
-pop_size              = 160
+fitness_threshold     = 10
+pop_size              = 64
 reset_on_extinction   = False
 
 [DefaultGenome]
@@ -37,16 +37,17 @@ enabled_default         = True
 enabled_mutate_rate     = 0.01
 
 feed_forward            = True
-initial_connection      = unconnected
+#initial_connection      = unconnected
+initial_connection      = full_direct
 
 # node add/remove rates
 node_add_prob           = 0.25
 node_delete_prob        = 0.1
 
 # network parameters
-num_hidden              = 1000
-# 1 for addr, 1 for size, 1 for timer, 128 for bar(8192B), 
-num_inputs              = 8194
+num_hidden              = 10
+# 1 for addr, 1 for size, 1 for timer(count), 1 for constant, 2048 for bar(8192B)
+num_inputs              = 1028
 # 64bit - data, 1 bit for trigger interrupt
 num_outputs             = 65
 
