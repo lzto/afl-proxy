@@ -8,12 +8,10 @@
 class HWModel_s2io : public HWModel {
 public:
   HWModel_s2io() : HWModel("s2io", 0x17d5, 0x5731), probe_len(0) {
-    setupBar({{PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024}});
+    setupBar({{PCI_BAR_TYPE_MMIO, 0x4000},
+              {PCI_BAR_TYPE_PIO, 8},
+              {PCI_BAR_TYPE_MMIO, 4096}});
+    //              {PCI_BAR_TYPE_MMIO, 0x100000}});
   }
   virtual ~HWModel_s2io(){};
   virtual void restart_device() final { probe_len = 0; };

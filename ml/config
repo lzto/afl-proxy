@@ -1,6 +1,6 @@
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = 10
+fitness_threshold     = 200
 pop_size              = 64
 reset_on_extinction   = False
 
@@ -45,9 +45,9 @@ node_add_prob           = 0.25
 node_delete_prob        = 0.1
 
 # network parameters
-num_hidden              = 10
+num_hidden              = 100
 # 1 for addr, 1 for size, 1 for timer(count), 1 for constant, 2048 for bar(8192B)
-num_inputs              = 1028
+num_inputs              = 2565
 # 64bit - data, 1 bit for trigger interrupt
 num_outputs             = 65
 

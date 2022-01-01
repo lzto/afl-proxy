@@ -104,7 +104,7 @@ thread *trigger_irq_thread;
 void ti_worker() {
   sleep(3);
   while (1) {
-    //INFO("Inject IRQ");
+    // INFO("Inject IRQ");
     ap_trigger_irq();
     sleep(1);
   }
@@ -398,7 +398,7 @@ void shm_ipc_read_data(uint8_t *dest, uint64_t addr, size_t size) {
   sm->rwreq.address = addr;
   sm->rwreq.size = size;
   if (sem_post(&sm->semw) == -1) {
-    unreachable("error post semr");
+    unreachable("error post semw");
   }
   if (sem_wait(&sm->semr) == -1) {
     unreachable("error wait semr");

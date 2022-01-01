@@ -136,10 +136,12 @@ void check_new_request(uint64_t shmid) {
   auto *sm = shms[shmid]->getMasterMem();
   if (sem_wait(&sm->semw) == -1)
     unreachable("error wait semw");
+  // printf("Checked request for shmid %lu\n", shmid);
 }
 
 uint8_t get_msg_type(uint64_t shmid) {
   auto *sm = shms[shmid]->getMasterMem();
+  __sync_synchronize();
   return sm->type;
 }
 
@@ -170,6 +172,7 @@ void do_respond(uint64_t shmid) {
   sm->type = 0;
   if (sem_post(&sm->semr) == -1)
     unreachable("error post semr");
+  // printf("Respond for shmid %lu\n", shmid);
 }
 
 // get number of device memory chunks

@@ -20,13 +20,18 @@ pyaplib.get_req_size.results = ctypes.c_int
 
 #import visualize
 
-qemutimeout = 30
+qemutimeout = 20
 
 def get_fitness(shmid):
     fname = "/home/tong/qemu-afl-image/vm-testing-"+str(shmid)+".log"
-    keyword="nozomi"
+    ret = 0
+    keyword="wrong"
     with open(fname, 'r') as fin:
-        return -sum([1 for line in fin if keyword in line])
+        ret += sum([1 for line in fin if keyword in line])
+    keyword="fail"
+    with open(fname, 'r') as fin:
+        ret += sum([1 for line in fin if keyword in line])
+    return (50-ret)/100;
 
 # 3 input: addr, size, total count
 # 65 output: 64bit data + interrupt trigger
@@ -47,10 +52,11 @@ def eval_single_genome(genome_id, genome, config, out):
                 # read addr and size from shm
                 addr = int(pyaplib.get_req_addr(genome_id))
                 size = int(pyaplib.get_req_size(genome_id))
-                network_input = (addr, size)
+                magic_value = int(0xEFEFFEFE)
+                network_input = (addr, size, cnt, magic_value)
                 devmcnt = pyaplib.get_devmem_cnt(genome_id)
                 for dmi in range(devmcnt):
-                    devmsize = pyaplib.get_devmem_size(genome_id, dmi)
+                    devmsize = int( pyaplib.get_devmem_size(genome_id, dmi) / 8)
                     c8_devm = ctypes.cast(pyaplib.get_devmem(genome_id, dmi), ctypes.POINTER(ctypes.c_char))
                     devm=()
                     for i in range(devmsize):
@@ -74,7 +80,7 @@ def eval_single_genome(genome_id, genome, config, out):
         etime = time.time()
         if (int(etime - stime)>qemutimeout):
             break
-    fitness = get_fitness(genome_id)
+    fitness = get_fitness(genome_id) + cnt / 10.0
     out.put(fitness)
     #genome.fitness = fitness
     print('Fitness gen {0}={1} RCNT:{2}'.format(genome_id, fitness, cnt))
@@ -115,10 +121,11 @@ def eval_genomes(genomes, config):
                     # read addr and size from shm
                     addr = pyaplib.get_req_addr(0)
                     size = pyaplib.get_req_size(0)
-                    network_input = (addr, size)
+                    magic_value = int(0xEFEFFEFE)
+                    network_input = (addr, size, cnt, magic_value)
                     devmcnt = pyaplib.get_devmem_cnt(0)
                     for dmi in range(devmcnt):
-                        devmsize = pyaplib.get_devmem_size(0, dmi)
+                        devmsize = int(pyaplib.get_devmem_size(0, dmi) / 8)
                         c8_devm = ctypes.cast(pyaplib.get_devmem(0, dmi), ctypes.POINTER(ctypes.c_char))
                         devm=()
                         for i in range(devmsize):
