@@ -38,6 +38,9 @@ def get_fitness(shmid):
     keyword="wrong"
     with open(fname, 'r') as fin:
         wrong = sum([1 for line in fin if keyword in line])
+    keyword="RIP"
+    with open(fname, 'r') as fin:
+        critical += sum([1 for line in fin if keyword in line])
     keyword="BUG"
     with open(fname, 'r') as fin:
         critical += sum([1 for line in fin if keyword in line])
@@ -94,11 +97,7 @@ def eval_single_genome(genome_id, genome, config, out):
                 #print(network_input)
                 output = net.activate(network_input)
                 #print(output)
-                dev_data = 0
-                for x in range(64):
-                    dev_data = dev_data<<1
-                    if (output[x]>0.5):
-                        dev_data = dev_data + 1;
+                dev_data = int(output[0])
                 #print("dev_data:{}".format(dev_data))
                 pyaplib.set_data(genome_id, dev_data)
             cnt = cnt+1
@@ -163,15 +162,11 @@ def eval_genomes(genomes, config):
                         network_input = network_input + devm
                     #print(network_input)
                     output = net.activate(network_input)
-                    print(output)
-                    dev_data = 0
-                    for x in range(64):
-                        dev_data = dev_data<<1
-                        if (output[x]>0.5):
-                            dev_data = dev_data + 1;
+                    #print(output)
+                    dev_data = int(output[0])
                     #print("dev_data:{}".format(dev_data))
                     pyaplib.set_data(0,dev_data)
-                    print('Read {0} Byte @ {1} = {2}'.format(hex(addr), size, hex(dev_data)))
+                    #print('Read {0} Byte @ {1} = {2}'.format(hex(addr), size, hex(dev_data)))
                 cnt = cnt+1
                 pyaplib.do_respond(0)
             # do a 10 sec test
@@ -205,8 +200,8 @@ def run(config_file):
     p.add_reporter(neat.Checkpointer(1))
 
     # Run for up to 300 generations.
-    winner = p.run(eval_genomes, 1)
-    #winner = p.run(eval_genomes_parallel, 300)
+    #winner = p.run(eval_genomes, 1)
+    winner = p.run(eval_genomes_parallel, 300)
     win = p.best_genome
     pickle.dump(winner, open('winner.pkl', 'wb'))
     pickle.dump(win, open('real_winner.pkl', 'wb'))

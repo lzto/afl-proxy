@@ -25,7 +25,7 @@ class Bar {
 public:
   Bar(int barType = PCI_BAR_TYPE_MMIO, int barIdx = 0, int barSize = 4096)
       : barType(barType), barIdx(barIdx), barSize(barSize), shm(nullptr) {
-    data = (uint8_t *)malloc(barSize);
+    data = (uint8_t *)calloc(barSize, sizeof(uint8_t));
   }
   ~Bar() {
     if (shm)

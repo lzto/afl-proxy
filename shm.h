@@ -86,6 +86,7 @@ private:
       close();
       return false;
     }
+    memset(smem, 0, size);
     auto from = "/dev/shm/" + path;
     auto to = "/dev/shm/" + shmPath;
     rename(from.c_str(), to.c_str());
