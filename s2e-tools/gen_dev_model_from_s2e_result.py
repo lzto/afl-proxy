@@ -1,21 +1,37 @@
 #!/usr/bin/python3
-
+# 2021-2022 Tong Zhang <ztong0001@gmail.com>
+# generate device model stub from s2e result
+# to use this tool, look at the stdout.txt and cut lines after
+#    PeX: Generate Test Case
+# into result.txt
+# also remove NNN [State XXX] before the line, only leave lines with the following format
+#    PeX: v34_pex_symdev_bar_0_mmio___0x910_size_8_pc_0xffffffffa053c6fd_130
+#    PeX: 0xef
+#    PeX: 0xcd
+#    PeX: 0xab
+#    PeX: 0x89
+#    PeX: 0x67
+#    PeX: 0x45
+#    PeX: 0x23
+#    PeX: 0x1
 import re
 
 def generate_code_block(addr, values):
-    print("case(",addr,"):{\\")
-    print("static int cnt;\\")
+    print("case(",addr,"):{")
+    print("static int cnt;")
     cnt = 0
     for v in values:
         size, value = v
         if size==1:
-            print("if (cnt==",cnt,") *((uint8_t *)dest) =", hex(value), ";\\")
+            print("if (cnt==",cnt,") *((uint8_t *)dest) =", hex(value), ";")
         if size==2:
-            print("if (cnt==",cnt,") *((uint16_t *)dest) =", hex(value), ";\\")
+            print("if (cnt==",cnt,") *((uint16_t *)dest) =", hex(value), ";")
         if size==4:
-            print("if (cnt==",cnt,") *((uint32_t *)dest) =", hex(value), ";\\")
+            print("if (cnt==",cnt,") *((uint32_t *)dest) =", hex(value), ";")
+        if size==8:
+            print("if (cnt==",cnt,") *((uint64_t *)dest) =", hex(value), ";")
         cnt = cnt+1
-    print("cnt++; break;}\\")
+    print("cnt++; break;}")
 
 # Using readlines()
 file1 = open('result.txt', 'r')

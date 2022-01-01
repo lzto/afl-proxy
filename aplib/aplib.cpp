@@ -202,7 +202,7 @@ end:
 
 void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size, int bar) {
   if (IS_DUMP_W)
-    INFO("write " << size << " byte, bar " << bar << " @ addr " << hexval(addr)
+    INFO("write " << size << " byte, bar " << bar << " @ " << hexval(addr)
                   << "=" << hexval(data));
   // DMA address detection
   if ((use_dma) && (size == 4)) {
