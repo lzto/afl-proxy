@@ -110,12 +110,14 @@
 #include "HWModel_mt7615e.h"
 #include "HWModel_mt76x0.h"
 #include "HWModel_mt76x0e.h"
+#include "HWModel_mxser.h"
 #include "HWModel_myrb.h"
 #include "HWModel_ne2k.h"
 #include "HWModel_net2272.h"
 #include "HWModel_netjet.h"
 #include "HWModel_netup_unidvb.h"
 #include "HWModel_nicstar.h"
+#include "HWModel_nosy.h"
 #include "HWModel_nouveau.h"
 #include "HWModel_nozomi.h"
 #include "HWModel_ntb_hw_amd.h"
@@ -337,6 +339,8 @@ void hw_model_internal_init() {
   INSERT_MODEL(nicstar);
   INSERT_MODEL(nouveau);
   INSERT_MODEL(nozomi);
+  INSERT_MODEL(nosy);
+  INSERT_MODEL(mxser);
   INSERT_MODEL(nvidiafb);
   INSERT_MODEL(nvme);
   INSERT_MODEL(pata_pdc202xx_old);
