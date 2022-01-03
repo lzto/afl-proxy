@@ -1,5 +1,5 @@
 """
-device simulation - mxser
+device simulation - nozomi
 """
 
 from __future__ import print_function
@@ -22,79 +22,16 @@ pyaplib.get_req_size.results = ctypes.c_int
 
 qemutimeout = 20
 
-'''
 def get_fitness(shmid):
     fname = "/home/tong/qemu-afl-image/vm-testing-"+str(shmid)+".log"
     ret = 0
-    critical = 0
-    wrong = 0
+    keyword="wrong"
+    with open(fname, 'r') as fin:
+        ret += sum([1 for line in fin if keyword in line])
     keyword="fail"
     with open(fname, 'r') as fin:
         ret += sum([1 for line in fin if keyword in line])
-    keyword="no space"
-    with open(fname, 'r') as fin:
-        ret += sum([1 for line in fin if keyword in line]) * 20
-
-    keyword="wrong"
-    with open(fname, 'r') as fin:
-        wrong = sum([1 for line in fin if keyword in line])
-    keyword="RIP"
-    with open(fname, 'r') as fin:
-        critical += sum([1 for line in fin if keyword in line])
-    keyword="BUG"
-    with open(fname, 'r') as fin:
-        critical += sum([1 for line in fin if keyword in line])
-    keyword="No such device"
-    with open(fname, 'r') as fin:
-        ret += sum([1 for line in fin if keyword in line]) * 30
-    if (critical != 0):
-        return -100000 * critical;
-    if (wrong>3):
-        return -40 * wrong;
-    return (100-ret)/100;
-'''
-def get_fitness(shmid):
-    fname = "/home/tong/qemu-afl-image/vm-testing-"+str(shmid)+".log"
-    ret = 0
-    keyword="Disabling IRQ"
-    with open(fname, 'r') as fin:
-        ret -= sum([1 for line in fin if keyword in line])
-    keyword="output error"
-    with open(fname, 'r') as fin:
-        ret -= sum([1 for line in fin if keyword in line])
-    keyword="mi0"
-    with open(fname, 'r') as fin:
-        ret += sum([1 for line in fin if keyword in line])
-    return ret
-
-
-def get_input(genome_id):
-    network_input = ()
-    devmcnt = pyaplib.get_devmem_cnt(genome_id)
-    for dmi in range(devmcnt):
-        devmsize = int( pyaplib.get_devmem_size(genome_id, dmi) / 8)
-        c8_devm = ctypes.cast(pyaplib.get_devmem(genome_id, dmi), ctypes.POINTER(ctypes.c_char))
-        devm=()
-        for i in range(devmsize):
-            devm = devm + tuple(c8_devm[i])
-        #devm = [ c8_devm[i] for i in range(devmsize) ]
-        #print(devm)
-        # now append to the network_input
-        network_input = network_input + devm
-    return network_input
-
-def get_input_selected(genome_id):
-    network_input = ()
-    devmcnt = pyaplib.get_devmem_cnt(genome_id)
-    c8_devm = ctypes.cast(pyaplib.get_devmem(genome_id, 0), ctypes.POINTER(ctypes.c_char))
-    network_input = network_input + tuple(c8_devm[32]);
-    network_input = network_input + tuple(c8_devm[1061]);
-    network_input = network_input + tuple(c8_devm[1062]);
-    network_input = network_input + tuple(c8_devm[289]);
-    network_input = network_input + tuple(c8_devm[290]);
-    network_input = network_input + tuple(c8_devm[300]);
-    network_input = network_input + tuple(c8_devm[319]);
-    return network_input
+    return (50-ret)/100;
 
 # 3 input: addr, size, total count
 # 65 output: 64bit data + interrupt trigger
@@ -115,13 +52,27 @@ def eval_single_genome(genome_id, genome, config, out):
                 # read addr and size from shm
                 addr = int(pyaplib.get_req_addr(genome_id))
                 size = int(pyaplib.get_req_size(genome_id))
-                network_input = (addr, size, cnt)
-                '''network_input = network_input + get_input_selected(genome_id);'''
-                network_input = network_input + get_input(genome_id);
+                magic_value = int(0xEFEFFEFE)
+                network_input = (addr, size, cnt, magic_value)
+                devmcnt = pyaplib.get_devmem_cnt(genome_id)
+                for dmi in range(devmcnt):
+                    devmsize = int( pyaplib.get_devmem_size(genome_id, dmi) / 8)
+                    c8_devm = ctypes.cast(pyaplib.get_devmem(genome_id, dmi), ctypes.POINTER(ctypes.c_char))
+                    devm=()
+                    for i in range(devmsize):
+                        devm = devm + tuple(c8_devm[i])
+                    #devm = [ c8_devm[i] for i in range(devmsize) ]
+                    #print(devm)
+                    # now append to the network_input
+                    network_input = network_input + devm
                 #print(network_input)
                 output = net.activate(network_input)
                 #print(output)
-                dev_data = int(output[0])
+                dev_data = 0
+                for x in range(64):
+                    dev_data = dev_data<<1
+                    if (output[x]>0.5):
+                        dev_data = dev_data + 1;
                 #print("dev_data:{}".format(dev_data))
                 pyaplib.set_data(genome_id, dev_data)
             cnt = cnt+1
@@ -129,8 +80,7 @@ def eval_single_genome(genome_id, genome, config, out):
         etime = time.time()
         if (int(etime - stime)>qemutimeout):
             break
-    '''fitness = get_fitness(genome_id) + cnt / 100.0'''
-    fitness = get_fitness(genome_id) / cnt * 10000
+    fitness = get_fitness(genome_id) + cnt / 10.0
     out.put(fitness)
     #genome.fitness = fitness
     print('Fitness gen {0}={1} RCNT:{2}'.format(genome_id, fitness, cnt))
@@ -142,7 +92,7 @@ def eval_single_genome(genome_id, genome, config, out):
 
 
 def eval_genomes_parallel(genomes, config):
-    parallel_size = 8
+    parallel_size = 4
     for i in range(0,len(genomes), parallel_size):
         output = mp.Queue()
         
@@ -171,7 +121,7 @@ def eval_genomes(genomes, config):
                     # read addr and size from shm
                     addr = pyaplib.get_req_addr(0)
                     size = pyaplib.get_req_size(0)
-                    magic_value = int(0x0123456789ABCDEF)
+                    magic_value = int(0xEFEFFEFE)
                     network_input = (addr, size, cnt, magic_value)
                     devmcnt = pyaplib.get_devmem_cnt(0)
                     for dmi in range(devmcnt):
@@ -187,10 +137,13 @@ def eval_genomes(genomes, config):
                     #print(network_input)
                     output = net.activate(network_input)
                     #print(output)
-                    dev_data = int(output[0])
+                    dev_data = 0
+                    for x in range(64):
+                        dev_data = dev_data<<1
+                        if (output[x]>0.5):
+                            dev_data = dev_data + 1;
                     #print("dev_data:{}".format(dev_data))
                     pyaplib.set_data(0,dev_data)
-                    print('Read {0} Byte @ {1} = {2}'.format(hex(addr), size, hex(dev_data)))
                 cnt = cnt+1
                 pyaplib.do_respond(0)
             # do a 10 sec test
@@ -212,10 +165,8 @@ def run(config_file):
                          config_file)
 
     # Create the population, which is the top-level object for a NEAT run.
-    p = neat.Population(config)
-
-    # load checkpoint?
-    p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-16")
+    #p = neat.Population(config)
+    p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-0")
 
     # Add a stdout reporter to show progress in the terminal.
     p.add_reporter(neat.StdOutReporter(True))
@@ -224,8 +175,8 @@ def run(config_file):
     p.add_reporter(neat.Checkpointer(1))
 
     # Run for up to 300 generations.
-    #winner = p.run(eval_genomes, 1)
-    winner = p.run(eval_genomes_parallel, 300)
+    #winner = p.run(eval_genomes, 300)
+    winner = p.run(eval_genomes_parallel, 3000)
     win = p.best_genome
     pickle.dump(winner, open('winner.pkl', 'wb'))
     pickle.dump(win, open('real_winner.pkl', 'wb'))
