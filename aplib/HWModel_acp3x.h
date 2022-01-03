@@ -1,5 +1,5 @@
 ///
-/// hardware model for 3c59x
+/// hardware model for acp3x
 /// 2021 Tong Zhang<ztong0001@gmail.com>
 ///
 

@@ -92,6 +92,7 @@
 #include "HWModel_iwlwifi.h"
 #include "HWModel_k10temp.h"
 #include "HWModel_kpc2000.h"
+#include "HWModel_ksz884x.h"
 #include "HWModel_kvaser.h"
 #include "HWModel_kyro.h"
 #include "HWModel_lanai.h"
@@ -318,6 +319,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(ivtv);
   INSERT_MODEL(iwlwifi);
   INSERT_MODEL(kpc2000);
+  INSERT_MODEL(ksz884x);
   INSERT_MODEL(kvaser);
   INSERT_MODEL(lanai);
   INSERT_MODEL(lmc);
