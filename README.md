@@ -70,6 +70,6 @@ APLib Environment Variables
 * **NO_REDIRECT_READ**=0,1: do not redirect read to AP - 0 redirect - 1 direct
 * **SFP_SHMID**=number: add suffix to shm file so that multiple instances can be launched
 * **USE_DMA**=0,1: try to support DMA
-* **USE_IRQ**=0,1: generate interrupt
+* **USE_IRQ**=0,non-zero-value-X: generate interrupt every X milliseconds, 0 to disable, this can be overriden by upper layer device model
 * **WAITGDB**=0,1: stop and waiting for gdb to attach at launch, useful for debugging aplib
 

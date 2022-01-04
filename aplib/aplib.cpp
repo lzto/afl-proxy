@@ -1,6 +1,6 @@
 ///
 /// afl proxy library
-/// 2020-2021 Tong Zhang<ztong0001@gmail.com>
+/// 2020-2022 Tong Zhang<ztong0001@gmail.com>
 ///
 #include "aplib.h"
 #include "shm.h"
@@ -55,7 +55,9 @@ static int dump_rw_addr;
 static int use_dma;
 
 // TODO: need to figure out the address of IRQ register
-static bool use_irq;
+// stores the milliseconds interval between triggering each IRQ,
+// This knob can be overriden by upper-level model
+static int use_irq;
 
 void real_ap_init(void) {
 
@@ -100,13 +102,18 @@ again:
   ap_reattach_pt();
 };
 
+///
+/// Trigger IRQ Thread
+///
 thread *trigger_irq_thread;
 void ti_worker() {
+  // add a little bit delay here since QEMU need some time to fully initialized,
+  // before that sending IRQ does not make sense
   sleep(3);
   while (1) {
     // INFO("Inject IRQ");
     ap_trigger_irq();
-    sleep(1);
+    usleep(use_irq);
   }
 }
 
@@ -131,13 +138,11 @@ void ap_init(void) {
     dump_rw_addr = knob2.getIntValue();
 
     EnvKnob knob3("USE_IRQ");
-    use_irq = knob3.isSet();
     //////////////////////////
-    // test code
-    if (use_irq) {
+    if (knob3.isSet()) {
+      use_irq = knob3.getIntValue();
       trigger_irq_thread = new thread(ti_worker);
     }
-    // test code
     /////////////////////////
     EnvKnob knob4("USE_DMA");
     use_dma = knob4.isSet();
@@ -176,8 +181,11 @@ int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size, int bar) {
   if (get_hw_instance()->read(dest, addr, size, bar))
     goto end;
 
-  if (!sm)
+  if (!sm) {
+    for (int i = 0; i < size; i++)
+      dest[i] = rand();
     goto end;
+  }
   if (ap_get_fuzz_file()[0] == 0) {
     // read data using IPC
     shm_ipc_read_data(dest, addr, size);
@@ -207,10 +215,13 @@ void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size, int bar) {
   // DMA address detection
   if ((use_dma) && (size == 4)) {
     // check if this looks like a DMA address
+    // DMA address must be within system main memory
     uint32_t dma_addr = data & 0xffffffff;
     if (!ap_is_ram(dma_addr)) {
       goto out;
     }
+    // TODO: should also expose DMA region when requested
+
     // apply some more filters here -- they should be in e820 but I don't know
     // why qemu is telling us partial info probably the rest of the table is set
     // by bios
@@ -251,7 +262,10 @@ void ap_log_pc(uint64_t rip) {
   if (!sm)
     return;
   // INFO("ap_log_pc"<<hexval(rip));
+again:
   if (sem_wait(&sm->semr) == -1) {
+    if (errno == EINTR)
+      goto again;
     unreachable("error wait semr");
   }
   sm->type = 0x01;
@@ -269,7 +283,10 @@ void ap_exit(void) {
 
     int sval;
     sem_getvalue(&sm->semr, &sval);
+  again:
     if (sem_wait(&sm->semr) == -1) {
+      if (errno == EINTR)
+        goto again;
       unreachable("error wait semr");
     }
     sm->type = 0xff;
@@ -292,7 +309,11 @@ void ap_attach_pt(void) {
     ap_init();
   if (!sm)
     return;
+again:
   if (sem_wait(&sm->semr) == -1) {
+    if (errno == EINTR)
+      goto again;
+
     unreachable("error wait semr");
   }
   kvm_tid = gettid();
@@ -317,7 +338,10 @@ void ap_reattach_pt(void) {
     return;
   assert(sm);
   // INFO("ap_reattach_pt:" << kvm_tid);
+again:
   if (sem_wait(&sm->semr) == -1) {
+    if (errno == EINTR)
+      goto again;
     unreachable("error wait semr");
   }
   sm->type = 0x02;
@@ -340,10 +364,16 @@ void ap_trigger_irq() {
     /// so we can safely assume we need to write DMA first then do IRQ
     uint8_t *buffer = (uint8_t *)malloc(4096);
     for (auto addr : dma_addrs) {
-      // we dont know the size of the dma region -- assuming 4k
+      // we dont know the size of the dma region
+      // -- assuming 4k since even with IOMMU it won't protect anything less
+      // than 1 page
       for (int i = 0; i < 4096; i++)
         buffer[i] = rand();
+      // should get buffer data from ML model
+      // for (int i = 0; i < 2064; i += 8)
+      //  shm_ipc_read_data(&buffer[i], 0xff0000 * cnt + i, 8);
       INFO("DMA to " << hexval(addr));
+      // write back to QEMU
       cpu_physical_memory_rw(addr, buffer, 4096, true);
     }
     free(buffer);
@@ -390,7 +420,10 @@ void *ap_get_usb_desc(void) { return nullptr; }
 
 // shared memory IPC stuff
 void shm_ipc_read_data(uint8_t *dest, uint64_t addr, size_t size) {
+again0:
   if (sem_wait(&sm->semr) == -1) {
+    if (errno == EINTR)
+      goto again0;
     unreachable("error wait semr");
   }
   sm->type = 0x03;
@@ -400,7 +433,11 @@ void shm_ipc_read_data(uint8_t *dest, uint64_t addr, size_t size) {
   if (sem_post(&sm->semw) == -1) {
     unreachable("error post semw");
   }
+again1:
   if (sem_wait(&sm->semr) == -1) {
+    // Interrupted System Calls
+    if (errno == EINTR)
+      goto again1;
     unreachable("error wait semr");
   }
   memcpy(dest, sm->data, size);
@@ -410,7 +447,10 @@ void shm_ipc_read_data(uint8_t *dest, uint64_t addr, size_t size) {
 }
 
 void shm_ipc_write_data(uint64_t data, uint64_t addr, size_t size) {
+again1:
   if (sem_wait(&sm->semr) == -1) {
+    if (errno == EINTR)
+      goto again1;
     unreachable("error wait semr");
   }
   sm->type = 0x03;
