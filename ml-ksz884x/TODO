@@ -1,4 +1,0 @@
-add irq trigger api, wire it up to nn-output[64]
-add DMA stuff
-add bar
-

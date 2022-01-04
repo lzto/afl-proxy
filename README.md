@@ -87,4 +87,5 @@ Adjust **ml/config** and fitness function for target driver and run **train.py**
 
 To run the generated model, use **run.py** script.
 
+Some pre-trained device model is located at [sfp-ml-dev-model-db](sfp-ml-dev-model-db)
 
