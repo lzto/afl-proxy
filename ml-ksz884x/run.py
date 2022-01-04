@@ -13,7 +13,7 @@ import multiprocessing as mp
 import pickle
 import re
 
-pyaplib = ctypes.cdll.LoadLibrary('../pylib/build/pyaplib.so')
+pyaplib = ctypes.cdll.LoadLibrary('pylib/build/pyaplib.so')
 pyaplib.get_devmem_size.restype = ctypes.c_int
 pyaplib.get_devmem.restype = ctypes.c_char_p
 pyaplib.get_msg_type.restype = ctypes.c_int

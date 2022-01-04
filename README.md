@@ -66,10 +66,25 @@ APLib Environment Variables
 -----------
 * **AP_DISABLED**=0,1: disable ap proxy - some device probing logic still works but won't connect to ap for fuzzing
 * **AP_DUMP_RW**=0,1,2,3: dump device memory trace, nodump-0/r-1/w-2/rw-3
-* **EXPORT_DEVMEM**=0,1:  export device memory through shared memory (/dev/shm/)
+* **EXPORT_DEVMEM**=0,1:  export device memory(PCI bar e.g.) through shared memory (/dev/shm/)
 * **NO_REDIRECT_READ**=0,1: do not redirect read to AP - 0 redirect - 1 direct
 * **SFP_SHMID**=number: add suffix to shm file so that multiple instances can be launched
 * **USE_DMA**=0,1: try to support DMA
 * **USE_IRQ**=0,non-zero-value-X: generate interrupt every X milliseconds, 0 to disable, this can be overriden by upper layer device model
 * **WAITGDB**=0,1: stop and waiting for gdb to attach at launch, useful for debugging aplib
+
+Device Model Generation Through Machine Learning
+----------
+
+ML related code is in **ml** and **pylib** directory. To use it, first build python library
+
+```
+cd pylib && make
+```
+You will need to change the qemu launch script path in **launch\_qemu** and **kill\_qemu** function.
+
+Adjust **ml/config** and fitness function for target driver and run **train.py** to get the result in **real\_winner.pkl**.
+
+To run the generated model, use **run.py** script.
+
 
