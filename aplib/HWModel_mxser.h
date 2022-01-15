@@ -9,8 +9,8 @@ class HWModel_mxser : public HWModel {
 public:
   HWModel_mxser() : HWModel("mxser", 0x1393, 0x0001), probe_len(0) {
     setupBar({
-        {PCI_BAR_TYPE_MMIO, 0x1},
-        {PCI_BAR_TYPE_MMIO, 0x1},
+        {PCI_BAR_TYPE_MMIO, 0},
+        {PCI_BAR_TYPE_MMIO, 0},
         {PCI_BAR_TYPE_PIO, 0x100},
         {PCI_BAR_TYPE_PIO, 0x20},
     });

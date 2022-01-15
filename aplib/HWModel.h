@@ -21,18 +21,26 @@ using namespace std;
 #define PCI_BAR_TYPE_MMIO 1
 #define PCI_BAR_TYPE_PIO 0
 
+///
+/// generic bar class
+/// non-present bar will have size=0
+///
 class Bar {
 public:
   Bar(int barType = PCI_BAR_TYPE_MMIO, int barIdx = 0, int barSize = 4096)
       : barType(barType), barIdx(barIdx), barSize(barSize), shm(nullptr) {
-    data = (uint8_t *)calloc(barSize, sizeof(uint8_t));
+    if (barSize)
+      data = (uint8_t *)calloc(barSize, sizeof(uint8_t));
+    else
+      data = nullptr;
   }
   ~Bar() {
     if (shm)
       delete shm;
-    else
+    else if (data)
       free(data);
   }
+  bool barPresent() { return !!data; }
   uint8_t &operator[](std::size_t idx) {
     assert(idx < barSize);
     return data[idx];
@@ -44,6 +52,9 @@ public:
   // expose this bar through shared memory,
   // name - set the prefix
   void swithToSHM(const string &name) {
+    // nothing to do if bar is not presented
+    if (!barPresent())
+      return;
     string realName = name;
     realName += "-bar-";
     realName += to_string(barIdx);
@@ -85,9 +96,13 @@ public:
   void setIdx(int i) { barIdx = i; };
   int getIdx() { return barIdx; };
   void setSize(int i) {
-    free(data);
+    if (data) {
+      free(data);
+      data = nullptr;
+    }
     barSize = i;
-    data = (uint8_t *)malloc(i);
+    if (barSize)
+      data = (uint8_t *)calloc(barSize, sizeof(uint8_t));
   };
   int getSize() { return barSize; };
 
@@ -104,9 +119,10 @@ class HWModel {
 public:
   HWModel(const char *name, uint16_t vid, uint16_t pid, uint16_t subvid = 0,
           uint16_t subpid = 0, uint32_t devclass = 0xff0000,
-          uint16_t revision = 2)
+          uint16_t revision = 2, int msixBarIdx = -1)
       : vid(vid), pid(pid), subvid(subvid), subpid(subpid), devclass(devclass),
-        revision(revision), name(name), redirectR(true) {
+        revision(revision), name(name), redirectR(true),
+        msixBarIdx(msixBarIdx) {
     EnvKnob knob("NO_REDIRECT_READ");
     if (knob.isPresented() && knob.isSet())
       redirectR = false;
@@ -122,6 +138,8 @@ public:
       cnt++;
     }
   };
+
+  int getMSIXBarIdx() { return msixBarIdx; }
 
   // expose bar through shared memory
   // name - set the prefix
@@ -176,6 +194,7 @@ protected:
   const uint32_t devclass;
   const uint16_t revision;
   int pciBarCnt;
+  int msixBarIdx;
   vector<Bar *> bars;
 
 private:

@@ -232,7 +232,9 @@ void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size, int bar) {
       INFO(ANSI_COLOR_GREEN << "Detected writing valid physical address "
                             << hexval(dma_addr) << " could be DMA address?"
                             << ANSI_COLOR_RESET);
-      dma_addrs.insert(dma_addr);
+      // use first address as dma address for ksz884x
+      if (dma_addrs.size() < 2)
+        dma_addrs.insert(dma_addr);
     }
   out:;
   }
@@ -405,6 +407,8 @@ int ap_get_pci_bar_type(int idx) {
 int ap_get_pci_bar_size(int idx) {
   return get_hw_instance()->getPCIBarSize(idx);
 }
+
+int ap_get_pci_msix_bar_idx() { return get_hw_instance()->getMSIXBarIdx(); }
 
 const char *ap_get_rom_path() {
 #ifdef DEV_MODEL_EXPANSION_ROM
