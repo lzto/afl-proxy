@@ -20,9 +20,11 @@
 using namespace std;
 
 // TODO: should implement a lock free queue here ...
+// must be in sync with aplib/aplib.h
 struct XXX {
   sem_t semr;
   sem_t semw;
+  sem_t sem_irq;
   char path[128]; // the input data path
   uint8_t type;
   union {
@@ -33,6 +35,8 @@ struct XXX {
       uint64_t size;    // requested size;
     } rwreq; // for requesting data directly from us instead of using file
   };
+  // 0 - irq deasserted, 1 - irq asserted
+  volatile uint8_t irq_assert;
   volatile uint8_t ready;
 };
 
@@ -94,6 +98,8 @@ void init(uint64_t shmid) {
       unreachable("failed to init semaphore r");
     if (sem_init(&(sm->semw), 1, 0) == -1)
       unreachable("failed to init semaphore w");
+    if (sem_init(&(sm->sem_irq), 1, 0) == -1)
+      unreachable("failed to init semaphore irq");
   }
   auto *sm = shm->getMem();
   // set file to be unavailable
@@ -203,5 +209,20 @@ void kill_qemu(uint64_t shmid) {
   cmd += to_string(shmid);
   cmd += " &";
   system(cmd.c_str());
+}
+
+// call those two functions to assert/deassert IRQ line in QEMU
+void assert_irq(uint64_t shmid) {
+  auto *sm = shms[shmid]->getMasterMem();
+  sm->irq_assert = 1;
+  if (sem_post(&sm->sem_irq) == -1)
+    unreachable("error post sem irq");
+}
+
+void deassert_irq(uint64_t shmid) {
+  auto *sm = shms[shmid]->getMasterMem();
+  sm->irq_assert = 0;
+  if (sem_post(&sm->sem_irq) == -1)
+    unreachable("error post sem irq");
 }
 }

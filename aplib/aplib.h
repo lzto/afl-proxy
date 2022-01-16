@@ -14,6 +14,7 @@
 struct XXX {
   sem_t semr;
   sem_t semw;
+  sem_t sem_irq;
   char path[128]; // the input data path
   uint8_t type;
   union {
@@ -24,6 +25,8 @@ struct XXX {
       uint64_t size;    // requested size;
     } rwreq; // for requesting data directly from us instead of using file
   };
+  // 0 - irq deasserted, 1 - irq asserted
+  volatile uint8_t irq_assert;
   volatile uint8_t ready;
 };
 
@@ -40,6 +43,9 @@ void ap_exit(void);
 void ap_attach_pt(void);
 void ap_reattach_pt(void);
 void ap_trigger_irq(void);
+// this is a blocking function, QEMU will call this function to check if it
+// need to assert/de-assert IRQ
+bool ap_check_irq_request(void);
 
 // set system memory map -- called by qemu
 void ap_set_e820(void *qemu_e820_table, int count);

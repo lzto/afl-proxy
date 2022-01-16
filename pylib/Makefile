@@ -2,8 +2,8 @@ CC=clang
 CXX=clang++
 LINK=clang++
 
-CFLAGS=-g -I../../ -fPIC
-CXXFLAGS=-g -std=c++14 -I../../ -fPIC
+CFLAGS=-g -I../ -fPIC
+CXXFLAGS=-g -std=c++14 -I../ -fPIC
 LDFLAGS= -lpthread -std=c++14 -shared -fPIC
 TARGET_EXEC=pyaplib.so
 
@@ -16,5 +16,5 @@ ifeq ($(UNAME_S),Darwin)
   LDFLAGS += 
 endif
 
--include ../../Makefile.defaults
+-include ../Makefile.defaults
 

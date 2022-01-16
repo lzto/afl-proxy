@@ -384,6 +384,21 @@ void ap_trigger_irq() {
   sfp_set_irq(1);
 }
 
+bool ap_check_irq_request(void) {
+again:
+  if (!sm) {
+    sleep(1);
+    goto again;
+  }
+again_wait:
+  if (sem_wait(&sm->sem_irq) == -1) {
+    if (errno == EINTR)
+      goto again_wait;
+    unreachable("error wait semr");
+  }
+  return sm->irq_assert;
+}
+
 const char *ap_get_dev_name() { return get_hw_instance()->getName().c_str(); }
 ///
 /// device generic information

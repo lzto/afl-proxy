@@ -37,4 +37,18 @@ test: aplib.so
 indent:
 	clang-format -i -style=file `find $d -name '*.cpp' -or -name "*.h" -or -name "*.c" -or -name "*.cc"`
 
+SCOPE_FILE = cscope.out
+TAG_FILE   = tags
+
+tags:
+	rm -f ${SCOPE_FILE} scope.* ${TAG_FILE}
+	find ${SRC_DIRS} -type f \
+    -a \( -name "*.h" -o -name "*.hpp" -o -name "*.cpp" -o -name "*.c" \
+    -o -name "*.cc" \) > ${SCOPE_FILE}
+	ctags -I "__THROW __nonnull __attribute_pure__ __attribute__ G_GNUC_PRINTF+" \
+		--file-scope=yes --c++-kinds=+px --c-kinds=+px --fields=+iaS -Ra --extra=+fq \
+		--langmap=c:.c.h.pc.ec --languages=c,c++ --links=yes \
+		-f ${TAG_FILE} -L ${SCOPE_FILE}
+	cscope -Rb -i ${SCOPE_FILE}
+
 .PHONY: aplib.so
