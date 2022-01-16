@@ -20,6 +20,7 @@
 struct XXX {
   sem_t semr;
   sem_t semw;
+  sem_t sem_irq;
   char path[128]; // the input data path
   uint8_t type;
   union {
@@ -30,6 +31,8 @@ struct XXX {
       uint64_t size;    // requested size;
     } rwreq; // for requesting data directly from us instead of using file
   };
+  // 0 - irq deasserted, 1 - irq asserted
+  volatile uint8_t irq_assert;
   volatile uint8_t ready;
 };
 
@@ -78,7 +81,7 @@ int main(int argc, char **argv) {
   if (shm.open(SHMOpenType::CREATE)) {
     auto *sm = shm.getMem();
     INFO("SHM created @ " << sm);
-    if (sem_init(&(sm->semr), 1, 1) == -1)
+    if (sem_init(&(sm->semr), 1, 0) == -1)
       unreachable("failed to init semaphore r");
     if (sem_init(&(sm->semw), 1, 0) == -1)
       unreachable("failed to init semaphore w");

@@ -27,6 +27,9 @@ set<uint64_t> dma_addrs;
 
 extern "C" {
 
+// for serializing qemu thread calling IPC
+static pthread_mutex_t shm_ipc_lock;
+
 // function inside hw/sfp/sfp-pci.c
 extern void sfp_set_irq(int isset);
 // function inside include/exec/cpu-common.h
@@ -100,6 +103,7 @@ again:
     fuzzdatasize = 0;
   }
   ap_reattach_pt();
+  pthread_mutex_init(&shm_ipc_lock, NULL);
 };
 
 ///
@@ -229,12 +233,15 @@ void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size, int bar) {
     if (dma_addr < 0x00100000) {
       goto out;
     } else {
-      INFO(ANSI_COLOR_GREEN << "Detected writing valid physical address "
-                            << hexval(dma_addr) << " could be DMA address?"
-                            << ANSI_COLOR_RESET);
+      //INFO(ANSI_COLOR_GREEN << "Detected writing valid physical address "
+      //                      << hexval(dma_addr) << " could be DMA address?"
+      //                      << ANSI_COLOR_RESET);
       // use first address as dma address for ksz884x
-      if (dma_addrs.size() < 2)
+      if (dma_addrs.size() < 2) {
+        INFO(ANSI_COLOR_GREEN << "Using " << hexval(dma_addr)
+                              << ANSI_COLOR_RESET);
         dma_addrs.insert(dma_addr);
+      }
     }
   out:;
   }
@@ -264,16 +271,16 @@ void ap_log_pc(uint64_t rip) {
   if (!sm)
     return;
   // INFO("ap_log_pc"<<hexval(rip));
+  sm->type = 0x01;
+  memcpy(sm->data, &rip, sizeof(uint64_t));
+  if (sem_post(&sm->semw) == -1) {
+    unreachable("error post semw");
+  }
 again:
   if (sem_wait(&sm->semr) == -1) {
     if (errno == EINTR)
       goto again;
     unreachable("error wait semr");
-  }
-  sm->type = 0x01;
-  memcpy(sm->data, &rip, sizeof(uint64_t));
-  if (sem_post(&sm->semw) == -1) {
-    unreachable("error post semr");
   }
 }
 
@@ -285,17 +292,17 @@ void ap_exit(void) {
 
     int sval;
     sem_getvalue(&sm->semr, &sval);
+    sm->type = 0xff;
+    // reset the flag
+    sm->ready = 0;
+    if (sem_post(&sm->semw) == -1) {
+      unreachable("error post semw");
+    }
   again:
     if (sem_wait(&sm->semr) == -1) {
       if (errno == EINTR)
         goto again;
       unreachable("error wait semr");
-    }
-    sm->type = 0xff;
-    // reset the flag
-    sm->ready = 0;
-    if (sem_post(&sm->semw) == -1) {
-      unreachable("error post semr");
     }
     shm->close();
     delete shm;
@@ -311,20 +318,19 @@ void ap_attach_pt(void) {
     ap_init();
   if (!sm)
     return;
-again:
-  if (sem_wait(&sm->semr) == -1) {
-    if (errno == EINTR)
-      goto again;
-
-    unreachable("error wait semr");
-  }
   kvm_tid = gettid();
   sm->type = 0x02;
   memcpy(sm->data, &kvm_tid, sizeof(pid_t));
   if (sem_post(&sm->semw) == -1) {
-    unreachable("error post semr");
+    unreachable("error post semw");
   }
   // TODO: need to wait proxy ack back here
+again:
+  if (sem_wait(&sm->semr) == -1) {
+    if (errno == EINTR)
+      goto again;
+    unreachable("error wait semr");
+  }
 }
 #else
 void ap_attach_pt(void) {
@@ -340,16 +346,15 @@ void ap_reattach_pt(void) {
     return;
   assert(sm);
   // INFO("ap_reattach_pt:" << kvm_tid);
+  sm->type = 0x02;
+  memcpy(sm->data, &kvm_tid, sizeof(pid_t));
+  if (sem_post(&sm->semw) == -1)
+    unreachable("error post semw");
 again:
   if (sem_wait(&sm->semr) == -1) {
     if (errno == EINTR)
       goto again;
     unreachable("error wait semr");
-  }
-  sm->type = 0x02;
-  memcpy(sm->data, &kvm_tid, sizeof(pid_t));
-  if (sem_post(&sm->semw) == -1) {
-    unreachable("error post semr");
   }
 }
 
@@ -360,6 +365,7 @@ again:
 void ap_fill_dma_buffer() {
   if (!use_dma)
     return;
+  //system("logger ap_fill_dma_buffer");
   ///
   /// write random data in the DMA region --
   /// DMA region is expected to be synchronized(visible) after the interrupt
@@ -374,9 +380,9 @@ void ap_fill_dma_buffer() {
     // should get buffer data from ML model
     for (int i = 0; i < 2064; i += 8)
       shm_ipc_read_data(&buffer[i], addr + i, 8);
-    INFO("DMA to " << hexval(addr));
+    // INFO("DMA to " << hexval(addr));
     // write back to QEMU
-    cpu_physical_memory_rw(addr, buffer, 4096, true);
+    cpu_physical_memory_rw(addr, buffer, 2064, true);
   }
   free(buffer);
 }
@@ -402,7 +408,7 @@ again_wait:
   if (sem_wait(&sm->sem_irq) == -1) {
     if (errno == EINTR)
       goto again_wait;
-    unreachable("error wait semr");
+    unreachable("error wait sem_irq");
   }
   return sm->irq_assert;
 }
@@ -447,12 +453,7 @@ void *ap_get_usb_desc(void) { return nullptr; }
 
 // shared memory IPC stuff
 void shm_ipc_read_data(uint8_t *dest, uint64_t addr, size_t size) {
-again0:
-  if (sem_wait(&sm->semr) == -1) {
-    if (errno == EINTR)
-      goto again0;
-    unreachable("error wait semr");
-  }
+  pthread_mutex_lock(&shm_ipc_lock);
   sm->type = 0x03;
   sm->rwreq.req_type = 0;
   sm->rwreq.address = addr;
@@ -468,25 +469,25 @@ again1:
     unreachable("error wait semr");
   }
   memcpy(dest, sm->data, size);
-  if (sem_post(&sm->semr) == -1) {
-    unreachable("error post semr");
-  }
+  pthread_mutex_unlock(&shm_ipc_lock);
 }
 
 void shm_ipc_write_data(uint64_t data, uint64_t addr, size_t size) {
+  pthread_mutex_lock(&shm_ipc_lock);
+  sm->type = 0x03;
+  sm->rwreq.req_type = 1;
+  sm->rwreq.address = addr;
+  sm->rwreq.size = size;
+  if (sem_post(&sm->semw) == -1) {
+    unreachable("error post semw");
+  }
 again1:
   if (sem_wait(&sm->semr) == -1) {
     if (errno == EINTR)
       goto again1;
     unreachable("error wait semr");
   }
-  sm->type = 0x03;
-  sm->rwreq.req_type = 1;
-  sm->rwreq.address = addr;
-  sm->rwreq.size = size;
-  if (sem_post(&sm->semw) == -1) {
-    unreachable("error post semr");
-  }
+  pthread_mutex_unlock(&shm_ipc_lock);
 }
 
 // get some idea of the system memory layout

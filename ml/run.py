@@ -20,7 +20,7 @@ pyaplib.get_msg_type.restype = ctypes.c_int
 pyaplib.get_req_addr.restype = ctypes.c_int
 pyaplib.get_req_size.results = ctypes.c_int
 
-device_clock_sec = 0.1
+device_clock_sec = 1
 
 def get_input(genome_id):
     network_input = ()
@@ -64,7 +64,7 @@ def run(config_file, result_file):
                 # read addr and size from shm
                 addr = int(pyaplib.get_req_addr(genome_id))
                 size = int(pyaplib.get_req_size(genome_id))
-                clk = 0
+                clk = 0xffffffff
                 network_input = (addr, size, cnt, clk)
                 '''network_input = network_input + get_input_selected(genome_id);'''
                 network_input = network_input + get_input(genome_id);
@@ -83,10 +83,10 @@ def run(config_file, result_file):
             network_input = network_input + get_input(genome_id);
             output = net.activate(network_input)
             assert_irq = int(output[1])
-            if (assert_irq==0):
-                pyaplib.deassert_irq(genome_id)
-            else:
+            if (assert_irq!=0):
                 pyaplib.assert_irq(genome_id)
+            else:
+                pyaplib.deassert_irq(genome_id)
             last_clock_tick = time.time()
         ''' timeout? '''
         # do a 10 sec test

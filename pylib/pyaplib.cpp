@@ -94,7 +94,7 @@ void init(uint64_t shmid) {
   if (shm->open(SHMOpenType::CREATE)) {
     auto *sm = shm->getMem();
     // INFO("SHM created @ " << sm);
-    if (sem_init(&(sm->semr), 1, 1) == -1)
+    if (sem_init(&(sm->semr), 1, 0) == -1)
       unreachable("failed to init semaphore r");
     if (sem_init(&(sm->semw), 1, 0) == -1)
       unreachable("failed to init semaphore w");
