@@ -8,12 +8,7 @@
 class HWModel_alcor_pci : public HWModel {
 public:
   HWModel_alcor_pci() : HWModel("alcor_pci", 0x1aea, 0x6601), probe_len(0) {
-    setupBar({{PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024}});
+    setupBar({{PCI_BAR_TYPE_MMIO, 0x100}});
   }
   virtual ~HWModel_alcor_pci(){};
   virtual void restart_device() final { probe_len = 0; };

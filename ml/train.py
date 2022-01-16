@@ -1,5 +1,5 @@
 """
-device simulation - ksz884x
+device simulation - 3c59x
 """
 
 from __future__ import print_function
@@ -55,31 +55,20 @@ def get_fitness(shmid):
         return -40 * wrong;
     return (100-ret)/100;
 '''
-'''
 def get_fitness(shmid):
     fname = "/home/tong/qemu-afl-image/vm-testing-"+str(shmid)+".log"
     ret = 0
-    keyword="Disabling IRQ"
+    keyword="Timeout waiting for hardware interrupt."
+    with open(fname, 'r', encoding="latin-1") as fin:
+        ret -= sum([1 for line in fin if keyword in line]) * 1000
+    keyword="alcor_reset: timeout"
+    with open(fname, 'r', encoding="latin-1") as fin:
+        ret -= sum([1 for line in fin if keyword in line]) * 10
+    keyword="warning: over current detected"
     with open(fname, 'r', encoding="latin-1") as fin:
         ret -= sum([1 for line in fin if keyword in line])
-    keyword="output error"
-    with open(fname, 'r', encoding="latin-1") as fin:
-        ret -= sum([1 for line in fin if keyword in line])
-    keyword="overrun"
-    with open(fname, 'r', encoding="latin-1") as fin:
-        ret -= sum([1 for line in fin if keyword in line])
-    keyword="spurious 8259A interrupt"
-    with open(fname, 'r', encoding="latin-1") as fin:
-        ret -= sum([1 for line in fin if keyword in line])
-    keyword="no mi0"
-    with open(fname, 'r', encoding="latin-1") as fin:
-        ret -= sum([1 for line in fin if keyword in line]) * 10000
-    keyword="mi0"
-    with open(fname, 'r', encoding="latin-1") as fin:
-        ret += sum([1 for line in fin if keyword in line]) * 10
     return ret
 '''
-
 def get_fitness(shmid):
     fname = "/home/tong/qemu-afl-image/vm-testing-"+str(shmid)+".log"
     ret = 0
@@ -91,7 +80,7 @@ def get_fitness(shmid):
                 ints = re.findall(r'\d+', line)
     ret = int(ints[0]) * 2 + int(ints[3])
     return ret
-
+'''
 
 def get_input(genome_id):
     network_input = ()
@@ -214,7 +203,7 @@ def run(config_file):
     p = neat.Population(config)
 
     # load checkpoint?
-    #p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-16")
+    #p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-7")
 
     # Add a stdout reporter to show progress in the terminal.
     p.add_reporter(neat.StdOutReporter(True))

@@ -1,5 +1,5 @@
 """
-device simulation - ksz884x
+device simulation - 3c59x
 """
 
 from __future__ import print_function

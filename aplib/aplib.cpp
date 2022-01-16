@@ -233,7 +233,7 @@ void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size, int bar) {
     if (dma_addr < 0x00100000) {
       goto out;
     } else {
-      //INFO(ANSI_COLOR_GREEN << "Detected writing valid physical address "
+      // INFO(ANSI_COLOR_GREEN << "Detected writing valid physical address "
       //                      << hexval(dma_addr) << " could be DMA address?"
       //                      << ANSI_COLOR_RESET);
       // use first address as dma address for ksz884x
@@ -365,7 +365,7 @@ again:
 void ap_fill_dma_buffer() {
   if (!use_dma)
     return;
-  //system("logger ap_fill_dma_buffer");
+  // system("logger ap_fill_dma_buffer");
   ///
   /// write random data in the DMA region --
   /// DMA region is expected to be synchronized(visible) after the interrupt

@@ -8,12 +8,7 @@
 class HWModel_3c59x : public HWModel {
 public:
   HWModel_3c59x() : HWModel("3c59x", 0x10b7, 0x1201), probe_len(0) {
-    setupBar({{PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024}});
+    setupBar({{PCI_BAR_TYPE_MMIO, 0x20}});
   }
   virtual ~HWModel_3c59x(){};
   virtual void restart_device() final { probe_len = 0; };
