@@ -21,11 +21,11 @@ public:
   bool isSet() {
     if (value.length() == 0)
       return false;
-    if (value == "1")
-      return true;
     if (value == "true")
       return true;
-    return false;
+    if ((value == "false") || (value == "0"))
+      return false;
+    return true;
   };
   int getIntValue() {
     assert(value.length() != 0);
