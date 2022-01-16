@@ -1,5 +1,5 @@
 """
-device simulation - mxser
+device simulation - ksz884x
 """
 
 from __future__ import print_function
@@ -22,7 +22,7 @@ pyaplib.get_req_size.results = ctypes.c_int
 parallel_size = 6
 #import visualize
 device_clock_sec = 0.5
-qemutimeout = 30
+qemutimeout = 20
 
 '''
 def get_fitness(shmid):
@@ -55,7 +55,7 @@ def get_fitness(shmid):
         return -40 * wrong;
     return (100-ret)/100;
 '''
-
+'''
 def get_fitness(shmid):
     fname = "/home/tong/qemu-afl-image/vm-testing-"+str(shmid)+".log"
     ret = 0
@@ -71,9 +71,25 @@ def get_fitness(shmid):
     keyword="spurious 8259A interrupt"
     with open(fname, 'r', encoding="latin-1") as fin:
         ret -= sum([1 for line in fin if keyword in line])
+    keyword="no mi0"
+    with open(fname, 'r', encoding="latin-1") as fin:
+        ret -= sum([1 for line in fin if keyword in line]) * 10000
     keyword="mi0"
     with open(fname, 'r', encoding="latin-1") as fin:
         ret += sum([1 for line in fin if keyword in line]) * 10
+    return ret
+'''
+
+def get_fitness(shmid):
+    fname = "/home/tong/qemu-afl-image/vm-testing-"+str(shmid)+".log"
+    ret = 0
+    keyword="RX bytes:"
+    ints = [0,0,0,0,0,0]
+    with open(fname, 'r', encoding="latin-1") as fin:
+        for line in fin:
+            if keyword in line:
+                ints = re.findall(r'\d+', line)
+    ret = int(ints[0]) * 2 + int(ints[3])
     return ret
 
 
@@ -157,8 +173,8 @@ def eval_single_genome(genome_id, genome, config, out):
         if (int(etime - stime)>qemutimeout):
             break
     '''fitness = get_fitness(genome_id) + cnt / 100.0'''
-    '''fitness = get_fitness(genome_id) / cnt * 10000'''
-    fitness = get_fitness(genome_id)
+    fitness = get_fitness(genome_id) / cnt * 1000
+    '''fitness = get_fitness(genome_id)'''
     out.put(fitness)
     #genome.fitness = fitness
     print('Fitness gen {0}={1} RCNT:{2}'.format(genome_id, fitness, cnt))

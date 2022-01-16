@@ -354,32 +354,40 @@ again:
 }
 
 ///
+/// called by QEMU to trigger DMA data buffer fill -- through ML model or random
+/// data
+///
+void ap_fill_dma_buffer() {
+  if (!use_dma)
+    return;
+  ///
+  /// write random data in the DMA region --
+  /// DMA region is expected to be synchronized(visible) after the interrupt
+  /// so we can safely assume we need to write DMA first then do IRQ
+  uint8_t *buffer = (uint8_t *)malloc(4096);
+  for (auto addr : dma_addrs) {
+    // we dont know the size of the dma region
+    // -- assuming 4k since even with IOMMU it won't protect anything less
+    // than 1 page
+    // for (int i = 0; i < 4096; i++)
+    //  buffer[i] = rand();
+    // should get buffer data from ML model
+    for (int i = 0; i < 2064; i += 8)
+      shm_ipc_read_data(&buffer[i], addr + i, 8);
+    INFO("DMA to " << hexval(addr));
+    // write back to QEMU
+    cpu_physical_memory_rw(addr, buffer, 4096, true);
+  }
+  free(buffer);
+}
+
+///
 /// trigger one-shot irq
 ///
 void ap_trigger_irq() {
   if (!use_irq)
     return;
-  if (use_dma) {
-    ///
-    /// write random data in the DMA region --
-    /// DMA region is expected to be synchronized(visible) after the interrupt
-    /// so we can safely assume we need to write DMA first then do IRQ
-    uint8_t *buffer = (uint8_t *)malloc(4096);
-    for (auto addr : dma_addrs) {
-      // we dont know the size of the dma region
-      // -- assuming 4k since even with IOMMU it won't protect anything less
-      // than 1 page
-      for (int i = 0; i < 4096; i++)
-        buffer[i] = rand();
-      // should get buffer data from ML model
-      // for (int i = 0; i < 2064; i += 8)
-      //  shm_ipc_read_data(&buffer[i], 0xff0000 * cnt + i, 8);
-      INFO("DMA to " << hexval(addr));
-      // write back to QEMU
-      cpu_physical_memory_rw(addr, buffer, 4096, true);
-    }
-    free(buffer);
-  }
+  ap_fill_dma_buffer();
   // trigger irq
   sfp_set_irq(1);
 }

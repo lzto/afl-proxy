@@ -1,5 +1,5 @@
 """
-device simulation - mxser
+device simulation - ksz884x
 """
 
 from __future__ import print_function
@@ -19,6 +19,8 @@ pyaplib.get_devmem.restype = ctypes.c_char_p
 pyaplib.get_msg_type.restype = ctypes.c_int
 pyaplib.get_req_addr.restype = ctypes.c_int
 pyaplib.get_req_size.results = ctypes.c_int
+
+device_clock_sec = 0.1
 
 def get_input(genome_id):
     network_input = ()
@@ -45,30 +47,48 @@ def run(config_file, result_file):
     genome = pickle.load(open(result_file, 'rb'))
     net = neat.nn.FeedForwardNetwork.create(genome, config)
     # create afl shm
-    pyaplib.init(0)
+    pyaplib.init(genome_id)
     # launch a new qemu
     print("Device model service is started, you can launch qemu now");
     cnt = 0
     stime = time.time()
+    last_clock_tick = time.time()
+    begin_to_send_irq = 0
     while True :
-        if (pyaplib.get_msg_type(0) == 3):
-            pyaplib.check_new_request(0)
-            req_type = pyaplib.get_req_type(0)
+        ''' check request from QEMU '''
+        if (pyaplib.get_msg_type(genome_id) == 3):
+            begin_to_send_irq = 1
+            pyaplib.check_new_request(genome_id)
+            req_type = pyaplib.get_req_type(genome_id)
             if (req_type == 0):
                 # read addr and size from shm
                 addr = int(pyaplib.get_req_addr(genome_id))
                 size = int(pyaplib.get_req_size(genome_id))
-                network_input = (addr, size, cnt)
+                clk = 0
+                network_input = (addr, size, cnt, clk)
+                '''network_input = network_input + get_input_selected(genome_id);'''
                 network_input = network_input + get_input(genome_id);
                 #print(network_input)
                 output = net.activate(network_input)
                 #print(output)
                 dev_data = int(output[0])
                 #print("dev_data:{}".format(dev_data))
-                pyaplib.set_data(0,dev_data)
-                print('Read {0} Byte @ {1} = {2}'.format(hex(addr), size, hex(dev_data)))
+                pyaplib.set_data(genome_id, dev_data)
             cnt = cnt+1
-            pyaplib.do_respond(0)
+            pyaplib.do_respond(genome_id)
+        ''' check IRQ '''
+        if (begin_to_send_irq) and (time.time() - last_clock_tick>device_clock_sec):
+            clk = 1
+            network_input = (-1, -1, cnt, clk)
+            network_input = network_input + get_input(genome_id);
+            output = net.activate(network_input)
+            assert_irq = int(output[1])
+            if (assert_irq==0):
+                pyaplib.deassert_irq(genome_id)
+            else:
+                pyaplib.assert_irq(genome_id)
+            last_clock_tick = time.time()
+        ''' timeout? '''
         # do a 10 sec test
         #etime = time.time()
         # if (int(etime - stime)>30):

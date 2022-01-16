@@ -43,6 +43,8 @@ void ap_exit(void);
 void ap_attach_pt(void);
 void ap_reattach_pt(void);
 void ap_trigger_irq(void);
+void ap_fill_dma_buffer(void);
+
 // this is a blocking function, QEMU will call this function to check if it
 // need to assert/de-assert IRQ
 bool ap_check_irq_request(void);
