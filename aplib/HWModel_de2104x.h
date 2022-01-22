@@ -8,12 +8,7 @@
 class HWModel_de2104x : public HWModel {
 public:
   HWModel_de2104x() : HWModel("de2104x", 0x1011, 0x0002), probe_len(0) {
-    setupBar({{PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
-              {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024}});
+    setupBar({{PCI_BAR_TYPE_MMIO, 0}, {PCI_BAR_TYPE_MMIO, 0x100}});
   }
   virtual ~HWModel_de2104x(){};
   virtual void restart_device() final { probe_len = 0; };

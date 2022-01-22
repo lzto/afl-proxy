@@ -233,13 +233,14 @@ void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size, int bar) {
     if (dma_addr < 0x00100000) {
       goto out;
     } else {
-      // INFO(ANSI_COLOR_GREEN << "Detected writing valid physical address "
-      //                      << hexval(dma_addr) << " could be DMA address?"
-      //                      << ANSI_COLOR_RESET);
+      INFO(ANSI_COLOR_GREEN << "Detected writing valid physical address "
+                            << hexval(dma_addr) << " could be DMA address?"
+                            << ANSI_COLOR_RESET);
       // use first address as dma address for ksz884x
-      if (dma_addrs.size() < 2) {
-        INFO(ANSI_COLOR_GREEN << "Using " << hexval(dma_addr)
-                              << ANSI_COLOR_RESET);
+      if (addr == 0x18) {
+        INFO(ANSI_COLOR_GREEN << "Using " << hexval(dma_addr) << " @ "
+                              << hexval(addr) << ANSI_COLOR_RESET);
+        dma_addrs.clear();
         dma_addrs.insert(dma_addr);
       }
     }
@@ -375,14 +376,14 @@ void ap_fill_dma_buffer() {
     // we dont know the size of the dma region
     // -- assuming 4k since even with IOMMU it won't protect anything less
     // than 1 page
-    // for (int i = 0; i < 4096; i++)
-    //  buffer[i] = rand();
+    for (int i = 0; i < 4096; i++)
+      buffer[i] = rand();
     // should get buffer data from ML model
-    for (int i = 0; i < 2064; i += 8)
-      shm_ipc_read_data(&buffer[i], addr + i, 8);
+    // for (int i = 0; i < 2064; i += 8)
+    //  shm_ipc_read_data(&buffer[i], addr + i, 8);
     // INFO("DMA to " << hexval(addr));
     // write back to QEMU
-    cpu_physical_memory_rw(addr, buffer, 2064, true);
+    cpu_physical_memory_rw(addr, buffer, 4096, true);
   }
   free(buffer);
 }

@@ -6,6 +6,7 @@
 
 #include "HWModel_3c59x.h"
 #include "HWModel_3w_9xxx.h"
+#include "HWModel_acard_ahci.h"
 #include "HWModel_acp3x.h"
 #include "HWModel_adm8211.h"
 #include "HWModel_adv_pci1760.h"
@@ -192,6 +193,7 @@
 #include "HWModel_vxge.h"
 #include "HWModel_w6692.h"
 #include "HWModel_wanxl.h"
+#include "HWModel_wdt_pci.h"
 #include "HWModel_zatm.h"
 
 #include <functional>
@@ -255,6 +257,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(adm8211);
   INSERT_MODEL(3c59x);
   INSERT_MODEL(3w_9xxx);
+  INSERT_MODEL(acard_ahci);
   INSERT_MODEL(acp3x);
   INSERT_MODEL(adv_pci1760);
   INSERT_MODEL(aic7xxx);
@@ -393,6 +396,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(vxge);
   INSERT_MODEL(w6692);
   INSERT_MODEL(wanxl);
+  INSERT_MODEL(wdt_pci);
   INSERT_MODEL(zatm);
   INSERT_MODEL(test);
 }

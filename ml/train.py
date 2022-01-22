@@ -1,5 +1,5 @@
 """
-device simulation - 3c59x
+device simulation - ne2k-pci
 """
 
 from __future__ import print_function
@@ -22,7 +22,7 @@ pyaplib.get_req_size.results = ctypes.c_int
 parallel_size = 6
 #import visualize
 device_clock_sec = 0.1
-qemutimeout = 20
+qemutimeout = 35
 
 '''
 def get_fitness(shmid):
@@ -55,19 +55,24 @@ def get_fitness(shmid):
         return -40 * wrong;
     return (100-ret)/100;
 '''
+
 def get_fitness(shmid):
     fname = "/home/tong/qemu-afl-image/vm-testing-"+str(shmid)+".log"
     ret = 0
-    keyword="Timeout waiting for hardware interrupt."
+    keyword="link down"
     with open(fname, 'r', encoding="latin-1") as fin:
-        ret -= sum([1 for line in fin if keyword in line]) * 1000
-    keyword="alcor_reset: timeout"
+        ret -= sum([1 for line in fin if keyword in line])
+    keyword="PCI bus error"
     with open(fname, 'r', encoding="latin-1") as fin:
-        ret -= sum([1 for line in fin if keyword in line]) * 10
-    keyword="warning: over current detected"
+        ret -= sum([1 for line in fin if keyword in line])
+    keyword="Device or resource busy"
+    with open(fname, 'r', encoding="latin-1") as fin:
+        ret -= sum([1 for line in fin if keyword in line]) * 100
+    keyword="Network is unreachable"
     with open(fname, 'r', encoding="latin-1") as fin:
         ret -= sum([1 for line in fin if keyword in line])
     return ret
+
 '''
 def get_fitness(shmid):
     fname = "/home/tong/qemu-afl-image/vm-testing-"+str(shmid)+".log"
@@ -79,7 +84,7 @@ def get_fitness(shmid):
             if keyword in line:
                 ints = re.findall(r'\d+', line)
     ret = int(ints[0]) * 2 + int(ints[3])
-    return ret
+    return ret / 10
 '''
 
 def get_input(genome_id):
@@ -203,7 +208,7 @@ def run(config_file):
     p = neat.Population(config)
 
     # load checkpoint?
-    #p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-7")
+    #p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-0")
 
     # Add a stdout reporter to show progress in the terminal.
     p.add_reporter(neat.StdOutReporter(True))
