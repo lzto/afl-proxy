@@ -15,6 +15,7 @@
 #include "HWModel_ambassador.h"
 #include "HWModel_amd_xgbe.h"
 #include "HWModel_amdgpu.h"
+#include "HWModel_anydev.h"
 #include "HWModel_apex.h"
 #include "HWModel_applicom.h"
 #include "HWModel_arcmsr.h"
@@ -208,6 +209,7 @@ static HWModel *instance;
   modelMap[#NAME] = []() { return new HWModel_##NAME(); };
 
 void hw_model_internal_init() {
+  INSERT_MODEL(anydev);
   INSERT_MODEL(qla2xxx);
   INSERT_MODEL(mt76x0);
   INSERT_MODEL(mt7615e);

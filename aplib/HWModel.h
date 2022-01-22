@@ -170,12 +170,12 @@ public:
 
   const string &getName() { return name; };
 
-  uint16_t getVid() { return vid; }
-  uint16_t getPid() { return pid; }
-  uint16_t getSubVid() { return subvid; }
-  uint16_t getSubPid() { return subpid; }
-  uint32_t getClass() { return devclass; }
-  uint16_t getRev() { return revision; }
+  virtual uint16_t getVid() { return vid; }
+  virtual uint16_t getPid() { return pid; }
+  virtual uint16_t getSubVid() { return subvid; }
+  virtual uint16_t getSubPid() { return subpid; }
+  virtual uint32_t getClass() { return devclass; }
+  virtual uint16_t getRev() { return revision; }
   int getPCIBarCnt() { return pciBarCnt; };
   int getPCIBarType(int idx) {
     assert((idx >= 0) && (idx < pciBarCnt));

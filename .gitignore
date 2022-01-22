@@ -5,3 +5,5 @@ run/dry_run*
 run/afl.log
 run/seed
 build
+cscope.out
+tags

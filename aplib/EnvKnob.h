@@ -31,6 +31,14 @@ public:
     assert(value.length() != 0);
     return atoi(value.c_str());
   };
+  uint16_t getUInt16Value() {
+    assert(value.length() != 0);
+    return atoi(value.c_str());
+  }
+  uint32_t getUInt32Value() {
+    assert(value.length() != 0);
+    return atoi(value.c_str());
+  }
   std::string getStringValue() { return value; }
 
 private:
