@@ -410,6 +410,11 @@ HWModel *init_hw_instance(const std::string &name) {
   if (instance)
     return instance;
   auto it = modelMap.find(name);
+  if (it == modelMap.end()) {
+    std::cout << "unknown hardware: " << name << "\n"
+              << "falling back to anydev\n";
+    it = modelMap.find("anydev");
+  }
   assert((it != modelMap.end()) && "unknown hardware");
   instance = it->second();
   return instance;
