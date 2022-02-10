@@ -74,6 +74,7 @@
 #include "HWModel_horizon.h"
 #include "HWModel_hpilo.h"
 #include "HWModel_hpsa.h"
+#include "HWModel_hptiop.h"
 #include "HWModel_hypervfb.h"
 #include "HWModel_i710fb.h"
 #include "HWModel_i810.h"
@@ -115,6 +116,7 @@
 #include "HWModel_mt76x0e.h"
 #include "HWModel_mxser.h"
 #include "HWModel_myrb.h"
+#include "HWModel_myrs.h"
 #include "HWModel_ne2k.h"
 #include "HWModel_net2272.h"
 #include "HWModel_netjet.h"
@@ -175,6 +177,7 @@
 #include "HWModel_solo6x10.h"
 #include "HWModel_sstfb.h"
 #include "HWModel_sundance.h"
+#include "HWModel_sym53c8xx.h"
 #include "HWModel_test.h"
 #include "HWModel_tg3.h"
 #include "HWModel_tifm_7xx1.h"
@@ -309,6 +312,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(hfi1);
   INSERT_MODEL(hpilo);
   INSERT_MODEL(hpsa);
+  INSERT_MODEL(hptiop);
   INSERT_MODEL(hypervfb);
   INSERT_MODEL(i710fb);
   INSERT_MODEL(i810);
@@ -341,6 +345,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(mlxsw_spectrum);
   INSERT_MODEL(mt76x0e);
   INSERT_MODEL(myrb);
+  INSERT_MODEL(myrs);
   INSERT_MODEL(net2272);
   INSERT_MODEL(netjet);
   INSERT_MODEL(nicstar);
@@ -382,6 +387,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(solo6x10);
   INSERT_MODEL(sstfb);
   INSERT_MODEL(sundance);
+  INSERT_MODEL(sym53c8xx);
   INSERT_MODEL(tg3);
   INSERT_MODEL(tlan);
   INSERT_MODEL(tsi721);
