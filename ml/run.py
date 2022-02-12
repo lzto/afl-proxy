@@ -1,5 +1,5 @@
 """
-device simulation - 3c59x
+device simulation
 """
 
 from __future__ import print_function
@@ -12,6 +12,8 @@ import ctypes
 import multiprocessing as mp
 import pickle
 import re
+# for fuzzing
+import random
 
 pyaplib = ctypes.cdll.LoadLibrary('../pylib/build/pyaplib.so')
 pyaplib.get_devmem_size.restype = ctypes.c_int
@@ -21,6 +23,17 @@ pyaplib.get_req_addr.restype = ctypes.c_int
 pyaplib.get_req_size.results = ctypes.c_int
 
 device_clock_sec = 1
+
+# how frequent should data be mutated, range [0,1]
+mutate_rate = 0
+
+''' fetch output from ndata and mutate/fuzz '''
+def fetch_output(ndata) :
+    d = int(ndata[0])
+    rand = random.random()
+    if (rand<mutate_rate):
+        d = d ^ random.getrandbits(64)
+    return d;
 
 def get_input(genome_id):
     network_input = ()
@@ -71,7 +84,8 @@ def run(config_file, result_file):
                 #print(network_input)
                 output = net.activate(network_input)
                 #print(output)
-                dev_data = int(output[0])
+                #dev_data = int(output[0])
+                dev_data = fetch_output(output)
                 #print("dev_data:{}".format(dev_data))
                 pyaplib.set_data(genome_id, dev_data)
             cnt = cnt+1
