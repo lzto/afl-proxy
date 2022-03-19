@@ -14,6 +14,7 @@
 #include "HWModel_dm9601.h"
 #include "HWModel_ds2490.h"
 #include "HWModel_emi26.h"
+#include "HWModel_f81232.h"
 #include "HWModel_hfcsusb.h"
 #include "HWModel_hso.h"
 #include "HWModel_imon.h"
@@ -457,6 +458,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(dm9601);
   INSERT_MODEL(ds2490);
   INSERT_MODEL(emi26);
+  INSERT_MODEL(f81232);
   INSERT_MODEL(hfcusb);
   INSERT_MODEL(hso);
   INSERT_MODEL(imon);
