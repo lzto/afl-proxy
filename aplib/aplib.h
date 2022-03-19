@@ -72,6 +72,9 @@ int ap_get_pci_bar_type(int idx);
 int ap_get_pci_bar_size(int idx);
 int ap_get_pci_msix_bar_idx(void);
 const char *ap_get_rom_path(void);
+// for USB devices
+uint16_t ap_get_usb_vid(void);
+uint16_t ap_get_usb_pid(void);
 
 // specialized for USB devices
 void *ap_get_usb_desc(void);

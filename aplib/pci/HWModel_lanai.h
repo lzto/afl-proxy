@@ -7,7 +7,7 @@
 
 class HWModel_lanai : public HWModel {
 public:
-  HWModel_lanai() : HWModel("lanai", 0x111a, 0x0003), probe_len(0) {
+  HWModel_lanai() : HWModel("lanai", 0x14c1, 0x0008), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},

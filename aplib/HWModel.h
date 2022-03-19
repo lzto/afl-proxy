@@ -21,6 +21,9 @@ using namespace std;
 #define PCI_BAR_TYPE_MMIO 1
 #define PCI_BAR_TYPE_PIO 0
 
+#define DEVICE_MODEL_TYPE_PCI 0
+#define DEVICE_MODEL_TYPE_USB 1
+
 ///
 /// generic bar class
 /// non-present bar will have size=0
@@ -186,6 +189,8 @@ public:
     return bars[idx]->getSize();
   };
 
+  virtual void *getUSBDesc() { return nullptr; }
+
 protected:
   const uint16_t vid;
   const uint16_t pid;
@@ -196,6 +201,9 @@ protected:
   int pciBarCnt;
   int msixBarIdx;
   vector<Bar *> bars;
+
+  // possible values are: DEVICE_MODEL_TYPE_PCI, DEVICE_MODEL_TYPE_USB
+  int deviceType;
 
 private:
   const string name;

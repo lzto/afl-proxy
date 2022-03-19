@@ -233,11 +233,11 @@ void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size, int bar) {
     if (dma_addr < 0x00100000) {
       goto out;
     } else {
-      INFO(ANSI_COLOR_GREEN << "Detected writing valid physical address "
-                            << hexval(dma_addr) << " could be DMA address?"
-                            << ANSI_COLOR_RESET);
+      // INFO(ANSI_COLOR_GREEN << "Detected writing valid physical address "
+      //                      << hexval(dma_addr) << " could be DMA address?"
+      //                      << ANSI_COLOR_RESET);
       // use first address as dma address for ksz884x
-      if (addr == 0x18) {
+      if (addr == 0x14) {
         INFO(ANSI_COLOR_GREEN << "Using " << hexval(dma_addr) << " @ "
                               << hexval(addr) << ANSI_COLOR_RESET);
         dma_addrs.clear();
@@ -426,6 +426,12 @@ uint32_t ap_get_pci_class() { return get_hw_instance()->getClass(); }
 uint16_t ap_get_pci_rev() { return get_hw_instance()->getRev(); }
 
 ///
+/// for usb devices
+///
+uint16_t ap_get_usb_vid(void) { return get_hw_instance()->getVid(); }
+uint16_t ap_get_usb_pid(void) { return get_hw_instance()->getPid(); }
+
+///
 /// PCI configuration
 ///
 int ap_get_pci_bar_cnt() { return get_hw_instance()->getPCIBarCnt(); }
@@ -449,7 +455,7 @@ const char *ap_get_rom_path() {
 }
 
 // void *ap_get_usb_desc(void) { return HW_MODEL_USB_DESC; }
-void *ap_get_usb_desc(void) { return nullptr; }
+void *ap_get_usb_desc(void) { return get_hw_instance()->getUSBDesc(); }
 }
 
 // shared memory IPC stuff

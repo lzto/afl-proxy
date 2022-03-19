@@ -4,6 +4,38 @@
 ///
 #include "hw_model.h"
 
+// usb
+#include "HWModel_asix.h"
+#include "HWModel_ati_remote.h"
+#include "HWModel_atusb.h"
+#include "HWModel_carl9170.h"
+#include "HWModel_chaoskey.h"
+#include "HWModel_dln2.h"
+#include "HWModel_dm9601.h"
+#include "HWModel_ds2490.h"
+#include "HWModel_emi26.h"
+#include "HWModel_hfcsusb.h"
+#include "HWModel_hso.h"
+#include "HWModel_imon.h"
+#include "HWModel_libertas_tf_usb.h"
+#include "HWModel_mceusb.h"
+#include "HWModel_mwifiex_usb.h"
+#include "HWModel_p54usb.h"
+#include "HWModel_pl2303.h"
+#include "HWModel_radio_keene.h"
+#include "HWModel_radio_shark.h"
+#include "HWModel_radio_si470x_usb.h"
+#include "HWModel_shark2.h"
+#include "HWModel_usb8xxx.h"
+#include "HWModel_usblcd.h"
+#include "HWModel_usblp.h"
+#include "HWModel_visor.h"
+#include "HWModel_whiteheat.h"
+#include "HWModel_xbox_remote.h"
+#include "HWModel_xpad.h"
+#include "HWModel_zd1201.h"
+#include "HWModel_zd1211rw.h"
+// pci
 #include "HWModel_3c59x.h"
 #include "HWModel_3w_9xxx.h"
 #include "HWModel_acard_ahci.h"
@@ -76,6 +108,9 @@
 #include "HWModel_hpsa.h"
 #include "HWModel_hptiop.h"
 #include "HWModel_hypervfb.h"
+#include "HWModel_i2c_amd8111.h"
+#include "HWModel_i2c_nvidia_gpu.h"
+#include "HWModel_i2c_virtio.h"
 #include "HWModel_i710fb.h"
 #include "HWModel_i810.h"
 #include "HWModel_i82092aa.h"
@@ -314,6 +349,9 @@ void hw_model_internal_init() {
   INSERT_MODEL(hpsa);
   INSERT_MODEL(hptiop);
   INSERT_MODEL(hypervfb);
+  INSERT_MODEL(i2c_amd8111);
+  INSERT_MODEL(i2c_nvidia_gpu);
+  INSERT_MODEL(i2c_virtio);
   INSERT_MODEL(i710fb);
   INSERT_MODEL(i810);
   INSERT_MODEL(i82092aa);
@@ -406,7 +444,39 @@ void hw_model_internal_init() {
   INSERT_MODEL(wanxl);
   INSERT_MODEL(wdt_pci);
   INSERT_MODEL(zatm);
+  // test device -- empty
   INSERT_MODEL(test);
+  // USB
+  INSERT_MODEL(asix);
+  INSERT_MODEL(ati_remote);
+  INSERT_MODEL(atusb);
+  INSERT_MODEL(carl9170);
+  INSERT_MODEL(chaoskey);
+  INSERT_MODEL(dln2);
+  INSERT_MODEL(dm9601);
+  INSERT_MODEL(ds2490);
+  INSERT_MODEL(emi26);
+  INSERT_MODEL(hfcusb);
+  INSERT_MODEL(hso);
+  INSERT_MODEL(imon);
+  INSERT_MODEL(libertas_tf_usb);
+  INSERT_MODEL(mceusb);
+  INSERT_MODEL(mwifiex_usb);
+  INSERT_MODEL(p54usb);
+  INSERT_MODEL(pl2303);
+  INSERT_MODEL(radio_keene);
+  INSERT_MODEL(radio_shark);
+  INSERT_MODEL(radio_si470x_usb);
+  INSERT_MODEL(shark2);
+  INSERT_MODEL(usb8xxx);
+  INSERT_MODEL(usblcd);
+  INSERT_MODEL(usblp);
+  INSERT_MODEL(visor);
+  INSERT_MODEL(whiteheat);
+  INSERT_MODEL(xbox_remote);
+  INSERT_MODEL(xpad);
+  INSERT_MODEL(zd1201);
+  INSERT_MODEL(zd1211rw);
 }
 
 ///

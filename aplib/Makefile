@@ -1,6 +1,6 @@
 #
 # makefile for aplib 
-# 2019-2021 Tong Zhang<ztong0001@gmail.com>
+# 2019-2022 Tong Zhang<ztong0001@gmail.com>
 #
 CC=clang
 CXX=clang++
@@ -8,8 +8,8 @@ LINK=clang++
 
 UNAME_S := $(shell uname -s)
 
-CFLAGS=-g -I../ -fPIC
-CXXFLAGS=-g -std=c++14 -I../ -fPIC
+CFLAGS=-g -I../ -I./ -I./pci -I./usb -fPIC
+CXXFLAGS=-g -std=c++14 -I../ -I./ -I./pci -I./usb -fPIC -std=c++14
 
 LDFLAGS=-lpthread -std=c++14 -fPIC
 
@@ -35,7 +35,7 @@ test: aplib.so
 	$(CXX) test.o aplib.o hw_model.o $(LDFLAGS) -o test
 
 indent:
-	clang-format -i -style=file `find $d -name '*.cpp' -or -name "*.h" -or -name "*.c" -or -name "*.cc"`
+	clang-format -i -style=file `find . -name '*.cpp' -or -name "*.h" -or -name "*.c" -or -name "*.cc"`
 
 SCOPE_FILE = cscope.out
 TAG_FILE   = tags
