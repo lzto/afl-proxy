@@ -26,6 +26,7 @@
 #include "HWModel_radio_shark.h"
 #include "HWModel_radio_si470x_usb.h"
 #include "HWModel_shark2.h"
+#include "HWModel_test_usb.h"
 #include "HWModel_usb8xxx.h"
 #include "HWModel_usblcd.h"
 #include "HWModel_usblp.h"
@@ -444,7 +445,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(wanxl);
   INSERT_MODEL(wdt_pci);
   INSERT_MODEL(zatm);
-  // test device -- empty
+  // test device -- dummy
   INSERT_MODEL(test);
   // USB
   INSERT_MODEL(asix);
@@ -477,6 +478,8 @@ void hw_model_internal_init() {
   INSERT_MODEL(xpad);
   INSERT_MODEL(zd1201);
   INSERT_MODEL(zd1211rw);
+  // test_usb device --- dummy
+  INSERT_MODEL(test_usb);
 }
 
 ///
