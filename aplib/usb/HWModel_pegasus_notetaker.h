@@ -16,93 +16,42 @@
 #define STRING_CONTROL 4
 
 namespace pegasus_notetaker {
-static USBDescStrings usb_sfp_stringtable;
+static USBDescStrings usb_sfp_stringtable = {
+    usb_sfp_stringtable[STRING_MANUFACTURER] = "SFP",
+    usb_sfp_stringtable[STRING_PRODUCT] = "USB SFP",
+    usb_sfp_stringtable[STRING_SERIALNUMBER] = "sfpsfpsfpsfpsfpsfpsfp",
+    usb_sfp_stringtable[STRING_CONTROL] = "sfpsfpsfp ctrl",
+};
+
 static USBDescIface desc_iface_sfp[] = {
-    {/* CDC Control Interface */
-     .bInterfaceNumber = 0,
-     .bNumEndpoints = 4,
-     .bInterfaceClass = USB_CLASS_VENDOR_SPEC,
-     .bInterfaceSubClass = 1,
+    {.bInterfaceNumber = 0,
+     .bNumEndpoints = 2,
+     .bInterfaceClass = USB_CLASS_AUDIO,
+     .bInterfaceSubClass = 0,
      .bInterfaceProtocol = 0,
      .iInterface = STRING_CONTROL,
-     .ndesc = 4,
-     .descs =
-         (USBDescOther[]){
-             {
-                 /* Header Descriptor */
-                 .data =
-                     (uint8_t[]){
-                         0x05,                /*  u8    bLength */
-                         USB_DT_CS_INTERFACE, /*  u8    bDescriptorType */
-                         0x10,                /*  u8    bDescriptorSubType */
-                         0x10, 0x01,          /*  le16  bcdCDC */
-                     },
-             },
-             {
-                 /* Header Descriptor */
-                 .data =
-                     (uint8_t[]){
-                         0x05,                /*  u8    bLength */
-                         USB_DT_CS_INTERFACE, /*  u8    bDescriptorType */
-                         0x10,                /*  u8    bDescriptorSubType */
-                         0x10, 0x01,          /*  le16  bcdCDC */
-                     },
-             },
-             {
-                 /* Header Descriptor */
-                 .data =
-                     (uint8_t[]){
-                         0x05,                /*  u8    bLength */
-                         USB_DT_CS_INTERFACE, /*  u8    bDescriptorType */
-                         0x10,                /*  u8    bDescriptorSubType */
-                         0x10, 0x01,          /*  le16  bcdCDC */
-                     },
-             },
-             {
-                 /* Header Descriptor */
-                 .data =
-                     (uint8_t[]){
-                         0x05,                /*  u8    bLength */
-                         USB_DT_CS_INTERFACE, /*  u8    bDescriptorType */
-                         0x10,                /*  u8    bDescriptorSubType */
-                         0x10, 0x01,          /*  le16  bcdCDC */
-                     },
-             },
-         },
      .eps = (USBDescEndpoint[]){
-         {
-             .bEndpointAddress = USB_DIR_OUT | 0x01,
-             .bmAttributes = USB_ENDPOINT_XFER_BULK,
-             .wMaxPacketSize = 0x10,
-             .bInterval = 1,
-         },
          {
              .bEndpointAddress = USB_DIR_IN | 0x01,
              .bmAttributes = USB_ENDPOINT_XFER_BULK,
-             .wMaxPacketSize = 0x10,
+             .wMaxPacketSize = 0x40,
              .bInterval = 1,
          },
          {
              .bEndpointAddress = USB_DIR_OUT | 0x02,
-             .bmAttributes = USB_ENDPOINT_XFER_INT,
-             .wMaxPacketSize = 0x10,
-             .bInterval = 1,
-         },
-         {
-             .bEndpointAddress = USB_DIR_IN | 0x02,
-             .bmAttributes = USB_ENDPOINT_XFER_INT,
-             .wMaxPacketSize = 0x10,
+             .bmAttributes = USB_ENDPOINT_XFER_BULK,
+             .wMaxPacketSize = 0x40,
              .bInterval = 1,
          },
      }}};
 
 static USBDescDevice desc_device_sfp = {
     .bcdUSB = 0x0200,
-    .bDeviceClass = USB_CLASS_COMM,
+    .bDeviceClass = USB_CLASS_AUDIO,
     .bMaxPacketSize0 = 0x40,
     .bNumConfigurations = 1,
     .confs = (USBDescConfig[]){{
-        .bNumInterfaces = 0, // dln2 require this to be 0
+        .bNumInterfaces = 1,
         .bConfigurationValue = 1,
         .iConfiguration = 7,
         .bmAttributes = USB_CFG_ATT_ONE | USB_CFG_ATT_SELFPOWER,
@@ -128,16 +77,7 @@ static USBDesc desc = {
     .str = usb_sfp_stringtable,
 };
 
-static void *hw_model_usb_gen_desc() {
-  static bool initialized;
-  if (!initialized) {
-    initialized = true;
-    usb_sfp_stringtable[STRING_MANUFACTURER] = "SFP";
-    usb_sfp_stringtable[STRING_PRODUCT] = "USB SFP";
-    usb_sfp_stringtable[STRING_SERIALNUMBER] = "sfpsfpsfpsfpsfpsfpsfp";
-  }
-  return &desc;
-}
+static void *hw_model_usb_gen_desc() { return &desc; }
 } // namespace pegasus_notetaker
 class HWModel_pegasus_notetaker : public HWModel {
 public:

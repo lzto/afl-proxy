@@ -17,7 +17,12 @@
 #define STRING_CONTROL 4
 
 namespace radio_keene {
-static USBDescStrings usb_sfp_stringtable;
+static USBDescStrings usb_sfp_stringtable = {
+    usb_sfp_stringtable[STRING_MANUFACTURER] = "SFP",
+    usb_sfp_stringtable[STRING_PRODUCT] = "USB SFP",
+    usb_sfp_stringtable[STRING_SERIALNUMBER] = "sfpsfpsfpsfpsfpsfpsfp",
+    usb_sfp_stringtable[STRING_CONTROL] = "sfpsfpsfp ctrl",
+};
 static USBDescIface desc_iface_sfp[] = {
     {/* CDC Control Interface */
      .bInterfaceNumber = 0,
@@ -129,16 +134,7 @@ static USBDesc desc = {
     .str = usb_sfp_stringtable,
 };
 
-static void *hw_model_usb_gen_desc() {
-  static bool initialized;
-  if (!initialized) {
-    initialized = true;
-    usb_sfp_stringtable[STRING_MANUFACTURER] = "SFP";
-    usb_sfp_stringtable[STRING_PRODUCT] = "B-LINK USB Audio  ";
-    usb_sfp_stringtable[STRING_SERIALNUMBER] = "deadbeefdeadbeef";
-  }
-  return &desc;
-}
+static void *hw_model_usb_gen_desc() { return &desc; }
 }; // namespace radio_keene
 
 class HWModel_radio_keene : public HWModel {

@@ -17,7 +17,12 @@
 #define STRING_CONTROL 4
 
 namespace dln2 {
-static USBDescStrings usb_sfp_stringtable;
+static USBDescStrings usb_sfp_stringtable = {
+    usb_sfp_stringtable[STRING_MANUFACTURER] = "SFP",
+    usb_sfp_stringtable[STRING_PRODUCT] = "USB SFP",
+    usb_sfp_stringtable[STRING_SERIALNUMBER] = "sfpsfpsfpsfpsfpsfpsfp",
+    usb_sfp_stringtable[STRING_CONTROL] = "sfpsfpsfp ctrl",
+};
 static USBDescIface desc_iface_sfp[] = {
     {/* CDC Control Interface */
      .bInterfaceNumber = 0,
@@ -129,16 +134,7 @@ static USBDesc desc = {
     .str = usb_sfp_stringtable,
 };
 
-static void *hw_model_usb_gen_desc_dln2() {
-  static bool initialized;
-  if (!initialized) {
-    initialized = true;
-    usb_sfp_stringtable[STRING_MANUFACTURER] = "SFP";
-    usb_sfp_stringtable[STRING_PRODUCT] = "USB SFP";
-    usb_sfp_stringtable[STRING_SERIALNUMBER] = "deadbeefdeadbeef";
-  }
-  return &desc;
-}
+static void *hw_model_usb_gen_desc_dln2() { return &desc; }
 }; // namespace dln2
 class HWModel_dln2 : public HWModel {
 public:
