@@ -22,6 +22,7 @@
 #include "HWModel_mceusb.h"
 #include "HWModel_mwifiex_usb.h"
 #include "HWModel_p54usb.h"
+#include "HWModel_pegasus_notetaker.h"
 #include "HWModel_pl2303.h"
 #include "HWModel_radio_keene.h"
 #include "HWModel_radio_shark.h"
@@ -466,6 +467,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(mceusb);
   INSERT_MODEL(mwifiex_usb);
   INSERT_MODEL(p54usb);
+  INSERT_MODEL(pegasus_notetaker);
   INSERT_MODEL(pl2303);
   INSERT_MODEL(radio_keene);
   INSERT_MODEL(radio_shark);

@@ -1,22 +1,21 @@
 ///
-/// hardware model for carl9170
+/// hardware model for pegasus_notetaker
 /// 2021 Tong Zhang<ztong0001@gmail.com>
 ///
 
 #include "HWModel.h"
-
 #include "include/usb/desc.h"
 #include "include/usb/usb.h"
 
-#define USB_SFP_VID 0x0409
-#define USB_SFP_PID 0x0249
+#define USB_SFP_VID 0x0e20
+#define USB_SFP_PID 0x0101
 
 #define STRING_MANUFACTURER 1
 #define STRING_PRODUCT 2
 #define STRING_SERIALNUMBER 3
 #define STRING_CONTROL 4
 
-namespace carl9170 {
+namespace pegasus_notetaker {
 static USBDescStrings usb_sfp_stringtable;
 static USBDescIface desc_iface_sfp[] = {
     {/* CDC Control Interface */
@@ -135,30 +134,64 @@ static void *hw_model_usb_gen_desc() {
     initialized = true;
     usb_sfp_stringtable[STRING_MANUFACTURER] = "SFP";
     usb_sfp_stringtable[STRING_PRODUCT] = "USB SFP";
-    usb_sfp_stringtable[STRING_SERIALNUMBER] = "deadbeefdeadbeef";
+    usb_sfp_stringtable[STRING_SERIALNUMBER] = "sfpsfpsfpsfpsfpsfpsfp";
   }
   return &desc;
 }
-}; // namespace carl9170
-
-class HWModel_carl9170 : public HWModel {
+} // namespace pegasus_notetaker
+class HWModel_pegasus_notetaker : public HWModel {
 public:
-  HWModel_carl9170()
-      : HWModel("carl9170", USB_SFP_VID, USB_SFP_PID), probe_len(0) {}
-  virtual ~HWModel_carl9170(){};
+  HWModel_pegasus_notetaker()
+      : HWModel("pegasus_notetaker", USB_SFP_VID, USB_SFP_PID), probe_len(0) {}
+  virtual ~HWModel_pegasus_notetaker(){};
   virtual void restart_device() final { probe_len = 0; };
   virtual int read(uint8_t *dest, uint64_t addr, size_t size) final {
-    if (probe_len > -1)
-      return 0;
-    probe_len++;
+    uint8_t *ptr = &(device_ram[addr]);
+    switch (size) {
+    case (1):
+      *((uint8_t *)dest) = *(uint8_t *)(ptr);
+      break;
+    case (2):
+      *((uint16_t *)dest) = *(uint16_t *)(ptr);
+      break;
+    case (4):
+      *((uint32_t *)dest) = *(uint32_t *)(ptr);
+      break;
+    case (8):
+      *((uint64_t *)ptr) = *(uint64_t *)(ptr);
+      break;
+    default:
+      assert(0);
+    }
     return size;
   };
-  virtual void write(uint64_t data, uint64_t addr, size_t size) final{};
+  virtual void write(uint64_t data, uint64_t addr, size_t size) final {
+    uint8_t *ptr = &device_ram[addr];
+    switch (size) {
+    case (1):
+      *ptr = (uint8_t)((data)&0xff);
+      break;
+    case (2):
+      *((uint16_t *)ptr) = (uint16_t)((data)&0xffff);
+      break;
+    case (4):
+      *((uint32_t *)ptr) = (uint32_t)((data)&0xffffffff);
+      break;
+    case (8):
+      *((uint64_t *)ptr) = (uint64_t)(data);
+      break;
+    default:
+      assert(0);
+    }
+  };
 
-  virtual void *getUSBDesc() { return carl9170::hw_model_usb_gen_desc(); }
+  virtual void *getUSBDesc() {
+    return pegasus_notetaker::hw_model_usb_gen_desc();
+  }
 
 private:
   int probe_len;
+  uint8_t device_ram[1024000];
 };
 #undef USB_SFP_VID
 #undef USB_SFP_PID

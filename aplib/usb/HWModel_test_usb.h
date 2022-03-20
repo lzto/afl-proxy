@@ -138,7 +138,7 @@ static void *hw_model_usb_gen_desc() {
   }
   return &desc;
 }
-} // namespace asix
+} // namespace test_usb
 class HWModel_test_usb : public HWModel {
 public:
   HWModel_test_usb()
