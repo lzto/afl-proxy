@@ -7,7 +7,8 @@
 
 class HWModel_amd_xgbe : public HWModel {
 public:
-  HWModel_amd_xgbe() : HWModel("amd_xgbe", 0x1022, 0x1458), probe_len(0) {
+  HWModel_amd_xgbe()
+      : HWModel("amd_xgbe", 0x1022, 0x1458, 0, 0, 0xff0000, 2), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 128 * 1024 * 1024},

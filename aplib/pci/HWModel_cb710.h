@@ -7,7 +7,8 @@
 
 class HWModel_cb710 : public HWModel {
 public:
-  HWModel_cb710() : HWModel("cb710", 0x1524, 0x0510), probe_len(0) {
+  HWModel_cb710()
+      : HWModel("cb710", 0x1524, 0x0510, 0, 0, 0x060700), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
