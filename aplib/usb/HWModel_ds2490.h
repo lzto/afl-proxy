@@ -78,13 +78,13 @@ static USBDescIface desc_iface_sfp[] = {
      .eps = (USBDescEndpoint[]){
          {
              .bEndpointAddress = USB_DIR_OUT | 0x01,
-             .bmAttributes = USB_ENDPOINT_XFER_BULK,
+             .bmAttributes = USB_ENDPOINT_XFER_INT,
              .wMaxPacketSize = 0x10,
              .bInterval = 1,
          },
          {
              .bEndpointAddress = USB_DIR_IN | 0x01,
-             .bmAttributes = USB_ENDPOINT_XFER_BULK,
+             .bmAttributes = USB_ENDPOINT_XFER_INT,
              .wMaxPacketSize = 0x10,
              .bInterval = 1,
          },

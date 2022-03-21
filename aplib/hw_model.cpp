@@ -19,6 +19,7 @@
 #include "HWModel_hso.h"
 #include "HWModel_imon.h"
 #include "HWModel_libertas_tf_usb.h"
+#include "HWModel_mcba_usb.h"
 #include "HWModel_mceusb.h"
 #include "HWModel_mwifiex_usb.h"
 #include "HWModel_p54usb.h"
@@ -465,6 +466,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(imon);
   INSERT_MODEL(libertas_tf_usb);
   INSERT_MODEL(mceusb);
+  INSERT_MODEL(mcba_usb);
   INSERT_MODEL(mwifiex_usb);
   INSERT_MODEL(p54usb);
   INSERT_MODEL(pegasus_notetaker);

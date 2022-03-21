@@ -8,7 +8,7 @@
 class HWModel_isci : public HWModel {
 public:
   HWModel_isci() : HWModel("isci", 0x8086, 0x1d60), probe_len(0) {
-    setupBar({{PCI_BAR_TYPE_PIO, 4 * 1024},
+    setupBar({{PCI_BAR_TYPE_MMIO, 4 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 128 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
