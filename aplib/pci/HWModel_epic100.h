@@ -8,7 +8,8 @@
 class HWModel_epic100 : public HWModel {
 public:
   HWModel_epic100()
-      : HWModel("epic100", 0x10b8, 0x0005, 0x1092, 0x0ab4), probe_len(0) {
+      : HWModel("epic100", 0x10b8, 0x0005, 0x1092, 0x0ab4, 0x020000),
+        probe_len(0) {
     setupBar({{PCI_BAR_TYPE_PIO, 4 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},

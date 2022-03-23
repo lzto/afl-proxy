@@ -7,7 +7,8 @@
 
 class HWModel_pcnet32 : public HWModel {
 public:
-  HWModel_pcnet32() : HWModel("pcnet32", 0x1022, 0x2000), probe_len(0) {
+  HWModel_pcnet32()
+      : HWModel("pcnet32", 0x1022, 0x2000, 0, 0, 0x0200), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_PIO, 4 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 128 * 1024 * 1024},

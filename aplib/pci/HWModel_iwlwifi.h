@@ -8,7 +8,7 @@
 class HWModel_iwlwifi : public HWModel {
 public:
   HWModel_iwlwifi()
-      : HWModel("iwlwifi", 0x8086, 0x0082, 0x8086, 0x1301, 0xff0000, 0x0),
+      : HWModel("iwlwifi", 0x8086, 0x0082, 0x8086, 0x1301, 0x028000, 0x0),
         probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},

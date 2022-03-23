@@ -8,7 +8,7 @@
 class HWModel_snd_hda_intel : public HWModel {
 public:
   HWModel_snd_hda_intel()
-      : HWModel("snd_hda_intel", 0x1002, 0x0002), probe_len(0) {
+      : HWModel("snd_hda_intel", 0x1002, 0x0002, 0, 0, 0x40300), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_PIO, 4 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 128 * 1024 * 1024},

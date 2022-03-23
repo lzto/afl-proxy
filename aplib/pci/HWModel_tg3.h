@@ -7,7 +7,7 @@
 
 class HWModel_tg3 : public HWModel {
 public:
-  HWModel_tg3() : HWModel("tg3", 0x106b, 0x1645), probe_len(0) {
+  HWModel_tg3() : HWModel("tg3", 0x106b, 0x1645, 0, 0, 0x020000), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},

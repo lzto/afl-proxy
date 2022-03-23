@@ -7,7 +7,8 @@
 
 class HWModel_3w_9xxx : public HWModel {
 public:
-  HWModel_3w_9xxx() : HWModel("3w_9xxx", 0x13c1, 0x1002), probe_len(0) {
+  HWModel_3w_9xxx()
+      : HWModel("3w_9xxx", 0x13c1, 0x1002, 0, 0, 0x010400), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},

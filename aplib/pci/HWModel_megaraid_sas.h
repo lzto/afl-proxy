@@ -8,7 +8,7 @@
 class HWModel_megaraid_sas : public HWModel {
 public:
   HWModel_megaraid_sas()
-      : HWModel("megaraid_sas", 0x1000, 0x005b), probe_len(0) {
+      : HWModel("megaraid_sas", 0x1000, 0x005b, 0, 0, 0x010000), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},

@@ -7,7 +7,8 @@
 
 class HWModel_pc300too : public HWModel {
 public:
-  HWModel_pc300too() : HWModel("pc300too", 0x120e, 0x0301), probe_len(0) {
+  HWModel_pc300too()
+      : HWModel("pc300too", 0x120e, 0x0301, 0, 0, 0x0280), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 0x80},
               {PCI_BAR_TYPE_MMIO, 0x8},
               {PCI_BAR_TYPE_MMIO, 0x400},

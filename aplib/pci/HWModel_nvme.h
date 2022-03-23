@@ -7,13 +7,14 @@
 
 class HWModel_nvme : public HWModel {
 public:
-  HWModel_nvme() : HWModel("nvme", 0x106b, 0x2001), probe_len(0) {
-    setupBar({{PCI_BAR_TYPE_MMIO, 0x80000},
-              {PCI_BAR_TYPE_MMIO, 0x80000},
-              {PCI_BAR_TYPE_MMIO, 0x80000},
-              {PCI_BAR_TYPE_MMIO, 0x80000},
-              {PCI_BAR_TYPE_MMIO, 0x80000},
-              {PCI_BAR_TYPE_MMIO, 0x80000}});
+  HWModel_nvme()
+      : HWModel("nvme", 0x106b, 0x2001, 0, 0, 0x010802), probe_len(0) {
+    setupBar({{PCI_BAR_TYPE_MMIO, 16384},
+              {PCI_BAR_TYPE_MMIO, 0},
+              {PCI_BAR_TYPE_MMIO, 0},
+              {PCI_BAR_TYPE_MMIO, 0},
+              {PCI_BAR_TYPE_MMIO, 256},
+              {PCI_BAR_TYPE_MMIO, 0}});
   }
   virtual ~HWModel_nvme(){};
   virtual void restart_device() final { probe_len = 0; };

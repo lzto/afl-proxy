@@ -7,7 +7,8 @@
 
 class HWModel_adm8211 : public HWModel {
 public:
-  HWModel_adm8211() : HWModel("adm8211", 0x10b7, 0x6000), probe_len(0) {
+  HWModel_adm8211()
+      : HWModel("adm8211", 0x10b7, 0x6000, 0, 0, 0x028000), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},

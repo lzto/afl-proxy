@@ -7,7 +7,8 @@
 
 class HWModel_ath10k : public HWModel {
 public:
-  HWModel_ath10k() : HWModel("ath10k", 0x168c, 0x003e), probe_len(0) {
+  HWModel_ath10k()
+      : HWModel("ath10k", 0x168c, 0x003e, 0, 0, 0x028000), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},

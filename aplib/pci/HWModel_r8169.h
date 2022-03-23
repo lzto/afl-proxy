@@ -7,7 +7,8 @@
 
 class HWModel_r8169 : public HWModel {
 public:
-  HWModel_r8169() : HWModel("r8169", 0x10ec, 0x2502), probe_len(0) {
+  HWModel_r8169()
+      : HWModel("r8169", 0x10ec, 0x2502, 0, 0, 0x020000), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},

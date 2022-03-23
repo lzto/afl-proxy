@@ -7,7 +7,8 @@
 
 class HWModel_3c59x : public HWModel {
 public:
-  HWModel_3c59x() : HWModel("3c59x", 0x10b7, 0x1201), probe_len(0) {
+  HWModel_3c59x()
+      : HWModel("3c59x", 0x10b7, 0x1201, 0, 0, 0x020000), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 0x20}});
   }
   virtual ~HWModel_3c59x(){};

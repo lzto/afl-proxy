@@ -7,7 +7,8 @@
 
 class HWModel_acard_ahci : public HWModel {
 public:
-  HWModel_acard_ahci() : HWModel("acard_ahci", 0x1191, 0x000d), probe_len(0) {
+  HWModel_acard_ahci()
+      : HWModel("acard_ahci", 0x1191, 0x000d, 0, 0, 0x010601), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 0},
               {PCI_BAR_TYPE_MMIO, 0},
               {PCI_BAR_TYPE_MMIO, 0},

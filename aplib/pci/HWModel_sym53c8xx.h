@@ -7,7 +7,8 @@
 
 class HWModel_sym53c8xx : public HWModel {
 public:
-  HWModel_sym53c8xx() : HWModel("sym53c8xx", 0x1000, 0x1), probe_len(0) {
+  HWModel_sym53c8xx()
+      : HWModel("sym53c8xx", 0x1000, 0x1, 0, 0, 0x010000), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 0x4000},
               {PCI_BAR_TYPE_MMIO, 0x4000},
               {PCI_BAR_TYPE_MMIO, 0x4000},

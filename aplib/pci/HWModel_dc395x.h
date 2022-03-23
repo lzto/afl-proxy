@@ -7,7 +7,8 @@
 
 class HWModel_dc395x : public HWModel {
 public:
-  HWModel_dc395x() : HWModel("dc395x", 0x1de1, 0x0391), probe_len(0) {
+  HWModel_dc395x()
+      : HWModel("dc395x", 0x1de1, 0x0391, 0, 0, 0x010000), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},

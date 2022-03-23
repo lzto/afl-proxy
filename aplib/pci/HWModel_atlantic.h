@@ -7,7 +7,8 @@
 
 class HWModel_atlantic : public HWModel {
 public:
-  HWModel_atlantic() : HWModel("atlantic", 0x1d6a, 0x00b1), probe_len(0) {
+  HWModel_atlantic()
+      : HWModel("atlantic", 0x1d6a, 0x00b1, 0, 0, 0x020000), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_PIO, 4 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 128 * 1024 * 1024},

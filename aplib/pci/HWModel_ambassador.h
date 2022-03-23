@@ -7,7 +7,8 @@
 
 class HWModel_ambassador : public HWModel {
 public:
-  HWModel_ambassador() : HWModel("ambassador", 0x10b6, 0x1001), probe_len(0) {
+  HWModel_ambassador()
+      : HWModel("ambassador", 0x10b6, 0x1001, 0, 0, 0x020300), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},

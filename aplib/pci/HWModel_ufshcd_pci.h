@@ -7,7 +7,8 @@
 
 class HWModel_ufshcd_pci : public HWModel {
 public:
-  HWModel_ufshcd_pci() : HWModel("ufshcd_pci", 0x144d, 0xc00c), probe_len(0) {
+  HWModel_ufshcd_pci()
+      : HWModel("ufshcd_pci", 0x144d, 0xc00c, 0, 0, 0x0), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 128 * 1024 * 1024},

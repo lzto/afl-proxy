@@ -8,7 +8,8 @@
 class HWModel_sundance : public HWModel {
 public:
   HWModel_sundance()
-      : HWModel("sundance", 0x1186, 0x1002, 0x1186, 0x1002), probe_len(0) {
+      : HWModel("sundance", 0x1186, 0x1002, 0x1186, 0x1002, 0x020000),
+        probe_len(0) {
     setupBar({{PCI_BAR_TYPE_PIO, 0x80}});
   }
   virtual ~HWModel_sundance(){};

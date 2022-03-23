@@ -7,7 +7,7 @@
 
 class HWModel_myrs : public HWModel {
 public:
-  HWModel_myrs() : HWModel("myrs", 0x1069, 0x50), probe_len(0) {
+  HWModel_myrs() : HWModel("myrs", 0x1069, 0x50, 0, 0, 0x010000), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 0x4000}});
   }
   virtual ~HWModel_myrs(){};

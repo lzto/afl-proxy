@@ -7,7 +7,8 @@
 
 class HWModel_ne2k : public HWModel {
 public:
-  HWModel_ne2k() : HWModel("ne2k", 0x10ec, 0x8029), probe_len(0) {
+  HWModel_ne2k()
+      : HWModel("ne2k", 0x10ec, 0x8029, 0, 0, 0x020000), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_PIO, 0x100}});
   }
   virtual ~HWModel_ne2k(){};

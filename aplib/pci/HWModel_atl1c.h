@@ -7,7 +7,8 @@
 
 class HWModel_atl1c : public HWModel {
 public:
-  HWModel_atl1c() : HWModel("atl1c", 0x1969, 0x1062), probe_len(0) {
+  HWModel_atl1c()
+      : HWModel("atl1c", 0x1969, 0x1062, 0, 0, 0x020000), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 4 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 128 * 1024 * 1024},

@@ -7,7 +7,8 @@
 
 class HWModel_vxge : public HWModel {
 public:
-  HWModel_vxge() : HWModel("vxge", 0x17d5, 0x5733), probe_len(0) {
+  HWModel_vxge()
+      : HWModel("vxge", 0x17d5, 0x5733, 0, 0, 0x020000), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 16 * 1024},
               {PCI_BAR_TYPE_MMIO, 16 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 16 * 1024 * 1024},

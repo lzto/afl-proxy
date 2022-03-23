@@ -7,7 +7,8 @@
 
 class HWModel_arcmsr : public HWModel {
 public:
-  HWModel_arcmsr() : HWModel("arcmsr", 0x17d3, 0x1110), probe_len(0) {
+  HWModel_arcmsr()
+      : HWModel("arcmsr", 0x17d3, 0x1110, 0, 0, 0x010400), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 0x1000}});
   }
   virtual ~HWModel_arcmsr(){};

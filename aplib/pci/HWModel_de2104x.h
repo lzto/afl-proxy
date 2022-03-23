@@ -7,7 +7,8 @@
 
 class HWModel_de2104x : public HWModel {
 public:
-  HWModel_de2104x() : HWModel("de2104x", 0x1011, 0x0002), probe_len(0) {
+  HWModel_de2104x()
+      : HWModel("de2104x", 0x1011, 0x0002, 0, 0, 0x020000), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 0}, {PCI_BAR_TYPE_MMIO, 0x100}});
   }
   virtual ~HWModel_de2104x(){};
