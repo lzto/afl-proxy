@@ -7,7 +7,8 @@
 
 class HWModel_skge : public HWModel {
 public:
-  HWModel_skge() : HWModel("skge", 0x10b7, 0x1700), probe_len(0) {
+  HWModel_skge()
+      : HWModel("skge", 0x10b7, 0x1700, 0, 0, 0x020000), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024},

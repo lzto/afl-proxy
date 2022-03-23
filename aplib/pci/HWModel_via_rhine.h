@@ -7,7 +7,8 @@
 
 class HWModel_via_rhine : public HWModel {
 public:
-  HWModel_via_rhine() : HWModel("via_rhine", 0x1106, 0x3043), probe_len(0) {
+  HWModel_via_rhine()
+      : HWModel("via_rhine", 0x1106, 0x3043, 0, 0, 0x020000), probe_len(0) {
     setupBar({{PCI_BAR_TYPE_PIO, 0x100},
               {PCI_BAR_TYPE_MMIO, 0x200},
               {PCI_BAR_TYPE_MMIO, 128 * 1024 * 1024},
