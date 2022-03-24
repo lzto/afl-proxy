@@ -29,6 +29,7 @@
 #include "HWModel_radio_shark.h"
 #include "HWModel_radio_si470x_usb.h"
 #include "HWModel_shark2.h"
+#include "HWModel_spi_sfp.h"
 #include "HWModel_test_usb.h"
 #include "HWModel_usb8xxx.h"
 #include "HWModel_usblcd.h"
@@ -214,6 +215,7 @@
 #include "HWModel_snd_trident.h"
 #include "HWModel_snd_vx222.h"
 #include "HWModel_solo6x10.h"
+#include "HWModel_spi_pxa2xx_pci.h"
 #include "HWModel_sstfb.h"
 #include "HWModel_sundance.h"
 #include "HWModel_sym53c8xx.h"
@@ -427,6 +429,8 @@ void hw_model_internal_init() {
   INSERT_MODEL(snd_intel8x0m);
   INSERT_MODEL(snd_trident);
   INSERT_MODEL(solo6x10);
+  INSERT_MODEL(spi_pxa2xx_pci);
+  INSERT_MODEL(spi_sfp)
   INSERT_MODEL(sstfb);
   INSERT_MODEL(sundance);
   INSERT_MODEL(sym53c8xx);
