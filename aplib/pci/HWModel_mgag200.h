@@ -20,6 +20,51 @@ public:
   virtual int read(uint8_t *dest, uint64_t addr, size_t size) final {
     if (probe_len > 100)
       return 0;
+#if 0
+    switch (addr) {
+    case (0x1fdf): {
+      static int cnt;
+      if (cnt == 0)
+        *((uint8_t *)dest) = 0x0;
+      cnt++;
+      break;
+    }
+    case (0x1fcc): {
+      static int cnt;
+      if (cnt == 0)
+        *((uint8_t *)dest) = 0x0;
+      if (cnt == 1)
+        *((uint8_t *)dest) = 0xfe;
+      cnt++;
+      break;
+    }
+    case (0x0): {
+      static int cnt;
+      if (cnt == 0)
+        *((uint16_t *)dest) = 0x0;
+      cnt++;
+      break;
+    }
+    case (0x1fd5): {
+      static int cnt;
+      if (cnt == 0)
+        *((uint8_t *)dest) = 0x0;
+      cnt++;
+      break;
+    }
+    case (0x3c0a): {
+      static int cnt;
+      if (cnt <= 235)
+        *((uint8_t *)dest) = 0x0;
+      if (cnt == 236)
+        *((uint8_t *)dest) = 0xfd;
+      if (cnt >= 237)
+        *((uint8_t *)dest) = 0x0;
+      cnt++;
+      break;
+    }
+    }
+#endif
     switch (addr) {
     case (0x3c0a): {
       static uint8_t cnt;
