@@ -89,3 +89,7 @@ To run the generated model, use **run.py** script.
 
 Some pre-trained device model is located at [sfp-ml-dev-model-db](sfp-ml-dev-model-db)
 
+Misc
+----------
+* s2e-tools: tools to convert s2e result to device model, prepare s2e project, check status and upload artifact to model archive server
+
