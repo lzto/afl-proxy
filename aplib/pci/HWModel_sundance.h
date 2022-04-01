@@ -11939,13 +11939,36 @@ public:
   virtual int read(uint8_t *dest, uint64_t addr, size_t size, int bar) {
     if (read(dest, addr, size))
       return size;
-    bars[bar]->read(dest, addr, size);
-    return size;
+    // bars[bar]->read(dest, addr, size);
+    //(*(uint64_t*)dest) ^= rand();
+    // return size;
+    return 0;
   };
   virtual void write(uint64_t data, uint64_t addr, size_t size, int bar) {
     bars[bar]->write(data, addr, size);
+    // assuming page aligned though not true
+    if (addr == 0x04) {
+      // INFO("=Got DMA TxListPtr: "<< hexval(data));
+      txlist = std::make_pair(addr, 4096);
+      dmasgLock.lock();
+      dmasg.clear();
+      dmasg.push_back(txlist);
+      dmasg.push_back(rxlist);
+      dmasgLock.unlock();
+    }
+    if (addr == 0x10) {
+      // INFO("=Got DMA RxListPtr: "<< hexval(data));
+      rxlist = std::make_pair(addr, 4096);
+      dmasgLock.lock();
+      dmasg.clear();
+      dmasg.push_back(txlist);
+      dmasg.push_back(rxlist);
+      dmasgLock.unlock();
+    }
   }
 
 private:
   int probe_len;
+  std::pair<uint64_t, uint64_t> txlist;
+  std::pair<uint64_t, uint64_t> rxlist;
 };

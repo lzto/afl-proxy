@@ -216,6 +216,7 @@ void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size, int bar) {
   if (IS_DUMP_W)
     INFO("write " << size << " byte, bar " << bar << " @ " << hexval(addr)
                   << "=" << hexval(data));
+#if 0
   // DMA address detection
   if ((use_dma) && (size == 4)) {
     // check if this looks like a DMA address
@@ -246,7 +247,7 @@ void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size, int bar) {
     }
   out:;
   }
-
+#endif
   // for probing
   get_hw_instance()->write(data, addr, size, bar);
 
@@ -366,6 +367,7 @@ again:
 void ap_fill_dma_buffer() {
   if (!use_dma)
     return;
+#if 0
   // system("logger ap_fill_dma_buffer");
   ///
   /// write random data in the DMA region --
@@ -386,6 +388,20 @@ void ap_fill_dma_buffer() {
     cpu_physical_memory_rw(addr, buffer, 4096, true);
   }
   free(buffer);
+#else
+  get_hw_instance()->lockDMASG();
+  const auto &dmasg = get_hw_instance()->getDMASG();
+  for (auto &p : dmasg) {
+    uint64_t addr = p.first;
+    uint64_t size = p.second;
+    uint8_t *buffer = (uint8_t *)malloc(size);
+    for (int i = 0; i < size; i++)
+      buffer[i] = rand();
+    cpu_physical_memory_rw(addr, buffer, size, true);
+    free(buffer);
+  }
+  get_hw_instance()->unlockDMASG();
+#endif
 }
 
 ///

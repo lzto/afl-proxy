@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <iostream>
 #include <list>
+#include <mutex>
 #include <string.h>
 #include <string>
 #include <vector>
@@ -191,6 +192,12 @@ public:
 
   virtual void *getUSBDesc() { return nullptr; }
 
+  const vector<pair<uint64_t, uint64_t>> &getDMASG() { return dmasg; }
+
+  void lockDMASG() { dmasgLock.lock(); }
+
+  void unlockDMASG() { dmasgLock.unlock(); }
+
 protected:
   const uint16_t vid;
   const uint16_t pid;
@@ -201,6 +208,9 @@ protected:
   int pciBarCnt;
   int msixBarIdx;
   vector<Bar *> bars;
+  // dma scatter gather list <pair<address, size>>
+  vector<pair<uint64_t, uint64_t>> dmasg;
+  std::mutex dmasgLock;
 
   // possible values are: DEVICE_MODEL_TYPE_PCI, DEVICE_MODEL_TYPE_USB
   int deviceType;
