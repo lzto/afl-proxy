@@ -7,3 +7,4 @@ run/seed
 build
 cscope.out
 tags
+.DS_Store
