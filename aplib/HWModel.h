@@ -17,6 +17,8 @@
 #include <string>
 #include <vector>
 
+#include "qemu_definitions.h"
+
 using namespace std;
 
 #define PCI_BAR_TYPE_MMIO 1
@@ -197,6 +199,33 @@ public:
   void lockDMASG() { dmasgLock.lock(); }
 
   void unlockDMASG() { dmasgLock.unlock(); }
+
+  virtual void feedRandomDMAData(){};
+
+  ///
+  /// write data to dst(qemu hw addr)
+  ///
+  void writeRandomDataToPhyMemGeneric(uint64_t dst, uint64_t size) {
+    uint8_t *buffer = (uint8_t *)malloc(size);
+    for (int i = 0; i < size; i++)
+      buffer[i] = rand();
+    cpu_physical_memory_rw(dst, buffer, size, true);
+    free(buffer);
+  }
+
+  ///
+  /// read size byte of data from src(qemu hw addr) to dst
+  ///
+  void readPhyMemGeneric(uint8_t *dst, uint64_t src, uint64_t size) {
+    cpu_physical_memory_rw(src, dst, size, false);
+  }
+
+  ///
+  /// write data to dst(qemu hw addr)
+  ///
+  void writePhyMemGeneric(uint64_t dst, uint8_t *src, uint64_t size) {
+    cpu_physical_memory_rw(dst, src, size, true);
+  }
 
 protected:
   const uint16_t vid;

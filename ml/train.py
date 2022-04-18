@@ -1,5 +1,5 @@
 """
-device simulation - ne2k-pci
+device simulation - sundance
 """
 
 from __future__ import print_function
@@ -11,6 +11,8 @@ import multiprocessing as mp
 import pickle
 import re
 import time, threading
+import subprocess
+import os
 
 pyaplib = ctypes.cdll.LoadLibrary('../pylib/build/pyaplib.so')
 pyaplib.get_devmem_size.restype = ctypes.c_int
@@ -19,73 +21,20 @@ pyaplib.get_msg_type.restype = ctypes.c_int
 pyaplib.get_req_addr.restype = ctypes.c_int
 pyaplib.get_req_size.results = ctypes.c_int
 
-parallel_size = 6
+parallel_size = 20
 #import visualize
 device_clock_sec = 0.1
-qemutimeout = 35
+qemutimeout = 120
 
+'''
+should look at coverage and count number of errors and path explored
 '''
 def get_fitness(shmid):
-    fname = "/home/tong/qemu-afl-image/vm-testing-"+str(shmid)+".log"
-    ret = 0
-    critical = 0
-    wrong = 0
-    keyword="fail"
-    with open(fname, 'r', encoding="latin-1") as fin:
-        ret += sum([1 for line in fin if keyword in line])
-    keyword="no space"
-    with open(fname, 'r', encoding="latin-1") as fin:
-        ret += sum([1 for line in fin if keyword in line]) * 20
-
-    keyword="wrong"
-    with open(fname, 'r', encoding="latin-1") as fin:
-        wrong = sum([1 for line in fin if keyword in line])
-    keyword="RIP"
-    with open(fname, 'r', encoding="latin-1") as fin:
-        critical += sum([1 for line in fin if keyword in line])
-    keyword="BUG"
-    with open(fname, 'r', encoding="latin-1") as fin:
-        critical += sum([1 for line in fin if keyword in line])
-    keyword="No such device"
-    with open(fname, 'r', encoding="latin-1") as fin:
-        ret += sum([1 for line in fin if keyword in line]) * 30
-    if (critical != 0):
-        return -100000 * critical;
-    if (wrong>3):
-        return -40 * wrong;
-    return (100-ret)/100;
-'''
-
-def get_fitness(shmid):
-    fname = "/home/tong/qemu-afl-image/vm-testing-"+str(shmid)+".log"
-    ret = 0
-    keyword="link down"
-    with open(fname, 'r', encoding="latin-1") as fin:
-        ret -= sum([1 for line in fin if keyword in line])
-    keyword="PCI bus error"
-    with open(fname, 'r', encoding="latin-1") as fin:
-        ret -= sum([1 for line in fin if keyword in line])
-    keyword="Device or resource busy"
-    with open(fname, 'r', encoding="latin-1") as fin:
-        ret -= sum([1 for line in fin if keyword in line]) * 100
-    keyword="Network is unreachable"
-    with open(fname, 'r', encoding="latin-1") as fin:
-        ret -= sum([1 for line in fin if keyword in line])
-    return ret
-
-'''
-def get_fitness(shmid):
-    fname = "/home/tong/qemu-afl-image/vm-testing-"+str(shmid)+".log"
-    ret = 0
-    keyword="RX bytes:"
-    ints = [0,0,0,0,0,0]
-    with open(fname, 'r', encoding="latin-1") as fin:
-        for line in fin:
-            if keyword in line:
-                ints = re.findall(r'\d+', line)
-    ret = int(ints[0]) * 2 + int(ints[3])
-    return ret / 10
-'''
+    '''fname = "/home/tong/qemu-afl-image/vm-testing-"+str(shmid)+".log"'''
+    fname = "/home/tong/qemu-afl-image/9p-"+str(shmid)
+    cmd = "/home/tong/afl-proxy/ml/calculate_fitness.sh " + fname
+    ret = subprocess.getoutput(cmd)
+    return float(ret)
 
 def get_input(genome_id):
     network_input = ()
@@ -122,12 +71,16 @@ def get_input_selected(genome_id):
 def eval_single_genome(genome_id, genome, config, out):
     #print("id:{}".format(genome_id))
     pyaplib.init(genome_id)
+    donefile="/home/tong/qemu-afl-image/9p-"+str(genome_id)+"/done"
+    if os.path.exists(donefile):
+        os.remove(donefile)
     pyaplib.launch_qemu(genome_id)
     cnt = 0
     stime = time.time()
     last_clock_tick = time.time()
     net = neat.nn.FeedForwardNetwork.create(genome, config)
     begin_to_send_irq = 0
+    need_restart = 0
     while True :
         ''' check request from QEMU '''
         if (pyaplib.get_msg_type(genome_id) == 3):
@@ -165,17 +118,22 @@ def eval_single_genome(genome_id, genome, config, out):
         ''' timeout? '''
         etime = time.time()
         if (int(etime - stime)>qemutimeout):
+            need_restart = 1
+            break
+        if (os.path.exists(donefile)):
             break
     '''fitness = get_fitness(genome_id) + cnt / 100.0'''
-    fitness = get_fitness(genome_id) / cnt * 1000
-    '''fitness = get_fitness(genome_id)'''
-    out.put(fitness)
+    '''fitness = get_fitness(genome_id) / cnt * 1000'''
+    if (need_restart==0):
+        fitness = get_fitness(genome_id)
+        out.put(fitness)
     #genome.fitness = fitness
     print('Fitness gen {0}={1} RCNT:{2}'.format(genome_id, fitness, cnt))
     # kill qemu
     pyaplib.kill_qemu(genome_id)
     # tear down shm
     pyaplib.uninit(genome_id)
+    return need_restart
     
 
 
@@ -194,8 +152,11 @@ def eval_genomes_parallel(genomes, config):
 def eval_genomes(genomes, config):
     for genome_id, genome in genomes:
         output = mp.Queue()
-        eval_single_genome(genome_id, genome, config, output);
-        genome.fitness = output.get()
+        need_restart = 1
+        while(need_restart):
+            need_restart = eval_single_genome(genome_id, genome, config, output);
+            if (not need_restart):
+                genome.fitness = output.get()
 
 
 def run(config_file):
@@ -208,7 +169,7 @@ def run(config_file):
     p = neat.Population(config)
 
     # load checkpoint?
-    #p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-0")
+    p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-8")
 
     # Add a stdout reporter to show progress in the terminal.
     p.add_reporter(neat.StdOutReporter(True))
@@ -218,7 +179,7 @@ def run(config_file):
 
     # Run for up to 300 generations.
     #winner = p.run(eval_genomes, 1)
-    winner = p.run(eval_genomes_parallel, 300)
+    winner = p.run(eval_genomes_parallel, 100)
     win = p.best_genome
     pickle.dump(winner, open('winner.pkl', 'wb'))
     pickle.dump(win, open('real_winner.pkl', 'wb'))

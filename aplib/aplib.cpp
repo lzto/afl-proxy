@@ -388,7 +388,7 @@ void ap_fill_dma_buffer() {
     cpu_physical_memory_rw(addr, buffer, 4096, true);
   }
   free(buffer);
-#else
+#elif 0
   get_hw_instance()->lockDMASG();
   const auto &dmasg = get_hw_instance()->getDMASG();
   for (auto &p : dmasg) {
@@ -401,6 +401,8 @@ void ap_fill_dma_buffer() {
     free(buffer);
   }
   get_hw_instance()->unlockDMASG();
+#else
+  get_hw_instance()->feedRandomDMAData();
 #endif
 }
 
