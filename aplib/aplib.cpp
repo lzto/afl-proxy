@@ -54,6 +54,10 @@ static int dump_rw_addr;
 #define IS_DUMP_W (dump_rw_addr & 2)
 #define IS_DUMP_RW (IS_DUMP_R || IS_DUMP_W)
 
+// dump address to file
+static bool dump_rw_addr_to_file;
+static string dump_rw_addr_filename;
+
 // whether should we use DMA
 static int use_dma;
 
@@ -138,29 +142,36 @@ void ap_init(void) {
       getchar();
       gdb_attached = 1;
     }
+
     EnvKnob knob2("AP_DUMP_RW");
     dump_rw_addr = knob2.getIntValue();
 
-    EnvKnob knob3("USE_IRQ");
+    EnvKnob knob3("AP_DUMP_FILE");
+    if (knob3.isPresented() && knob3.isSet()) {
+      dump_rw_addr_to_file = true;
+      dump_rw_addr_filename = knob3.getStringValue();
+    }
+
+    EnvKnob knob4("USE_IRQ");
     //////////////////////////
-    if (knob3.isSet()) {
-      use_irq = knob3.getIntValue();
+    if (knob4.isSet()) {
+      use_irq = knob4.getIntValue();
       trigger_irq_thread = new thread(ti_worker);
     }
     /////////////////////////
-    EnvKnob knob4("USE_DMA");
-    use_dma = knob4.isSet();
+    EnvKnob knob5("USE_DMA");
+    use_dma = knob5.isSet();
 
     // export device memory through shared memory
-    EnvKnob knob5("EXPORT_DEVMEM");
-    if (knob5.isPresented() && knob5.isSet()) {
+    EnvKnob knob6("EXPORT_DEVMEM");
+    if (knob6.isPresented() && knob6.isSet()) {
       string shmname = "/afl-proxy-";
       shmname += string(getenv("SFP_SHMID"));
       hw_instance_export_devmem(shmname);
     }
 
-    EnvKnob knob6("AP_DISABLED");
-    if (knob6.isPresented() && knob6.isSet())
+    EnvKnob knob7("AP_DISABLED");
+    if (knob7.isPresented() && knob7.isSet())
       return;
     isEnabled = true;
   }
@@ -206,48 +217,32 @@ int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size, int bar) {
     goto end;
   memcpy(dest, fuzzdata + addr, size);
 end:
-  if (IS_DUMP_R)
-    INFO("read " << size << " byte, bar " << bar << " @ " << hexval(addr) << "="
-                 << hexval(*(uint64_t *)(dest)));
+  if (IS_DUMP_R) {
+    if (dump_rw_addr_to_file) {
+      LOG_TO_FILE(dump_rw_addr_filename, "read "
+                                             << size << " byte, bar " << bar
+                                             << " @ " << hexval(addr) << "="
+                                             << hexval(*(uint64_t *)(dest)));
+
+    } else {
+      INFO("read " << size << " byte, bar " << bar << " @ " << hexval(addr)
+                   << "=" << hexval(*(uint64_t *)(dest)));
+    }
+  }
   return size;
 }
 
 void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size, int bar) {
-  if (IS_DUMP_W)
-    INFO("write " << size << " byte, bar " << bar << " @ " << hexval(addr)
-                  << "=" << hexval(data));
-#if 0
-  // DMA address detection
-  if ((use_dma) && (size == 4)) {
-    // check if this looks like a DMA address
-    // DMA address must be within system main memory
-    uint32_t dma_addr = data & 0xffffffff;
-    if (!ap_is_ram(dma_addr)) {
-      goto out;
-    }
-    // TODO: should also expose DMA region when requested
-
-    // apply some more filters here -- they should be in e820 but I don't know
-    // why qemu is telling us partial info probably the rest of the table is set
-    // by bios
-    // ignore first 1M
-    if (dma_addr < 0x00100000) {
-      goto out;
+  if (IS_DUMP_W) {
+    if (dump_rw_addr_to_file) {
+      LOG_TO_FILE(dump_rw_addr_filename,
+                  "write " << size << " byte, bar " << bar << " @ "
+                           << hexval(addr) << "=" << hexval(data));
     } else {
-      // INFO(ANSI_COLOR_GREEN << "Detected writing valid physical address "
-      //                      << hexval(dma_addr) << " could be DMA address?"
-      //                      << ANSI_COLOR_RESET);
-      // use first address as dma address for ksz884x
-      if (addr == 0x14) {
-        INFO(ANSI_COLOR_GREEN << "Using " << hexval(dma_addr) << " @ "
-                              << hexval(addr) << ANSI_COLOR_RESET);
-        dma_addrs.clear();
-        dma_addrs.insert(dma_addr);
-      }
+      INFO("write " << size << " byte, bar " << bar << " @ " << hexval(addr)
+                    << "=" << hexval(data));
     }
-  out:;
   }
-#endif
   // for probing
   get_hw_instance()->write(data, addr, size, bar);
 

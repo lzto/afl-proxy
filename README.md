@@ -66,6 +66,7 @@ APLib Environment Variables
 -----------
 * **AP_DISABLED**=0,1: disable ap proxy - some device probing logic still works but won't connect to ap for fuzzing
 * **AP_DUMP_RW**=0,1,2,3: dump device memory trace, nodump-0/r-1/w-2/rw-3
+* **AP_DUMP_FILE**=filename: where to dump trace, default is stdout
 * **EXPORT_DEVMEM**=0,1:  export device memory(PCI bar e.g.) through shared memory (/dev/shm/)
 * **NO_REDIRECT_READ**=0,1: do not redirect read to AP - 0 redirect - 1 direct
 * **SFP_SHMID**=number: add suffix to shm file so that multiple instances can be launched
