@@ -120,8 +120,11 @@ void ti_worker() {
   sleep(3);
   while (1) {
     // INFO("Inject IRQ");
+    if (use_irq < 1000)
+      usleep(use_irq);
+    else
+      sleep(use_irq / 1000);
     ap_trigger_irq();
-    usleep(use_irq);
   }
 }
 

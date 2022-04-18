@@ -153,6 +153,17 @@ public:
     return size;
   };
   virtual void write(uint64_t data, uint64_t addr, size_t size) final{};
+  virtual void write(uint64_t data, uint64_t addr, size_t size, int bar) {
+    bars[bar]->write(data, addr, size);
+    // assuming page aligned though not true
+    if (addr == 0x154c) {
+      auto p = std::make_pair(data, 32 * 4 * 4);
+      dmasgLock.lock();
+      // dmasg.clear();
+      dmasg.push_back(p);
+      dmasgLock.unlock();
+    }
+  }
 
 private:
   int probe_len;

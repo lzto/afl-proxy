@@ -200,7 +200,15 @@ public:
 
   void unlockDMASG() { dmasgLock.unlock(); }
 
-  virtual void feedRandomDMAData(){};
+  virtual void feedRandomDMAData() {
+    lockDMASG();
+    for (auto p : dmasg) {
+      uint64_t addr = p.first;
+      uint64_t len = p.second;
+      writeRandomDataToPhyMemGeneric(addr, len);
+    }
+    unlockDMASG();
+  };
 
   ///
   /// write data to dst(qemu hw addr)

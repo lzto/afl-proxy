@@ -48,7 +48,8 @@ for line in Lines:
     r = re.search("qemu", line)
     if r:
         arr = re.split(r" ",line)
-        dmaaddrs.add(arr[-1])
+        if (arr[-1]!="0x0"):
+            dmaaddrs.add(arr[-1])
 
 print("Register, DMA Buffer Address")
 for a in dmaaddrs:

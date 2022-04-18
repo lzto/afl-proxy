@@ -43,6 +43,27 @@ public:
   };
   virtual void write(uint64_t data, uint64_t addr, size_t size) final{};
 
+  virtual void write(uint64_t data, uint64_t addr, size_t size, int bar) {
+    bars[bar]->write(data, addr, size);
+    // assuming page aligned though not true
+    if (addr == 0x104) {
+      auto p = std::make_pair(data, 32 * 4 * 4);
+      dmasgLock.lock();
+      // dmasg.clear();
+      dmasg.push_back(p);
+      dmasgLock.unlock();
+    }
+  }
+  virtual void feedRandomDMAData() {
+    lockDMASG();
+    for (auto p : dmasg) {
+      uint64_t addr = p.first;
+      uint64_t len = p.second;
+      writeRandomDataToPhyMemGeneric(addr, len);
+    }
+    unlockDMASG();
+  };
+
 private:
   int probe_len;
 };
