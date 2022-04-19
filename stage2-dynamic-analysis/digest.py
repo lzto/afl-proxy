@@ -26,8 +26,8 @@ for line in Lines:
     r = re.search("write", line)
     if r:
         arr=re.split(r" |=",line)
-        reg=arr[6];
-        val=arr[7];
+        reg=int(arr[6],16);
+        val=int(arr[7],16);
         if val in addr2reg.keys():
             addr2reg[val].add(reg)
         else:
@@ -49,12 +49,14 @@ for line in Lines:
     if r:
         arr = re.split(r" ",line)
         if (arr[-1]!="0x0"):
-            dmaaddrs.add(arr[-1])
+            dmaaddrs.add(int(arr[-1],16))
 
 print("Register, DMA Buffer Address")
 for a in dmaaddrs:
-    if a in addr2reg.keys():
-        print(addr2reg[a],a)
+    for k in addr2reg.keys():
+        if ((a<=k) and ((k-a)<4096)):
+            print ([hex(x) for x in addr2reg[k]])
+            print("=>",hex(a))
 
 
 
