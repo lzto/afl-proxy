@@ -23,6 +23,16 @@ AP supports two different modes to collect code coverage. One is through explici
 
 AP relies on Linux **perf** subsystem to collect PT trace.
 
+Second Stage Analysis
+---------------
+The device model build can be break down into two stage:
+
+1) s2e symbolic execution - produce first device model that can pass probing
+
+2) dynamic analysis to produce PCI bus master support model -- improve first model with DMA support
+
+To run 2nd step, the guest kernel must be patched with **0001-sfp-Add-hypercall-to-let-host-know-dma-buffer-locati.patch**
+
 
 Installation
 ---------------
@@ -93,4 +103,5 @@ Some pre-trained device model is located at [sfp-ml-dev-model-db](sfp-ml-dev-mod
 Misc
 ----------
 * s2e-tools: tools to convert s2e result to device model, prepare s2e project, check status and upload artifact to model archive server
+
 
