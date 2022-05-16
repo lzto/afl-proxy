@@ -4,8 +4,9 @@ project(pex)
 
 set(CMAKE_CXX_STANDARD 14)
 
-find_package(LLVM REQUIRED CONFIG
-  HINTS "${LLVM_CMAKE_PATH}")
+# find_package(LLVM REQUIRED CONFIG
+#   HINTS "${LLVM_CMAKE_PATH}")
+find_package(LLVM 13.0.0 REQUIRED CONFIG)
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")

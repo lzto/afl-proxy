@@ -8,7 +8,7 @@ function build
     echo "NOTE: specify your own LLVM_DIR and LLVM_ROOT"
     JOBS=`getconf _NPROCESSORS_ONLN`
 #specify non default compiler here
-#        -DCMAKE_C_COMPILER=clang-10  \
+    #    -DCMAKE_C_COMPILER=clang-13
 #        -DCMAKE_CXX_COMPILER=clang++-10
     mkdir build
     pushd build
