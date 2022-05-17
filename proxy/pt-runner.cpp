@@ -232,6 +232,7 @@ void ptWorker(pid_t tid) {
   sa.sa_flags = SA_SIGINFO;
 
   if (sigaction(SIGIO, &sa, NULL) < 0) {
+    LOG_TO_FILE("afl.log", "Ooops, failed to set signal handler for perf"); 
     ERROR("failed to set signal handler for perf\n");
     exit(-1);
   }
@@ -266,9 +267,10 @@ void ptWorker(pid_t tid) {
 
   int group_fd = -1;
   unsigned long flags = 0;
-
+  LOG_TO_FILE("afl.log", "Setting up PT...!"); 
   int fd = perf_event_open(&attr, pid, cpu, group_fd, flags);
   if (fd < 0) {
+    LOG_TO_FILE("afl.log", "perf_event_open failed!");
     ERROR("Error opening leader event "
           << hexval(attr.config) << "\n"
           << "try run as root or set /proc/sys/kernel/perf_event_paranoid\n"
@@ -276,9 +278,12 @@ void ptWorker(pid_t tid) {
           << "run perf record -e intel_pt// -vvv to confirm event type\n");
     exit(EXIT_FAILURE);
   }
+ 
   // LOG_TO_FILE("afl.log", "> perf fd =" << fd);
-  if (setup_mmap(&attr, fd) < 0)
+  if (setup_mmap(&attr, fd) < 0) {
+    LOG_TO_FILE("afl.log", "Error setting up mmap");
     return;
+  }
 
   fcntl(fd, F_SETFL, O_RDWR | O_NONBLOCK | O_ASYNC);
   fcntl(fd, F_SETSIG, SIGIO);
@@ -286,8 +291,10 @@ void ptWorker(pid_t tid) {
   fcntl(fd, F_SETOWN_EX, getpid());
 
   ioctl(fd, PERF_EVENT_IOC_RESET, 0);
-  ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
-
+  if (ioctl(fd, PERF_EVENT_IOC_ENABLE, 0) < 0) {
+    LOG_TO_FILE("afl.log", "Error enabling PT");
+  }
+  LOG_TO_FILE("afl.log", "PT Set up finished!");
   outs() << "====================================================\n";
   // start to poll buffer
   while (1) {

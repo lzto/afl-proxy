@@ -9,6 +9,7 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <time.h>
+#include <chrono>
 
 #include <map>
 #include <set>
@@ -26,7 +27,8 @@ using namespace std;
 set<uint64_t> dma_addrs;
 
 extern "C" {
-
+#define MMIO_SIZE (4096 * 6);
+#define DMA_SIZE (4096 * 10);
 // for serializing qemu thread calling IPC
 static pthread_mutex_t shm_ipc_lock;
 
@@ -61,13 +63,16 @@ static string dump_rw_addr_filename;
 // whether should we use DMA
 static int use_dma;
 
+// How long an AFL fuzzing epoch lasts
+static int64_t afl_epoch;
 // TODO: need to figure out the address of IRQ register
 // stores the milliseconds interval between triggering each IRQ,
 // This knob can be overriden by upper-level model
 static int use_irq;
+static std::chrono::_V2::steady_clock::time_point afl_last_epoch_end = chrono::steady_clock::now();
 
 void real_ap_init(void) {
-
+  
   if (sm)
     return;
   fuzz_file_fd = -1;
@@ -77,7 +82,7 @@ again:
   shmname += string(getenv("SFP_SHMID"));
   shm = new SHM<struct XXX>(shmname.c_str());
   if (!shm->open(SHMOpenType::CONNECT)) {
-    // WARN("cannot connect tp /afl-proxy. retry.. ");
+    WARN("cannot connect tp /afl-proxy. retry.. ");
     usleep(100);
     delete shm;
     goto again;
@@ -95,6 +100,7 @@ again:
   int sval;
   sem_getvalue(&sm->semr, &sval);
   // INFO("==>semr value=" << sval << " ready?" << (int)sm->ready);
+  INFO("path name: " << sm->path);
   std::ifstream is(sm->path, std::ifstream::binary);
   is.seekg(0, is.end);
   fuzzdatasize = is.tellg();
@@ -165,6 +171,14 @@ void ap_init(void) {
     EnvKnob knob5("USE_DMA");
     use_dma = knob5.isSet();
 
+    /////////////////////////
+    EnvKnob knob_afl("AFL_EPOCH");
+    if (knob_afl.isPresented() && knob_afl.isSet()) {
+      afl_epoch = knob_afl.getIntValue();
+    } else {
+      afl_epoch = INT64_MAX;
+    }
+
     // export device memory through shared memory
     EnvKnob knob6("EXPORT_DEVMEM");
     if (knob6.isPresented() && knob6.isSet()) {
@@ -195,6 +209,8 @@ int ap_fetch_fuzz_data_rand(char *dest, uint64_t addr, size_t size) {
 
 int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size, int bar) {
   static int counter;
+  auto cur_time = chrono::steady_clock::now();
+  auto elapsed_secs = chrono::duration_cast<chrono::seconds>(cur_time - afl_last_epoch_end).count();
   // for probing
   if (get_hw_instance()->read(dest, addr, size, bar))
     goto end;
@@ -210,8 +226,13 @@ int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size, int bar) {
     goto end;
   }
   counter++;
-  if (counter % 100 == 0)
+  
+  if (counter % 100 == 0 || elapsed_secs >= afl_epoch) {
+    counter = 0;
+    INFO("epoch ended");
     ap_exit();
+    afl_last_epoch_end = chrono::steady_clock::now();
+  }
   ap_init();
   if (!fuzzdatasize)
     goto end;
@@ -342,10 +363,11 @@ void ap_attach_pt(void) {
 }
 #endif
 void ap_reattach_pt(void) {
+  kvm_tid = gettid();
   if (kvm_tid == 0)
     return;
   assert(sm);
-  // INFO("ap_reattach_pt:" << kvm_tid);
+  INFO("ap_reattach_pt:" << kvm_tid);
   sm->type = 0x02;
   memcpy(sm->data, &kvm_tid, sizeof(pid_t));
   if (sem_post(&sm->semw) == -1)
@@ -400,7 +422,11 @@ void ap_fill_dma_buffer() {
   }
   get_hw_instance()->unlockDMASG();
 #else
-  get_hw_instance()->feedRandomDMAData();
+  if (fuzz_file_fd != -1) {
+    get_hw_instance()->feedFuzzDMAData(fuzzdata + MMIO_SIZE, (int)fuzzdatasize - MMIO_SIZE);
+  } else {
+    get_hw_instance()->feedRandomDMAData();
+  }
 #endif
 }
 

@@ -210,6 +210,26 @@ public:
     unlockDMASG();
   };
 
+  virtual void feedFuzzDMAData(uint8_t * dma_data_start, int data_sz) {
+    lockDMASG();
+    uint8_t * dma_data = dma_data_start;
+    uint8_t * dma_data_end = dma_data_start + data_sz;
+    for (auto p : dmasg) {
+      uint64_t addr = p.first;
+      uint64_t len = p.second;
+      if (dma_data + len > dma_data_end) {
+        dma_data = dma_data_start;
+      }
+      if (dma_data + len <= dma_data_end) {
+        writeFuzzDataToPhyMemGeneric(addr, len, dma_data);
+        dma_data += len;
+      } else {
+        writeRandomDataToPhyMemGeneric(addr, len);
+      }
+    }
+    unlockDMASG();
+  };
+
   ///
   /// write data to dst(qemu hw addr)
   ///
@@ -217,6 +237,18 @@ public:
     uint8_t *buffer = (uint8_t *)malloc(size);
     for (int i = 0; i < size; i++)
       buffer[i] = rand();
+    cpu_physical_memory_rw(dst, buffer, size, true);
+    free(buffer);
+  }
+
+  ///
+  /// write fuzzed data to dst(qemu hw addr)
+  ///
+  void writeFuzzDataToPhyMemGeneric(uint64_t dst, uint64_t size, uint8_t * fuzz_data) {
+    uint8_t *buffer = (uint8_t *)malloc(size);
+    for (int i = 0; i < size; i++) {
+      buffer[i] = fuzz_data[i];
+    }
     cpu_physical_memory_rw(dst, buffer, size, true);
     free(buffer);
   }

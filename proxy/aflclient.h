@@ -35,13 +35,19 @@ public:
   ~AFLClient(){};
   // call this to inject coverage information to AFL
   void AFLMaybeLog(uintptr_t cur_loc) {
-    if (!afl_area_ptr)
+    if (!afl_area_ptr) {
       return;
+    }
+    LOG_TO_FILE("afl.log", " pc@" << (uint64_t)(cur_loc));
     cur_loc = (cur_loc >> 4) ^ (cur_loc << 8);
     cur_loc &= MAP_SIZE - 1;
     if (cur_loc >= afl_inst_rms) {
+      LOG_TO_FILE("afl.log", " WTF?");
       return;
     }
+    // int idx = cur_loc ^ prev_loc;
+    // LOG_TO_FILE("afl.log", "loc: " << idx);
+    // afl_area_ptr[idx] =1;
     afl_area_ptr[cur_loc ^ prev_loc]++;
     prev_loc = cur_loc >> 1;
   };
@@ -109,6 +115,7 @@ private:
       /* In parent process: write PID to pipe, then wait for child. */
       if (write(FORKSRV_FD + 1, &child_pid, 4) != 4)
         exit(1);
+      LOG_TO_FILE("afl.log", "NEW EPOCH started");
       if (waitpid(child_pid, &status, is_persistent ? WUNTRACED : 0) < 0)
         exit(1);
       /* In persistent mode, the child stops itself with SIGSTOP to indicate

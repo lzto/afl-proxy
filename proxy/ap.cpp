@@ -51,7 +51,7 @@ void handle_type_cov(struct XXX *sm) {
 void start_pt(struct XXX *sm) {
   pid_t tid;
   memcpy(&tid, &(sm->data), sizeof(pid_t));
-  // LOG_TO_FILE("afl.log", "start PT for tid " << tid);
+  LOG_TO_FILE("afl.log", "start PT for tid..." << tid);
   aflClient->startPT(tid);
 }
 
