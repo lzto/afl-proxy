@@ -1,7 +1,7 @@
 /*
  * standalone program to setup perf subsystem and receive perf data for pt
  * 2018 Tong Zhang<ztong@vt.edu>
- * 2021 Tong Zhang<ztong0001@gmail.com>
+ * 2021-2022 Tong Zhang<ztong0001@gmail.com>
  * -- IA32_RTIT_STATUS
  * sudo rdmsr --processor 0 0x571
  * -- IA32_RTIT_CTRL
@@ -221,7 +221,13 @@ void check_buffer(int fd) {
 }
 
 void ptWorker(pid_t tid) {
-  pid_t pid = tid;
+  // pid_t pid = tid;
+  // FIXME: looks like we cannot really use actual PID here when collecting KVM
+  // related info, here we need to set it to -1.
+  // see output from
+  //     perf record -e intel_pt// -vv -C 0
+  //
+  pid_t pid = -1;
   int cpu = 0; // measure on cpu 0
   // LOG_TO_FILE("afl.log", "target CPU " << cpu << " PID " << pid);
 
