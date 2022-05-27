@@ -39,6 +39,8 @@ const char *ap_get_fuzz_file(void);
 int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size, int bar);
 void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size, int bar);
 void ap_log_pc(uint64_t);
+// AFL's coverage will be updated when calling ap_exit(), this will indicate
+// that guest os exited one fuzzing cycle
 void ap_exit(void);
 void ap_attach_pt(void);
 void ap_reattach_pt(void);
