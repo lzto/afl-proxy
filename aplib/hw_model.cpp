@@ -246,11 +246,15 @@
 using namespace std;
 
 static map<string, function<HWModel *()>> modelMap;
-
+static map<string, function<Stage2HWModel *()>> stage2ModelMap;
 static HWModel *instance;
+static Stage2HWModel * stage2instance;
 
 #define INSERT_MODEL(NAME)                                                     \
   modelMap[#NAME] = []() { return new HWModel_##NAME(); };
+
+#define INSERT_STAGE2_MODEL(NAME)        \
+  stage2ModelMap[#NAME] = []() { return new_stage2_model_##NAME(); };
 
 void hw_model_internal_init() {
   INSERT_MODEL(anydev);
@@ -408,6 +412,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(pm2fb);
   INSERT_MODEL(qxl);
   INSERT_MODEL(r8169);
+  INSERT_STAGE2_MODEL(r8169);
   INSERT_MODEL(radeon_fb);
   INSERT_MODEL(rivafb);
   INSERT_MODEL(rtsx_pci);
@@ -513,8 +518,27 @@ HWModel *init_hw_instance(const char *name) {
   return init_hw_instance(std::string(name));
 }
 
+Stage2HWModel * init_stage2_hw_instance(const std::string & name) {
+  if (stage2instance) {
+    return stage2instance;
+  }
+  auto it = stage2ModelMap.find(name);
+  if (it == stage2ModelMap.end()) {
+    std::cout << "No stage2 model for hardware: " << name << "\n";
+    return nullptr;
+  }
+  stage2instance = it->second();
+  return stage2instance;
+}
+
+Stage2HWModel * init_stage2_hw_instance(const char * name) {
+  return init_stage2_hw_instance(std::string(name));
+}
+
+
 HWModel *get_hw_instance() { return instance; }
 
+Stage2HWModel * get_stage2_hw_instance() { return stage2instance; }
 ///
 /// expose device memory through shared memory /dev/shm/
 /// name - is prefix

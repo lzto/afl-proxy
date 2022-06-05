@@ -38,17 +38,17 @@ public:
     if (!afl_area_ptr) {
       return;
     }
-    LOG_TO_FILE("afl.log", " pc@" << (uint64_t)(cur_loc));
+    LOG_TO_FILE("afl.log", " pc@" << std::hex << (uint64_t)(cur_loc));
     cur_loc = (cur_loc >> 4) ^ (cur_loc << 8);
     cur_loc &= MAP_SIZE - 1;
     if (cur_loc >= afl_inst_rms) {
-      LOG_TO_FILE("afl.log", " WTF?");
       return;
     }
-    // int idx = cur_loc ^ prev_loc;
+    int idx = cur_loc ^ prev_loc;
     // LOG_TO_FILE("afl.log", "loc: " << idx);
     // afl_area_ptr[idx] =1;
     afl_area_ptr[cur_loc ^ prev_loc]++;
+    LOG_TO_FILE("afl.log", "loc:" << idx << (uint64_t)afl_area_ptr[cur_loc ^ prev_loc]);
     prev_loc = cur_loc >> 1;
   };
   bool isAFLAlive() { return afl_area_ptr != nullptr; }
@@ -123,6 +123,7 @@ private:
          again. */
       if (WIFSTOPPED(status))
         child_stopped = 1;
+      LOG_TO_FILE("afl.log", "status: " << status);
       /* Relay wait status to pipe, then loop back. */
       if (write(FORKSRV_FD + 1, &status, 4) != 4)
         exit(1);

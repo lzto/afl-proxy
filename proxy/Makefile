@@ -1,6 +1,6 @@
-CC=clang
-CXX=clang++
-LINK=clang++
+CC=gcc
+CXX=g++
+LINK=g++
 
 CFLAGS=-g -I../
 CXXFLAGS=-g -std=c++14 -I../

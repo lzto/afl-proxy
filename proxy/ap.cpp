@@ -74,13 +74,13 @@ void skip_dry_run() {
 int main(int argc, char **argv) {
   aflClient = new AFLClient;
   if (aflClient->isAFLAlive()) {
-    INFO("AFLClient is alive");
+    // LOG_TO_FILE("afl.log", "AFLClient is alive");
   }
   skip_dry_run();
   SHM<struct XXX> shm("/afl-proxy-0");
   if (shm.open(SHMOpenType::CREATE)) {
     auto *sm = shm.getMem();
-    INFO("SHM created @ " << sm);
+    // LOG_TO_FILE("afl.log", "SHM created @ " << sm);
     if (sem_init(&(sm->semr), 1, 0) == -1)
       unreachable("failed to init semaphore r");
     if (sem_init(&(sm->semw), 1, 0) == -1)
@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
     if (sem_wait(&sm->semw) == -1) {
       unreachable("error wait semw");
     }
-    INFO("received type " << hexval((uint64_t)sm->type) << " msg");
+    // LOG_TO_FILE("afl.log", "received type " << hexval((uint64_t)sm->type) << " msg");
     switch (sm->type) {
     case (1):
       handle_type_cov(sm);

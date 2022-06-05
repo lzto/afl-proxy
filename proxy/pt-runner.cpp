@@ -222,7 +222,7 @@ void check_buffer(int fd) {
 
 void ptWorker(pid_t tid) {
   pid_t pid = tid;
-  int cpu = 0; // measure on cpu 0
+  int cpu = 6; // measure on cpu 0
   // LOG_TO_FILE("afl.log", "target CPU " << cpu << " PID " << pid);
 
   // setup signal handler for receiving perf data signal

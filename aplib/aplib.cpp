@@ -27,8 +27,8 @@ using namespace std;
 set<uint64_t> dma_addrs;
 
 extern "C" {
-#define MMIO_SIZE (4096 * 6);
-#define DMA_SIZE (4096 * 10);
+#define MMIO_SIZE (4096 * 6)
+#define DMA_SIZE (4096 * 10)
 // for serializing qemu thread calling IPC
 static pthread_mutex_t shm_ipc_lock;
 
@@ -62,7 +62,7 @@ static string dump_rw_addr_filename;
 
 // whether should we use DMA
 static int use_dma;
-
+static bool use_stage2;
 // How long an AFL fuzzing epoch lasts
 static int64_t afl_epoch;
 // TODO: need to figure out the address of IRQ register
@@ -112,6 +112,7 @@ again:
     fuzzdata = nullptr;
     fuzzdatasize = 0;
   }
+  INFO("fuzz data size: " << fuzzdatasize);
   ap_reattach_pt();
   pthread_mutex_init(&shm_ipc_lock, NULL);
 };
@@ -123,7 +124,7 @@ thread *trigger_irq_thread;
 void ti_worker() {
   // add a little bit delay here since QEMU need some time to fully initialized,
   // before that sending IRQ does not make sense
-  sleep(3);
+  sleep(5);
   while (1) {
     // INFO("Inject IRQ");
     if (use_irq < 1000)
@@ -144,6 +145,7 @@ void ap_init(void) {
     EnvKnob knob0("SFP_DEV_MODEL");
     assert(knob0.isPresented() && "SFP_DEV_MODEL is not set");
     init_hw_instance(knob0.getStringValue());
+    init_stage2_hw_instance(knob0.getStringValue());
 
     EnvKnob knob1("WAITGDB");
     if (knob1.isSet()) {
@@ -179,6 +181,12 @@ void ap_init(void) {
       afl_epoch = INT64_MAX;
     }
 
+    ////////////////////////
+    EnvKnob knob_stage2("USE_STAGE2");
+    if (knob_stage2.isPresented() && knob_stage2.isSet()) {
+      use_stage2 = true;
+    }
+
     // export device memory through shared memory
     EnvKnob knob6("EXPORT_DEVMEM");
     if (knob6.isPresented() && knob6.isSet()) {
@@ -211,6 +219,7 @@ int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size, int bar) {
   static int counter;
   auto cur_time = chrono::steady_clock::now();
   auto elapsed_secs = chrono::duration_cast<chrono::seconds>(cur_time - afl_last_epoch_end).count();
+  Stage2HWModel * stage2 = get_stage2_hw_instance();
   // for probing
   if (get_hw_instance()->read(dest, addr, size, bar))
     goto end;
@@ -226,7 +235,7 @@ int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size, int bar) {
     goto end;
   }
   counter++;
-  
+ 
   if (counter % 100 == 0 || elapsed_secs >= afl_epoch) {
     counter = 0;
     INFO("epoch ended");
@@ -239,7 +248,16 @@ int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size, int bar) {
   addr = addr % fuzzdatasize;
   if (addr >= fuzzdatasize)
     goto end;
-  memcpy(dest, fuzzdata + addr, size);
+  
+  if (stage2 && use_stage2) {
+#if 0
+    memcpy(dest, fuzzdata + addr, size);
+#else
+    stage2->feedFuzzMMIOData(addr, dest, size, (fuzzdata + addr));
+#endif
+  } else {
+    memcpy(dest, fuzzdata + addr, size);
+  }
 end:
   if (IS_DUMP_R) {
     if (dump_rw_addr_to_file) {
@@ -269,7 +287,11 @@ void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size, int bar) {
   }
   // for probing
   get_hw_instance()->write(data, addr, size, bar);
-
+  // intercept writes of DMA address
+  Stage2HWModel * stage2 = get_stage2_hw_instance();
+  if (stage2 && use_stage2) {
+    stage2->captureDMARegistration(addr, data);
+  }
   if (!sm)
     return;
   if (ap_get_fuzz_file()[0] == 0) {
@@ -280,6 +302,7 @@ void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size, int bar) {
 
   if (!fuzzdatasize)
     return;
+  
   addr = addr % fuzzdatasize;
   if (addr >= fuzzdatasize)
     return;
@@ -319,12 +342,14 @@ void ap_exit(void) {
     if (sem_post(&sm->semw) == -1) {
       unreachable("error post semw");
     }
-  again:
-    if (sem_wait(&sm->semr) == -1) {
-      if (errno == EINTR)
-        goto again;
-      unreachable("error wait semr");
-    }
+    // AP will exit anyway ... so why bother waiting?
+//     if (sem_wait(&sm->semr) == -1) {
+//       if (errno == EINTR) {        
+//         goto close;
+//       }
+//       unreachable("error wait semr");
+//     }
+// close:
     shm->close();
     delete shm;
   }
@@ -363,9 +388,11 @@ void ap_attach_pt(void) {
 }
 #endif
 void ap_reattach_pt(void) {
-  kvm_tid = gettid();
-  if (kvm_tid == 0)
+  if (kvm_tid == 0) {
+    kvm_tid = gettid();
+  } else {
     return;
+  }
   assert(sm);
   INFO("ap_reattach_pt:" << kvm_tid);
   sm->type = 0x02;
@@ -385,6 +412,7 @@ again:
 /// data
 ///
 void ap_fill_dma_buffer() {
+  static bool secondary_dma_scanned = false;
   if (!use_dma)
     return;
 #if 0
@@ -422,8 +450,21 @@ void ap_fill_dma_buffer() {
   }
   get_hw_instance()->unlockDMASG();
 #else
-  if (fuzz_file_fd != -1) {
-    get_hw_instance()->feedFuzzDMAData(fuzzdata + MMIO_SIZE, (int)fuzzdatasize - MMIO_SIZE);
+  Stage2HWModel * stage2 = get_stage2_hw_instance();
+  int dma_fuzz_sz = fuzzdatasize - MMIO_SIZE;
+  if (dma_fuzz_sz < 0) {
+    dma_fuzz_sz = 0;
+  }
+  if (stage2 && use_stage2) {
+    if (!stage2->isLevel1DMASet()) {
+      return;
+    } else if (!secondary_dma_scanned) {
+      secondary_dma_scanned = true;
+      stage2->scanSecondaryDMABuffer();
+    }
+    stage2->feedFuzzDMAData(fuzzdata + MMIO_SIZE, dma_fuzz_sz, false);
+  } else if (stage2) {
+    stage2->feedFuzzDMAData(fuzzdata + MMIO_SIZE, dma_fuzz_sz, false);
   } else {
     get_hw_instance()->feedRandomDMAData();
   }

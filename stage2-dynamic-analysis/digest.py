@@ -16,7 +16,7 @@ fn_klog = sys.argv[2]
 
 # store the value to register mapping
 addr2reg = {}
-
+reg_write_cnt = {}
 # process qemu-w.log
 fh_wlog = open(fn_wlog, 'r')
 Lines = fh_wlog.readlines()
@@ -27,7 +27,11 @@ for line in Lines:
     if r:
         arr=re.split(r" |=",line)
         reg=int(arr[6],16);
-        val=int(arr[7],16);
+        # if reg not in reg_write_cnt.keys():
+        #     reg_write_cnt[reg] = 0
+        # else:
+        #     reg_write_cnt[reg] += 1
+        val=int(arr[7],16)
         if val in addr2reg.keys():
             addr2reg[val].add(reg)
         else:
@@ -41,22 +45,29 @@ fh_wlog.close()
 fh_klog = open(fn_klog, 'r')
 Lines = fh_klog.readlines()
 
-dmaaddrs=set()
+dmaaddrs=[]
 
 for line in Lines:
     line = line.strip()
     r = re.search("qemu", line)
     if r:
         arr = re.split(r" ",line)
-        if (arr[-1]!="0x0"):
-            dmaaddrs.add(int(arr[-1],16))
+        if (arr[-1]!="0x0" and arr[-7] == "0x1"):
+            dmaaddrs.append((int(arr[-1],16), int(arr[-3],16)))
 
+code = ""
 print("Register, DMA Buffer Address")
-for a in dmaaddrs:
+for (a, sz) in dmaaddrs:
     for k in addr2reg.keys():
         if ((a<=k) and ((k-a)<4096)):
-            print ([hex(x) for x in addr2reg[k]])
+            all_regs = [hex(x) for x in addr2reg[k]]
+            print(all_regs)
             print("=>",hex(a))
+            code += "model->setDMAReg(" + all_regs[0] + ", " + hex(sz) + ");\n";
 
+
+print("-------------Code-------------------")
+print(code);
+            
 
 

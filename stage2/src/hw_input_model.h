@@ -1,3 +1,5 @@
+#ifndef __HW_INPUT_MODEL_H
+#define __HW_INPUT_MODEL_H
 #include <stdint.h>
 #include <set>
 #include <vector>
@@ -5,105 +7,98 @@
 #include <unordered_map>
 #include <iostream>
 #include <sstream>
-class HWInputValue {
-public:
-  enum class ValueType {
-    RANGE,
-    ValueSet,
-    BitSet,
-  };
+#include <cstdlib>
+#include <cassert>
+#define DICT_MODE 1
+#define RANDOM_MODE 0
 
-  HWInputValue(uint64_t start, uint64_t end)
-    : range_start(start), range_end(end) {
-    vtype = ValueType::RANGE;
-  }
-  
-  HWInputValue(ValueType t) {
-    vtype = t;
-  }
-
-  void insertValue(uint64_t v) {
-    if (vtype != ValueType::ValueSet || vtype != ValueType::BitSet) {
-      return;
-    }
-    vbset.insert(v);
-  }
-
-  inline bool isEmpty() {
-    if (vtype == ValueType::RANGE) {
-      return range_start == range_end;
-    }
-    return vbset.empty();
-  }
-
-  inline ValueType getType() { return vtype; }
-
-private:
-  union {
-    struct {
-      uint64_t range_start;
-      uint64_t range_end;
-    };
-    std::set<uint64_t> vbset;
-
-  };
-  ValueType vtype;
-};
+std::string to_hex(uint64_t val) {
+    std::ostringstream ss;
+    ss << "0x" << std::hex << val;
+    return ss.str();
+}
 
 class HWInput {
 public:
   HWInput() {}
   HWInput(int off, int nbytes)
-    :offset(off), bytes(nbytes) {
-      value_set = nullptr;
-      bit_set = nullptr;
+    :offset(off), n_bytes(nbytes) {
   }
-  inline bool hasRange() { return ranges.size() != 0; }
-  inline std::vector<HWInputValue*> & getRanges() { return ranges; }
-  inline HWInputValue * getValueSet() { return value_set; }
-  inline HWInputValue * getBitsSet() { return bit_set; }
+  
+  inline int nbytes() { return n_bytes; }
+  bool empty() { return bits_set.empty() && value_set.empty() && ranges.empty(); }
+  void setOffset(int off) { offset = off; }
+  void setSize(int nbytes) { n_bytes = nbytes; }
+  inline void insertRanges(int64_t start, int64_t end) { ranges.push_back({start, end}); }
+  inline void insertValue(uint64_t val) { value_set.insert(val); }
+  inline void insertBits(uint64_t bits) { bits_set.insert(bits); }
 
-  void addRange(HWInputValue* v) {
-    ranges.push_back(v);
-  }
 
-  void addValue(uint64_t v) {
-    if (!value_set) {
-      value_set = new HWInputValue(HWInputValue::ValueType::ValueSet);
+  void process() {
+    important_bits = 0;
+    if (bits_set.size()) {
+      for (auto & bits : bits_set) {
+        important_bits |= bits;
+      }
     }
-    value_set->insertValue(v);
+    generateRangeValues();
+  }  
+  void genSpecial(int64_t start, int64_t end, std::vector<int64_t> & res) {
+    res.push_back(start+1); 
+    res.push_back(start);
+    res.push_back(start-1);
+    res.push_back(end);
+    res.push_back(end+1);
   }
 
-  void addBits(uint64_t v) {
-    if (!bit_set) {
-      bit_set = new HWInputValue(HWInputValue::ValueType::BitSet);
+  void generateRangeValues() {
+    if (ranges.size()) {
+      for (auto & p : ranges) {
+        int64_t start = p.first;
+        int64_t end = p.second;
+        std::vector<int64_t> res;
+        genSpecial(start, end, res);
+        for (auto & v : res) {
+          range_special_vals.insert((uint64_t)v);
+        }
+      }
     }
-    bit_set->insertValue(v);
   }
+
+  std::string genModelInitCode(int base_indent) {
+    std::string res;
+    std::string indent = "        ";
+    std::string base = std::string(base_indent, ' ');
+    indent += base;
+    res = base + "HWInput(" + std::to_string(offset) + ", " + std::to_string(n_bytes) + ",\n" + indent;
+    // bits
+    res += to_hex(important_bits) + ",\n" + indent;
+    // magic values
+    res += "{";
+    for (auto & v : value_set) {
+      res += to_hex(v) + ", ";
+    }
+    res += "},\n" + indent;
+    // special range values
+    res += "{";
+    for (auto & v : range_special_vals) {
+      res += to_hex(v) + ", ";
+    }
+    res += "})\n";
+    return res;
+  }
+
 
 private:
-  std::vector<HWInputValue*> ranges;
-  HWInputValue *value_set;
-  HWInputValue *bit_set;
+  std::vector<std::pair<int64_t, int64_t>> ranges;
+  std::set<uint64_t> value_set;
+  std::set<uint64_t> bits_set;
+  uint64_t important_bits;
+  std::set<uint64_t> range_special_vals;
   int offset;
-  int bytes;
+  int n_bytes;
 };
 
-class HWInputModel {
-public:
-  HWInputModel(const std::string & name) {
-    base_struct_name = name;
-  }
-  HWInput & getInputAt(int offset) {
-    return inputs[offset];
-  }
-  std::unordered_map<int, HWInput> & getInputs() {
-    return inputs;
-  }
-private:
-  std::string base_struct_name;
-  std::unordered_map<int, HWInput> inputs;
-};
 
 static std::string op_symbols[] = {
   "&&", "||", "!",
@@ -111,6 +106,7 @@ static std::string op_symbols[] = {
   "!=", "&", "|", "^",
   "+", "*", "/", "-", "<<", ">>",
 };
+class ValueExpr;
 
 class Expression {
 public:
@@ -127,7 +123,7 @@ public:
   virtual std::string str()=0;
   inline ExpType getType() { return exp_type; };
   inline bool isValue() { return exp_type == ExpType::VALUE; }
-  
+  virtual inline bool isConstant() { return false; }
 protected:
   ExpType exp_type;
 };
@@ -152,6 +148,9 @@ public:
   void setLHS(Expression * expr) {
     lhs = expr;
   }
+  virtual inline bool isConstant() {return false;}
+  Expression * getRHS() { return rhs; }
+  Expression * getLHS() { return lhs; }
 private:
   Expression * lhs;
   Expression * rhs;
@@ -178,7 +177,7 @@ public:
     value = v;
     vtype = ValueType::CONSTANT;
   }
-  inline bool isConstant() { return vtype == ValueType::CONSTANT; }
+  virtual bool isConstant() { return vtype == ValueType::CONSTANT; }
   inline bool isHWInput() { return vtype == ValueType::HW_INPUT; }
   std::string str() {
     if (isConstant()) {
@@ -189,6 +188,8 @@ public:
       return "x";
     }
   }
+  uint64_t getConstant() { return value; }
+
 private:
   std::string base_type_name;
   int offset;
@@ -197,3 +198,80 @@ private:
   ValueType vtype;
 };
 
+void genHWInputConstraint(Expression * expr, HWInput & hw_input) {
+  auto exp_type = expr->getType();
+  if(exp_type == Expression::ExpType::VALUE) {
+    std::cerr << "constraint not valid\n";
+    return;
+  }
+  ArithExpr * arith = (ArithExpr*)expr;
+  Expression * lhs = arith->getLHS();
+  Expression * rhs = arith->getRHS();
+  ValueExpr * constant = nullptr;
+  Expression * other_expr = nullptr;
+  if (!lhs->isConstant() && !rhs->isConstant()) {
+    std::cerr << "constraint not valid\n";
+    return;
+  }
+  if (lhs->isConstant()) {
+    constant = (ValueExpr *)lhs;
+    other_expr = rhs;
+  } else {
+    constant = (ValueExpr *)rhs;
+    other_expr = lhs;
+  }
+  uint64_t const_val = constant->getConstant();
+  if (exp_type == Expression::ExpType::EQ 
+      || exp_type == Expression::ExpType::NE) 
+  {
+    // x == MAGIC
+    if (other_expr->isValue()) {
+      hw_input.insertValue(const_val);
+    } else if (other_expr->getType() == Expression::ExpType::BITAND){  // x & 0xVVVVV == V ?
+      ArithExpr * band= (ArithExpr *)other_expr;
+      auto * mask = (ValueExpr*)(band->getLHS()->isConstant() ? band->getLHS() : band->getRHS());
+      uint64_t mask_val = mask->getConstant();
+      if (const_val == 0) {
+        hw_input.insertBits(mask_val);
+      } else {
+        hw_input.insertBits(const_val);
+      }
+    } else {
+      // else what?
+    }
+  } else if (exp_type == Expression::ExpType::LE 
+          || exp_type == Expression::ExpType::LT) {
+    if (const_val == 0 && exp_type == Expression::ExpType::LT) {
+      uint64_t highest_set = 0;
+      int size = hw_input.nbytes();
+      if (size == 1) {
+        highest_set = 1ULL << 7;
+      } else if (size == 2) {
+        highest_set = 1ULL << 15;
+      } else if (size == 4) {
+        highest_set = 1ULL << 31;
+      } else if (size == 8) {
+        highest_set = 1ULL << 63;
+      }
+      hw_input.insertBits(highest_set);
+    } else {
+      hw_input.insertRanges(0, const_val);
+    }
+  } else if (exp_type == Expression::ExpType::GT
+            || exp_type == Expression::ExpType::GE) {
+    uint64_t max_val = 0;
+    int size = hw_input.nbytes();
+    if (size == 1) {
+      max_val = UINT8_MAX;
+    } else if (size == 2) {
+      max_val = UINT16_MAX;
+    } else if (size == 4) {
+      max_val = UINT32_MAX;
+    } else if (size == 8) {
+      max_val = UINT64_MAX;
+    }
+    hw_input.insertRanges(const_val, max_val);
+  }
+}
+
+#endif // __HW_INPUT_MODEL_H

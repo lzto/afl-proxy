@@ -140,6 +140,7 @@ public:
           int ipl = *p >> 5;
           p++;
           auto ip = get_ip_val(&p, end, ipl, &last_ip);
+          // LOG_TO_FILE("afl.log", "ip@" << std::hex << ip);
           // printf("%s\t%d: 0x%lx\n", name, ipl, ip);
           aflClient->AFLMaybeLog(ip);
           continue;
