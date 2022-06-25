@@ -9,7 +9,7 @@ class HWModel_3c59x : public HWModel {
 public:
   HWModel_3c59x()
       : HWModel("3c59x", 0x10b7, 0x1201, 0, 0, 0x020000), probe_len(0) {
-    setupBar({{PCI_BAR_TYPE_MMIO, 0x20}});
+    setupBar({{PCI_BAR_TYPE_MMIO, 0x100}});
   }
   virtual ~HWModel_3c59x(){};
   virtual void restart_device() final { probe_len = 0; };
@@ -203,7 +203,7 @@ public:
       if (cnt == 15)
         *((uint16_t *)dest) = 0x0;
       if (cnt == 16)
-        *((uint16_t *)dest) = 0x8000;
+        *((uint16_t *)dest) = 0x8000; // *((uint16_t *)dest) = 0x8020; 
       if (cnt == 17)
         *((uint16_t *)dest) = 0x2000;
       if (cnt == 18)
@@ -1665,3 +1665,79 @@ public:
 private:
   int probe_len;
 };
+
+
+Stage2HWModel * new_stage2_model_3c59x() {
+  unordered_map<int, HWInput> mmio_mdl =
+  {
+  {20 ,       HWInput(20, 4,
+                {0x1, 0x2, 0x4, 0x8, 0x10, },
+                {},
+                {})
+  },
+  {28 ,       HWInput(28, 4,
+                {},
+                {},
+                {0x5ff, 0x600, 0x601, 0xffffffff, 0x100000000, })
+  },
+  {4 ,      HWInput(4, 4,
+              {0x3000, },
+              {},
+              {})
+  },
+  {0 ,      HWInput(0, 4,
+              {},
+              {},
+              {0x8, 0x9, 0xa, 0xffffffff, 0x100000000, })
+  },
+  {12 ,       HWInput(12, 4,
+                {0x1000, 0x8000, },
+                {},
+                {})
+  },
+  {27 ,       HWInput(27, 4,
+                {0x4, 0x8, 0x14, 0x30, 0x38, 0x3c, 0x82, 0x88, },
+                {},
+                {0x0, 0x1, 0xffffffff, 0x100000000, 0xffffffffffffffff, })
+  },
+  {14 ,       HWInput(14, 4,
+                {0x1, 0x8, 0x10, 0x11, 0x20, 0x40, 0x80, 0xe6, 0x100, 0x200, 0x400, 0x1000, },
+                {0xffff, },
+                {})
+  },
+  {24 ,       HWInput(24, 4,
+                {0x4000, },
+                {},
+                {0x0, 0x1, 0xffffffff, 0x100000000, 0xffffffffffffffff, })
+  },
+  {32 ,       HWInput(32, 4,
+                {0x4, },
+                {},
+                {})
+  },
+  {10 ,       HWInput(10, 4,
+                {0x800, },
+                {},
+                {})
+  },
+  {36 ,       HWInput(36, 4,
+                {},
+                {0x0, },
+                {})
+  },
+  };
+
+  vector<DMAInputModel> dma_mdl = {
+  DMAInputModel(2944,16, {
+  {4 , HWInput(4, 4,
+          {0x4000, 0x8000, 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x60000000, 0xa0000000, },
+          {},
+          {})
+  },
+  }),
+  };
+  auto * model = new Stage2HWModel("XXX", mmio_mdl, dma_mdl);
+  model->setDMAReg(0x38, 0xb80);
+  model->setSecondaryDMAInfo(16, 2944, 8);
+  return model;
+}

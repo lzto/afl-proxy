@@ -263,3 +263,50 @@ public:
 private:
   int probe_len;
 };
+
+Stage2HWModel * new_stage2_model_epic100() {
+  unordered_map<int, HWInput> mmio_mdl =
+  {
+  {0 ,      HWInput(0, 4,
+              {},
+              {0xffff, },
+              {})
+  },
+  {52 ,       HWInput(52, 4,
+                {0x4000, },
+                {0x0, 0xffff, },
+                {})
+  },
+  {116 ,        HWInput(116, 4,
+                {0x10, },
+                {},
+                {})
+  },
+  {4 ,      HWInput(4, 4,
+              {0x8, 0xc, 0x100, 0xcad, 0x7000, 0x7300, 0x10000, },
+              {0xffffffff, },
+              {})
+  },
+  {48 ,       HWInput(48, 4,
+                {0x1, },
+                {},
+                {})
+  },
+  };
+
+  vector<DMAInputModel> dma_mdl = {
+  DMAInputModel(4096,16, {
+  {0 , HWInput(0, 4,
+          {0x1, 0x6, 0x8, 0x10, 0x40, 0x1050, 0x2000, 0x2006, 0x8000, },
+          {},
+          {0x5fb, 0x5fc, 0x5fd, 0xffffffff, 0x100000000, })
+  },
+  }),
+  };
+  auto * model = new Stage2HWModel("XXX", mmio_mdl, dma_mdl);
+  model->setSecondaryDMAInfo(16, 4096, 4);
+  model->setDMAReg(0xc4, 0x1000);
+  model->setDMAReg(0x84, 0x1000);
+
+  return model;
+}

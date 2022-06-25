@@ -71,6 +71,8 @@
 using namespace llvm;
 
 /* helper function */
+void collectValueAlias(Value * v, std::set<Value*> & alias, std::set<Value*> & visited);
+
 std::string getTypeOffsetStr(Type * tp, int offset) {
   return tp->getStructName().str() + "##" + std::to_string(offset);
 }
@@ -198,7 +200,7 @@ private:
   std::set<std::string> dmaAddrStoreDst;
   std::unordered_map<std::string, int> typeOffset2DMABufferLengths;
   std::unordered_map<Type*, int> dmaType2DMABufferLengths;
-  std::unordered_map<Type*, int> secondDMABufferOffsets;
+  std::unordered_map<Type*, std::unordered_map<int, int>> secondDMABufferOffSz;
   // store instructions that store something to device
   std::vector<StoreInst *> mmioSt;
   std::unordered_map<std::string, struct MMIORegionPtr> mmioRegions;
@@ -209,10 +211,16 @@ private:
   std::unordered_map<Type*, std::unordered_map<int, HWInput>> dmaModel;
   std::unordered_map<Function*, std::vector<int>> mmioReadWrappers; // func -> base, offset param id, size
   std::unordered_map<Value*, std::vector<CallInst*>> funcCallSites;
-  std::unordered_map<Function*, TypeOffset> func2KMI;
-  std::unordered_map<std::string, Function*> kmi2Func;
+  std::unordered_map<Function*, std::vector<TypeOffset>> func2KMI;
+  std::unordered_map<std::string, std::set<Function*>> kmi2Funcs;
   std::unordered_map<std::string, StructType*> structTypes;
+  std::unordered_map<BasicBlock*, int> bbIOReadCnt;
+  std::unordered_map<Function*, int> funcIOReadCnt;
+  std::unordered_map<Type*, std::set<Function*>> type2Funcs;
+  std::unordered_map<Value*, int> dmaPhyAddrToDMASz;
+  bool enable_type_based_func_res;
   void identifyKMI(Module &module);
+  void identifyKMIByStore(StoreInst *st);
   int getStructSize(StructType * t);
   bool findTypeOffsetAlias(Type * t, int offset, TypeOffset & result);
   void findMemRegionTypeByCast(std::set<std::string> & srcs, 
@@ -224,6 +232,7 @@ private:
   void findPointerStoredToType(Value *v, std::set<std::string> & srcs, 
                                         std::set<Type *> & results);
   int findMMIO_Offset(CallInst * mmio);
+  Type *findStructMemberTypeInSubclass(StructType * super_clas_type, int offset, Value * super_class_ptr);
   void doFindMMIORegionPtrs(Value * mmio_ptr, int base_off);
   void findMMIORegionPtrs();
   void collectMMIOReadInterface();
@@ -247,9 +256,12 @@ private:
   bool isGEPFromSameStructField(Value *, std::set<Value *> &);
   bool isLoadedFromAddress(Value *, std::set<Value *> &);
   bool isLoadedFromSameStructField(Value *, std::set<Value *> &);
-  void findDMAPageAddrOffset(Value * page_addr);
-  void collectMMIOReadSources(std::unordered_map<Value*, std::vector<int>> & res);
-
+  void __findDMAPageAddrOffset(Value * page_addr, std::set<Value*>visited, int sz);
+  void findDMAPageAddrOffset(Value * page_addr, int sz);
+  void collectMMIOReadSources(std::unordered_map<Value*, std::vector<std::vector<int>>>& );
+  void __collectAliasPassedAsParam(Value *, std::set<Value*> & , std::set<Function*> & ); 
+  void collectAliasPassedAsParam(Value * v, std::set<Value*> &);
+  void cntFunctionIOReads();
   int getGEPOffset(GetElementPtrInst * gep) {
     APInt apint(64, 0);
     bool is_constant;
@@ -280,7 +292,7 @@ private:
 
 public:
   static char ID;
-  APStage2() : ModulePass(ID){};
+  APStage2() : ModulePass(ID){ enable_type_based_func_res =true; };
 
   virtual StringRef getPassName() const override { return "apstage2"; }
   bool APStage2Pass(Module &module);

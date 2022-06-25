@@ -410,3 +410,59 @@ public:
 private:
   int probe_len;
 };
+
+Stage2HWModel * new_stage2_model_sis190() {
+  unordered_map<int, HWInput> mmio_mdl =
+  {
+  {0 ,      HWInput(0, 1,
+              {0x1, },
+              {},
+              {})
+  },
+  {60 ,       HWInput(60, 4,
+                {0x80, },
+                {},
+                {})
+  },
+  {56 ,       HWInput(56, 4,
+                {0x2, },
+                {},
+                {})
+  },
+  {32 ,       HWInput(32, 4,
+                {0x4, 0x40, 0x10000, },
+                {},
+                {0x0, 0x1, 0x2, 0xffffffff, 0x100000000, })
+  },
+  {68 ,       HWInput(68, 4,
+                {0x10, 0x40000, 0x200000, 0x2000000, 0x8000000, 0xcc00000, 0x60c00000, 0x80000000, 0x82000000, 0xbc700000, 0xd0100000, 0xd0200000, 0xf0100000, },
+                {},
+                {})
+  },
+  {36 ,       HWInput(36, 4,
+                {},
+                {0x0, },
+                {})
+  },
+  };
+
+  vector<DMAInputModel> dma_mdl = {
+  DMAInputModel(1024,16, {
+  {0 , HWInput(0, 4,
+          {0x10000, 0x80000, 0x160000, 0x600000, },
+          {},
+          {})
+  },
+  {4 , HWInput(4, 4,
+          {0x10000, 0x20000, 0x40000, 0x80000, 0xf0000, 0x80000000, },
+          {},
+          {})
+  },
+  }),
+  };
+  auto * model = new Stage2HWModel("XXX", mmio_mdl, dma_mdl);
+  model->setSecondaryDMAInfo(16, 1024, 8);
+  model->setDMAReg(0x4, 0x400);
+  model->setDMAReg(0x14, 0x400);  
+  return model;
+}

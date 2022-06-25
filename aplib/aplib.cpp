@@ -27,8 +27,8 @@ using namespace std;
 set<uint64_t> dma_addrs;
 
 extern "C" {
-#define MMIO_SIZE (4096 * 6)
-#define DMA_SIZE (4096 * 10)
+#define MMIO_SIZE (1024)
+// #define DMA_SIZE (4096 * 10)
 // for serializing qemu thread calling IPC
 static pthread_mutex_t shm_ipc_lock;
 
@@ -128,7 +128,7 @@ void ti_worker() {
   while (1) {
     // INFO("Inject IRQ");
     if (use_irq < 1000)
-      usleep(use_irq);
+      usleep(use_irq * 1000);
     else
       sleep(use_irq / 1000);
     ap_trigger_irq();
@@ -146,7 +146,7 @@ void ap_init(void) {
     assert(knob0.isPresented() && "SFP_DEV_MODEL is not set");
     init_hw_instance(knob0.getStringValue());
     init_stage2_hw_instance(knob0.getStringValue());
-
+    
     EnvKnob knob1("WAITGDB");
     if (knob1.isSet()) {
       outs() << "wait gdb, pid=" << getpid() << "\n";
@@ -199,7 +199,12 @@ void ap_init(void) {
     if (knob7.isPresented() && knob7.isSet())
       return;
     isEnabled = true;
+
+    if (use_stage2) {
+      assert(get_stage2_hw_instance());
+    }
   }
+  
   if (isEnabled)
     real_ap_init();
 }
@@ -217,6 +222,10 @@ int ap_fetch_fuzz_data_rand(char *dest, uint64_t addr, size_t size) {
 
 int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size, int bar) {
   static int counter;
+  static uint64_t delay_counter = 0;
+  static uint64_t delay = 400;
+  uint64_t zero = 0;
+  uint64_t wrapped_addr;
   auto cur_time = chrono::steady_clock::now();
   auto elapsed_secs = chrono::duration_cast<chrono::seconds>(cur_time - afl_last_epoch_end).count();
   Stage2HWModel * stage2 = get_stage2_hw_instance();
@@ -235,7 +244,7 @@ int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size, int bar) {
     goto end;
   }
   counter++;
- 
+  delay_counter++;
   if (counter % 100 == 0 || elapsed_secs >= afl_epoch) {
     counter = 0;
     INFO("epoch ended");
@@ -245,18 +254,20 @@ int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size, int bar) {
   ap_init();
   if (!fuzzdatasize)
     goto end;
-  addr = addr % fuzzdatasize;
-  if (addr >= fuzzdatasize)
+  wrapped_addr = addr % fuzzdatasize;
+  if (wrapped_addr >= fuzzdatasize)
     goto end;
   
-  if (stage2 && use_stage2) {
+  if (stage2 && use_stage2 && delay_counter > delay) {
 #if 0
-    memcpy(dest, fuzzdata + addr, size);
+    memcpy(dest, fuzzdata + wrapped_addr, size);
 #else
-    stage2->feedFuzzMMIOData(addr, dest, size, (fuzzdata + addr));
+    stage2->feedFuzzMMIOData(addr, dest, size, (fuzzdata + wrapped_addr));
 #endif
+  } else if (addr + size <= fuzzdatasize) {
+    memcpy(dest, fuzzdata + wrapped_addr, size);
   } else {
-    memcpy(dest, fuzzdata + addr, size);
+    memcpy(dest, &zero, size);
   }
 end:
   if (IS_DUMP_R) {
@@ -388,11 +399,7 @@ void ap_attach_pt(void) {
 }
 #endif
 void ap_reattach_pt(void) {
-  if (kvm_tid == 0) {
-    kvm_tid = gettid();
-  } else {
-    return;
-  }
+  kvm_tid = gettid();
   assert(sm);
   INFO("ap_reattach_pt:" << kvm_tid);
   sm->type = 0x02;
@@ -412,7 +419,7 @@ again:
 /// data
 ///
 void ap_fill_dma_buffer() {
-  static bool secondary_dma_scanned = false;
+  static bool secondary_dma_scanned =  true; // false;
   if (!use_dma)
     return;
 #if 0
@@ -455,6 +462,8 @@ void ap_fill_dma_buffer() {
   if (dma_fuzz_sz < 0) {
     dma_fuzz_sz = 0;
   }
+  auto cur_time = chrono::steady_clock::now();
+  
   if (stage2 && use_stage2) {
     if (!stage2->isLevel1DMASet()) {
       return;
@@ -462,12 +471,17 @@ void ap_fill_dma_buffer() {
       secondary_dma_scanned = true;
       stage2->scanSecondaryDMABuffer();
     }
-    stage2->feedFuzzDMAData(fuzzdata + MMIO_SIZE, dma_fuzz_sz, false);
-  } else if (stage2) {
-    stage2->feedFuzzDMAData(fuzzdata + MMIO_SIZE, dma_fuzz_sz, false);
-  } else {
+    stage2->feedFuzzDMAData(fuzzdata + MMIO_SIZE, dma_fuzz_sz, true);
+  } 
+  // else if (stage2) {
+  //   stage2->feedFuzzDMAData(fuzzdata + MMIO_SIZE, dma_fuzz_sz, false);
+  // } 
+  else {
     get_hw_instance()->feedRandomDMAData();
   }
+  auto end_time = chrono::steady_clock::now();
+  auto elapsed_secs = chrono::duration_cast<chrono::microseconds>(end_time - cur_time).count();
+  // cerr << "DMA fill time: " << elapsed_secs << " us\n";
 #endif
 }
 
@@ -475,10 +489,13 @@ void ap_fill_dma_buffer() {
 /// trigger one-shot irq
 ///
 void ap_trigger_irq() {
-  if (!use_irq)
-    return;
+  // if (!use_irq)
+  //   return;
+
   ap_fill_dma_buffer();
   // trigger irq
+  if (!use_irq)
+    return;
   sfp_set_irq(1);
 }
 

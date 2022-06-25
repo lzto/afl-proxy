@@ -28,3 +28,24 @@ public:
 private:
   int probe_len;
 };
+
+Stage2HWModel* new_stage2_model_atyfb() {
+  unordered_map<int, HWInput> mmio_mdl =
+  {
+  {24 ,       HWInput(24, 4,
+                {0x2, 0x4, },
+                {},
+                {})
+  },
+  {824 ,        HWInput(824, 4,
+                {0x1, },
+                {},
+                {})
+  },
+  };
+
+  vector<DMAInputModel> dma_mdl = {
+  };
+  auto * model = new Stage2HWModel("XXX", mmio_mdl, dma_mdl);
+  return model;
+}

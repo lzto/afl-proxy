@@ -73,7 +73,8 @@ void APStage2::processCall(CallInst *ci) {
     auto * iasm = dyn_cast<InlineAsm>(cv->stripPointerCasts());
     const std::string & asm_str = iasm->getAsmString();
     if (asm_str == "movl $1,$0" || asm_str == "movb $1,$0" ||
-       asm_str == "movw $1,$0" || asm_str == "movq $1,$0") {
+       asm_str == "movw $1,$0" || asm_str == "movq $1,$0" || asm_str == "inl ${1:w}, $0"
+       || asm_str == "inb ${1:w}, ${0:b}" || asm_str == "inw ${1:w}, ${0:w}") {
       callIoReads.push_back(ci);
     } else if (iasm->getAsmString() == "movl $0,$1") {
       // who cares about writes ???
@@ -105,6 +106,17 @@ void APStage2::processCall(CallInst *ci) {
   callInsts.push_back(ci);
   if (name.startswith("dma_alloc_attrs")) {
     callDmaAlloc.push_back(ci);
+    Value * ptr = ci->getArgOperand(2);
+    Value * sz_v = ci->getOperand(1);
+    int sz = 0;
+    if (auto * c = dyn_cast<ConstantInt>(sz_v)) {
+      sz = c->getZExtValue();
+    }
+    std::vector<Value*> lds;
+    collectLoadFromAddress(ptr, lds);
+    for (auto * v : lds) {
+      dmaPhyAddrToDMASz[v] = sz;
+    }
   }
   if (name.startswith("dma_alloc_coherent")) {
     callDmaAlloc.push_back(ci);
@@ -224,6 +236,7 @@ void APStage2::tryFindDMATypeByCast(Value * v, std::set<Type *> & results) {
 void APStage2::findPointerStoredToType(Value *v, std::set<std::string> & srcs, 
                                         std::set<Type *> & results)
 {
+  const auto &dl = m_->getDataLayout();
   for (auto *u : v->users()) {
     // got store
     if (StoreInst *st = dyn_cast<StoreInst>(u)) {
@@ -241,7 +254,15 @@ void APStage2::findPointerStoredToType(Value *v, std::set<std::string> & srcs,
             if (!isa<StructType>(base)) {
               continue;
             }
-            Type * t = getTypeByOffset(*m_, base, offset);
+            Type * t = gep->getType();
+            if (t->isPointerTy())
+              t = getPointerBaseType(t);
+            if (!isa<StructType>(t)) {
+              t = getTypeByOffset(*m_, base, offset);
+              if (t && t->isPointerTy()) {
+                t = getPointerBaseType(t);
+              }
+            }
             if (t && isa<StructType>(t)) {
               errs() << "Loc: ";
               gep->getDebugLoc().print(errs());
@@ -250,7 +271,20 @@ void APStage2::findPointerStoredToType(Value *v, std::set<std::string> & srcs,
             } else {
               std::string type_off = getTypeOffsetStr(base, offset);
               srcs.insert(type_off);
+              // Let's try to find the type in subclass, if the source is a super class
+               int struct_sz = dl.getStructLayout((StructType*)base)->getSizeInBytes();
+               if (offset >= struct_sz) {
+                Type * t = findStructMemberTypeInSubclass((StructType*)base, offset, gep->getPointerOperand());
+                if (t && t->isPointerTy()) {
+                  t = getPointerBaseType(t);
+                }
+                if (t && isa<StructType>(t)) {
+                  INFO("DMA Type detected in subclass: " << t->getStructName());
+                  results.insert(t);
+                }
+              }
             }
+            
           }
         } else {
           // std::vector<Value *> lds;
@@ -261,6 +295,10 @@ void APStage2::findPointerStoredToType(Value *v, std::set<std::string> & srcs,
         }
       } 
     } else if (isa<CastInst>(u) || isa<PHINode>(u)) {
+      findPointerStoredToType(u, srcs, results);
+    } else if (isa<BinaryOperator>(u)) {
+      findPointerStoredToType(u, srcs, results);
+    } else if (isa<GetElementPtrInst>(u)) {
       findPointerStoredToType(u, srcs, results);
     }
   }
@@ -282,9 +320,6 @@ void APStage2::collectLoadStoreStruct(Value *v, std::set<Value *> &r) {
 }
 
 
-/*
- * What is this for?
- */
 bool APStage2::findTypeOffsetAlias(Type * t, int offset, TypeOffset & result) {
   std::set<std::string>  type_offsets;
   std::set<Type *> res;
@@ -312,6 +347,48 @@ bool APStage2::findTypeOffsetAlias(Type * t, int offset, TypeOffset & result) {
   return false;
 }
 
+Type * APStage2::findStructMemberTypeInSubclass(StructType * super_class_type, int offset, Value * super_class_ptr) {
+   const DataLayout & dl = m_->getDataLayout();
+   const StructLayout * struct_dl = dl.getStructLayout(super_class_type);
+   StructType *subclass_type = nullptr;
+   int super_struct_sz = struct_dl->getSizeInBytes();
+   // Locate src
+   for (auto * v : super_class_ptr->users()) {
+     if (auto * gep = dyn_cast<GetElementPtrInst>(v)) {
+       if (gep->getPointerOperand() != super_class_ptr) {
+         continue;
+       }
+       int offset = getGEPOffset(gep);
+       if (offset != super_struct_sz) {
+         continue;
+       }
+       subclass_type = (StructType*)findStructTypeCasted(gep);
+       if (!subclass_type) {
+         continue;
+       }
+       INFO("Subclass found: " << subclass_type->getName());
+       break;
+     }
+   }
+   
+   if (!subclass_type) {
+     return nullptr;
+   }
+   
+   int offset_into_sub = offset - super_struct_sz;
+   INFO("offset :" << offset_into_sub);
+   if (offset_into_sub < 0) {
+     WARN("Strange, the offset into the subclass < 0");
+     return nullptr;
+   }
+
+   Type * res = getTypeByOffset(*m_, subclass_type, offset_into_sub);
+   if (res && !isa<StructType>(res)) {
+     DEBUG("Member Type: " << *res);
+   }
+   return res;
+}
+
 
 /*
  * LLVM IR will cast the type back to
@@ -323,6 +400,7 @@ void APStage2::findMemRegionTypeByCast(std::set<std::string> & type_offsets,
                                   std::set<Type *> & results) 
 {
   Module & module = *m_;
+  
   for (Module::iterator fi = module.begin(), f_end = module.end(); fi != f_end; ++fi) {
     Function *func = dyn_cast<Function>(fi);
     if (func->isDeclaration() || func->isIntrinsic())
@@ -346,7 +424,7 @@ void APStage2::findMemRegionTypeByCast(std::set<std::string> & type_offsets,
             if (!isa<StructType>(base_type)) {
               continue;
             }
-       
+            
             int offset = getGEPOffset(gep);
             if (offset == -1) {
               continue;
@@ -399,51 +477,66 @@ int APStage2::getStructMemberOffset(GetElementPtrInst * gep) {
  *    dma_addr_t dma_buf;
  * }
  */
-void APStage2::findDMAPageAddrOffset(Value * page_addr) {
+
+void APStage2::findDMAPageAddrOffset(Value * page_addr, int sz) {
+  std::set<Value*> visited;
+  __findDMAPageAddrOffset(page_addr, visited, sz);
+  return;
+}
+
+void APStage2::__findDMAPageAddrOffset(Value * page_addr, std::set<Value*>visited, int sz) {
+  if (visited.count(page_addr)) {
+    return;
+  }
+  visited.insert(page_addr);
   for (auto * user : page_addr->users()) {
     if (isa<StoreInst>(user)) {
       StoreInst * st = dyn_cast<StoreInst>(user);
       Value * ptr_op = st->getPointerOperand();
       if (GetElementPtrInst * gep = dyn_cast<GetElementPtrInst>(ptr_op)) {
         Type * struct_type = gep->getSourceElementType();
-        if (secondDMABufferOffsets.find(struct_type) != secondDMABufferOffsets.end()) {
-          continue;
-        }
+        
         if (dmaBufferTypes.count(struct_type)) {
           errs() << "hit\n";
           int offset = getStructMemberOffset(gep);
           if (offset != -1) {
             Type * type = getTypeByOffset(*m_, struct_type, offset);
             if (type) {
-              secondDMABufferOffsets[struct_type] = offset;
+              secondDMABufferOffSz[struct_type][offset] = sz;
               errs() << struct_type->getStructName() << ": @" << (*type) << " offset " << offset << " type: " << *(gep->getResultElementType()) <<  " secondary DMA buffer " << "\n" ; 
             }
           }
         }
       }
     } else if (isa<PHINode>(user)) {
-      findDMAPageAddrOffset(user);
+      __findDMAPageAddrOffset(user, visited, sz);
     } else if (isa<CastInst>(user)) {
-      findDMAPageAddrOffset(user);
+      __findDMAPageAddrOffset(user, visited, sz);
     }
   }
 }
 
 void APStage2::genSecondaryDMAInitCode() {
-  std::set<int> dma_size_seen;
+  // std::set<int> dma_size_seen;
   std::string code;
-  for (auto & p : secondDMABufferOffsets) {
+  for (auto & p : secondDMABufferOffSz) {
     StructType * struct_type = (StructType *)(p.first);
-    int offset = p.second;
+    auto & sec_off_sz_pairs = p.second;
     int struct_sz = getStructSize(struct_type);
-    int dma_buffer_sz = dmaType2DMABufferLengths[struct_type];
-    if (dma_size_seen.count(dma_buffer_sz)) {
+    int l1_dma_buffer_sz = dmaType2DMABufferLengths[struct_type];
+    if (l1_dma_buffer_sz % struct_sz != 0) {
       continue;
     }
-    if (dma_buffer_sz % struct_sz == 0) {
-      dma_size_seen.insert(dma_buffer_sz);
+    for (auto & off_sz_p : sec_off_sz_pairs) {
+      int offset = off_sz_p.first;
+      int l2_dma_buffer_sz = off_sz_p.second;
       code += "model->setSecondaryDMAInfo(" + std::to_string(struct_sz) + ", " + 
-              std::to_string(dma_buffer_sz) + ", " + std::to_string(offset) + ");\n";
+              std::to_string(l1_dma_buffer_sz) + ", " + std::to_string(offset);
+      if (l2_dma_buffer_sz != 0) {
+        code += ", " + std::to_string(l2_dma_buffer_sz);
+      }
+      code += + ");\n";
+      
     }
   }
   errs() << code << "\n";
@@ -702,6 +795,42 @@ void APStage2::doFindMMIORegionPtrs(Value *mmio_ptr, int base_off) {
   
 }
 
+void APStage2::__collectAliasPassedAsParam(Value * v, std::set<Value*> & res, std::set<Function*> & visited) {
+  std::set<Value*> reads_alias;
+  std::set<Value*> value_visited;
+  collectValueAlias(v, reads_alias, value_visited);
+  for (auto * vi : reads_alias) {
+    for (auto * u : vi->users()) {
+      if (auto * ci = dyn_cast<CallInst>(u)) {
+        Function * f = ci->getCalledFunction();
+        if (!f || f->isVarArg()) {
+          continue;
+        }
+        INFO("DMA Alias Called Func: " << f->getName());
+        int arg_id = -1;
+        for (size_t i=0; i<ci->getNumArgOperands(); i++ ) {
+          if (ci->getArgOperand(i) == vi) {
+            arg_id = (int)i;
+          }
+        }
+        if (arg_id == -1) {
+          continue;
+        }
+        Value * arg = f->getArg(arg_id);
+        if (!visited.count(f)) {
+          visited.insert(f);
+          res.insert(arg);
+          __collectAliasPassedAsParam(arg, res, visited);
+        }
+      }
+    }
+  }
+}
+
+void APStage2::collectAliasPassedAsParam(Value * v, std::set<Value*> & res) {
+  std::set<Function*>  visited;
+  __collectAliasPassedAsParam(v, res, visited);
+}
 
 /* collect DMA inputs source */
 void APStage2::collectDMAReads() {
@@ -727,12 +856,19 @@ void APStage2::collectDMAReads() {
             continue;
           }
           std::vector<Value*> loads;
+          std::set<Value*> dma_read_alias;
           collectLoadFromAddress(gep, loads);
           for (auto * ld : loads) {
+            collectAliasPassedAsParam(ld, dma_read_alias);
             errs() << "DMA Read: offset = " << offset << "\n";
             ((LoadInst*)ld)->getDebugLoc().print(errs());
             errs() << "\n";
             dmaReads[ld] = {type, offset};
+            bbIOReadCnt[((LoadInst*)ld)->getParent()] += 1;
+          }
+          for (auto * a : dma_read_alias) {
+            errs() << "DMA Read Alias: offset = " << offset << "\n";
+            dmaReads[a] = {type, offset};
           }
         }
       }
@@ -781,14 +917,14 @@ Value * getFirstHWInputInBB(BasicBlock * bb,
   return nullptr;                                              
 }
 
-static void collectValueAlias(Value * v, std::set<Value*> & alias, std::set<Value*> visited) {
+void collectValueAlias(Value * v, std::set<Value*> & alias, std::set<Value*> & visited) {
   if (visited.count(v)) {
     return;
   }
   visited.insert(v);
+  alias.insert(v);
   for (auto * u : v->users()) {
     if (isa<CastInst>(u) || isa<PHINode>(u)) {
-      alias.insert(u);
       collectValueAlias(u, alias, visited);
     }
   }
@@ -854,7 +990,18 @@ void FieldConstraintBuilder::buildPreds(Value * hw_input_op, std::set<Value*> & 
     Instruction * inst = (Instruction*)hw_input_op;
     Value * op1 = inst->getOperand(0);
     Value * op2 = inst->getOperand(1);
+  
+    
     if (!isa<ConstantInt>(op1) && !isa<ConstantInt>(op2)) {
+      if (auto * bop = dyn_cast<BinaryOperator>(hw_input_op)) {
+        auto opcode = bop->getOpcode();
+        if (opcode == Instruction::BinaryOps::And
+           || opcode == Instruction::BinaryOps::Or) {
+          for (auto * u : hw_input_op->users()) {
+            buildPreds(u, visited);
+          }
+        }
+      }
       return;
     }
     path.push_back(hw_input_op);
@@ -937,18 +1084,120 @@ void FieldConstraintBuilder::buildConstraints() {
   
 }
 
-bool APStage2::valueIsReturned(Value * v) {
+static bool BBhasReturn(BasicBlock * bb) {
+  for (auto ii=bb->begin(); ii != bb->end(); ++ii) {
+    if (isa<ReturnInst>(ii)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static int __maxNumOfBBToReturn(BasicBlock * bb, std::set<BasicBlock*> &visited) {
+  if (visited.count(bb)) {
+    return 0;
+  }
+  visited.insert(bb);
+  if (BBhasReturn(bb)) {
+    return 1;
+  }
+  int max_num = 1;
+  for (auto * succ : successors(bb)) {
+    int nbtr = __maxNumOfBBToReturn(succ, visited) + 1;
+    max_num =  max_num > nbtr ? max_num : nbtr;
+  }
+  return max_num;
+}
+
+static int maxNumOfBBToReturn(BasicBlock * bb) {
+  std::set<BasicBlock*> visited;
+  return __maxNumOfBBToReturn(bb, visited);
+}
+
+
+void APStage2::cntFunctionIOReads() {
+  for (auto fi=m_->begin(); fi != m_->end(); ++fi) {
+    Function *f = &(*fi);
+    int io_cnt = 0;
+    for (auto bi=fi->begin(); bi != fi->end(); ++bi) {
+      BasicBlock * bb = &(*bi);
+      io_cnt += bbIOReadCnt[bb];
+    }
+    funcIOReadCnt[f] = io_cnt;
+  }
+}
+
+bool doValueIsReturned(Value * v, std::set<Value*> &visited) {
+  if (visited.count(v)) {
+    return false;
+  }
+  visited.insert(v);
   for (auto * u : v->users()) {
     if (isa<ReturnInst>(u)) {
       return true;
     } else if (isa<CastInst>(u) || isa<PHINode>(u)) {
-      bool returned =  valueIsReturned(u);
+      bool returned =  doValueIsReturned(u, visited);
       if (returned) {
         return true;
       }
     }
   }
   return false;
+}
+
+bool APStage2::valueIsReturned(Value *v) {
+  std::set<Value*> visited;
+  return doValueIsReturned(v, visited);
+}
+
+void APStage2::identifyKMIByStore(StoreInst * st) {
+  auto * stored = st->getValueOperand();
+  Type * tp = stored->getType();
+  Type * func_ptr_tp = nullptr;
+  const DataLayout & dl = m_->getDataLayout();
+  if (tp->isPointerTy()) {
+    func_ptr_tp = tp;
+    tp = getPointerBaseType(tp);
+  }
+  if (!tp->isFunctionTy()) {
+    return;
+  }
+  int offset = -1;
+  Type * dst_tp;
+  Type * alias_tp = nullptr;
+  int alias_offset;
+  Function * func = (Function*)stored;
+  GetElementPtrInst * gep = nullptr;
+  auto * dst = st->getPointerOperand()->stripPointerCasts();
+  if ((gep = dyn_cast<GetElementPtrInst>(dst))) {
+    offset = getGEPOffset(gep);
+    dst_tp = gep->getSourceElementType();
+  } else {
+    offset = 0;
+    dst_tp = dst->getType();
+  }
+
+  if (!isa<StructType>(dst_tp)) {
+      return;
+  }
+  if (offset == -1) {
+    WARN("GEP offset is not constant, it is uncommon\n");
+    return;
+  }
+  const StructLayout * sl = dl.getStructLayout((StructType*)dst_tp);
+  if (gep && sl->getSizeInBytes() >= (uint64_t)offset) {
+    alias_tp = findStructMemberTypeInSubclass((StructType*)dst_tp, offset, gep->getPointerOperand());
+  }
+  DEBUG("Function: " << func->getName() << " struct: " << dst_tp->getStructName() << " offset: " << offset);
+  TypeOffset tp_off = {dst_tp, offset};
+  func2KMI[func].push_back(tp_off);
+  type2Funcs[func_ptr_tp].insert(func);
+  DEBUG("Function Ptr Type: " << *func_ptr_tp << "\n Func Name: " << func->getName());
+  if (alias_tp && alias_tp->isStructTy()) {
+    alias_offset = offset - dl.getStructLayout((StructType*)alias_tp)->getSizeInBytes();
+    DEBUG("Function: " << func->getName() << " struct: " << alias_tp->getStructName() << " offset: " << alias_offset);
+    func2KMI[func].push_back({alias_tp, alias_offset});
+  }
 }
 
 void APStage2::identifyKMI(Module &module) {
@@ -1016,7 +1265,7 @@ void APStage2::identifyKMI(Module &module) {
       Function * f = (Function *)ci;
       // DEBUG("Function name: " << f->getName() << " Function Type: " << *ti);
       int elm_offset = struct_dl->getElementOffset(i);
-      func2KMI[f] = {st_type, elm_offset};
+      func2KMI[f].push_back({st_type, elm_offset});
     }
   }
 }
@@ -1055,9 +1304,10 @@ void APStage2::MMIOReadCallGraphBackwardSlicing(Function *func, std::set<Functio
   visited.insert(func);
   mmioReadWrappers[func] = {base, offset_param_id, size};
   if (func2KMI.find(func) != func2KMI.end()) {
-    TypeOffset & kmi = func2KMI[func];
-    std::string key = getTypeOffsetStr(kmi.type, kmi.offset);
-    kmi2Func[key] = func;
+    for (auto & kmi : func2KMI[func]) {
+      std::string key = getTypeOffsetStr(kmi.type, kmi.offset);
+      kmi2Funcs[key].insert(func);
+    }
   }
   for (auto * call : funcCallSites[func]) {
     if (valueIsReturned(call)) {
@@ -1109,6 +1359,15 @@ void APStage2::collectMMIOReadInterface() {
       int constant_off = getGEPOffset(gep);
       assert(constant_off != -1);
       MMIOReadCallGraphBackwardSlicing(func, visited, base_off, -constant_off, sz);
+    } else if (auto * binary_op = dyn_cast<BinaryOperator>(mmio_ptr->stripPointerCasts())){
+      if (binary_op->getOpcode() == Instruction::BinaryOps::Add) {
+        auto * cop = binary_op->getOperand(1);
+        if (auto * ci = dyn_cast<ConstantInt>(cop)) {
+          int constant_off = ci->getZExtValue();
+          MMIOReadCallGraphBackwardSlicing(func, visited, base_off, -constant_off, sz);
+        }
+      }
+      
     } else {
       DEBUG("no offset?");
     }
@@ -1160,26 +1419,27 @@ void APStage2::collectIndirectMMIOReadWrappers(Module & m, std::set<Function*> &
     StructType * st = structTypes[st_name];
     assert(st && "struct type does not exist?");
     auto key = getTypeOffsetStr(st, offset);
-    if (kmi2Func.find(key) != kmi2Func.end()) {
-      Function * called_func = kmi2Func[key];
-      auto & vec = mmioReadWrappers[called_func];
-      int base = vec[0];
-      int param_id = vec[1];
-      int size = vec[2];
-      int caller_param_id = param_id;
+    if (kmi2Funcs.find(key) != kmi2Funcs.end()) {
+      for (auto * called_func : kmi2Funcs[key]) {
+        auto & vec = mmioReadWrappers[called_func];
+        int base = vec[0];
+        int param_id = vec[1];
+        int size = vec[2];
+        int caller_param_id = param_id;
 
-      // negative value means it is a constant offset
-      if (param_id >= 0) {
-        Value *arg_op = ci->getArgOperand(param_id);
-        caller_param_id = getParamIndex(arg_op, func);
+        // negative value means it is a constant offset
+        if (param_id >= 0) {
+          Value *arg_op = ci->getArgOperand(param_id);
+          caller_param_id = getParamIndex(arg_op, func);
+        }
+        if (caller_param_id == -1) {
+          DEBUG("No param id?");
+          continue;
+        }
+        errs() << "Wrapper found: " << func->getName() << "\n";
+        mmioReadWrappers[func] = {base, caller_param_id, size};
+        res.insert(func);
       }
-      if (caller_param_id == -1) {
-        DEBUG("No param id?");
-        continue;
-      }
-      errs() << "Wrapper found: " << func->getName() << "\n";
-      mmioReadWrappers[func] = {base, caller_param_id, size};
-      res.insert(func);
     }
   }
 }
@@ -1189,8 +1449,12 @@ void APStage2::collectIndirectMMIOReadWrappers(Module & m, std::set<Function*> &
 void APStage2::collectMMIOReadWrappers(Module & m) {
   identifyKMI(m);
   collectMMIOReadInterface();
-  for (auto & p : kmi2Func) {
-    errs() << "Read Interface: " << p.first << "  " << p.second->getName() << "\n";
+  for (auto & p : kmi2Funcs) {
+    errs() << "Read Interface: " << p.first << "  "; 
+    for (auto * f : p.second) {
+      errs() << f->getName() << " ";
+    }
+    errs() << "\n";
   }
   int oldsz1;
   int oldsz2;
@@ -1198,7 +1462,7 @@ void APStage2::collectMMIOReadWrappers(Module & m) {
   int newsz2;
   do {
     oldsz1 = mmioReadWrappers.size();
-    oldsz2 = kmi2Func.size();
+    oldsz2 = kmi2Funcs.size();
     std::set<Function*> res;
     std::set<Function*> visited;
     collectIndirectMMIOReadWrappers(m, res);
@@ -1207,8 +1471,9 @@ void APStage2::collectMMIOReadWrappers(Module & m) {
       MMIOReadCallGraphBackwardSlicing(func, visited, b_idx_sz[0], b_idx_sz[1], b_idx_sz[2]);
     }
     newsz1 = mmioReadWrappers.size();
-    newsz2 = kmi2Func.size();
+    newsz2 = kmi2Funcs.size();
   } while (oldsz1 != newsz1 || oldsz2 != newsz2);
+
 }
 
 
@@ -1391,39 +1656,57 @@ static bool getOffsetSizeInMMIOReadCall(CallInst * ci, std::vector<int> &vec, st
   return true;
 }
 
-void APStage2::collectMMIOReadSources(std::unordered_map<Value*, std::vector<int>> & res) {
+
+void APStage2::collectMMIOReadSources(std::unordered_map<Value*, std::vector<std::vector<int>>> & res) {
   // resolve indirect calls
   for (auto * ci : indirectCalls) {
     Value * callee = ci->getCalledOperand()->stripPointerCasts();
+
     if (!isa<LoadInst>(callee)) {
+      // INFO("Not load");
+      // INFO(*ci);
       continue;
     }
     LoadInst * load = (LoadInst*)callee;
     Value * src = load->getPointerOperand()->stripPointerCasts();
     int offset = -1;
     Type * t;
-    if (auto * gep = dyn_cast<GetElementPtrInst>(src)) {
-      t = gep->getSourceElementType();
+    GetElementPtrInst *gep = nullptr; 
+    if ((gep = dyn_cast<GetElementPtrInst>(src))) {
+      t =  gep->getSourceElementType();
       offset = getGEPOffset(gep);
     } else {
       t = src->getType();
       offset = 0;
     }
-    if (!t->isStructTy()) {
-      continue;
+    if (t->isPointerTy()) {
+      t = getPointerBaseType(t);
     }
-    if (offset == -1) {
-      continue;
+    
+    std::set<Function*> funcs;
+    std::string key = "None";
+    if (t->isStructTy() && offset != -1) {
+      std::string st_name = getStructBaseName(t->getStructName().str());
+      StructType * st = structTypes[st_name];
+      assert(st && "struct type does not exist?");
+      key = getTypeOffsetStr(st, offset);
     }
-    std::string st_name = getStructBaseName(t->getStructName().str());
-    StructType * st = structTypes[st_name];
-    assert(st && "struct type does not exist?");
-    auto key = getTypeOffsetStr(st, offset);
-    if (kmi2Func.find(key) != kmi2Func.end()) {
+
+    if (kmi2Funcs.find(key) != kmi2Funcs.end()) {
       // resolve the indirect call here
-      Function * resolved_callee = kmi2Func[key];
+        funcs = kmi2Funcs[key];
+    } else if (enable_type_based_func_res
+              && type2Funcs.find(load->getType()) != type2Funcs.end()) {
+      DEBUG("Resolving using type based analysis...");
+      funcs = type2Funcs[load->getType()];
+    }
+
+    for (auto * resolved_callee: funcs) {
       // if this is a mmio read wrapper
       if (mmioReadWrappers.find(resolved_callee) != mmioReadWrappers.end()) {
+        ci->getDebugLoc().print(errs());
+        errs() << "\n";
+        DEBUG("Resolved callee: " << resolved_callee->getName());
         std::vector<int> & vec = mmioReadWrappers[resolved_callee];
         std::vector<int> offset_sz = {-1, 0};
         bool ok = getOffsetSizeInMMIOReadCall(ci, vec, offset_sz);
@@ -1432,7 +1715,8 @@ void APStage2::collectMMIOReadSources(std::unordered_map<Value*, std::vector<int
             "offset is not a constant... ");
         } else {
           // we are good
-          res[ci] = offset_sz;
+          res[ci].push_back(offset_sz);
+          bbIOReadCnt[ci->getParent()] += 1;
         }
       }
     }
@@ -1458,7 +1742,8 @@ void APStage2::collectMMIOReadSources(std::unordered_map<Value*, std::vector<int
             "offset is not a constant... ");
       } else {
         // we are good
-        res[ci] = offset_sz;
+        res[ci].push_back(offset_sz);
+        bbIOReadCnt[ci->getParent()] += 1;
       }
     }
   }
@@ -1467,59 +1752,63 @@ void APStage2::collectMMIOReadSources(std::unordered_map<Value*, std::vector<int
     int offset = findMMIO_Offset(ci);
     int size = ci->getType()->getScalarSizeInBits() / 8;
     if (offset != -1) {
-      res[ci] = {offset, size};
+      res[ci].push_back({offset, size});
+      bbIOReadCnt[ci->getParent()] += 1;
     }
   }
 }
 
 void APStage2::extractMMIOFieldConstraint() {
-  std::unordered_map<Value*, std::vector<int>> mmio_reads;
+  std::unordered_map<Value*, std::vector<std::vector<int>>> mmio_reads;
   collectMMIOReadSources(mmio_reads);
+  cntFunctionIOReads();
   for (auto & p : mmio_reads) {
     CallInst * ci = (CallInst*)p.first;
 
-    int offset = p.second[0];
-    int size = p.second[1];
-    assert(offset != -1);
-    if (Function * callee = ci->getCalledFunction()) {
-      errs() << "\nCalled Function : " << callee->getName() << "\n";
-    } else {
-      errs() << "\n";
-    }
-    errs() << "MMIO Read: ";
-    ci->getDebugLoc().print(errs());
-    errs() << *ci << "\n";
-    errs() << "\nOFFSET: " << offset <<  " SIZE: " << size << "\n";
-    errs() << "Results:\n";
-    
-    auto * builder = new FieldConstraintBuilder("mmio", offset, ci);
-    builder->buildConstraints();
-    auto & cstrs = builder->getResults();
-    
-    if (!cstrs.size()) {
+    for (auto & off_sz : p.second) {
+      int offset = off_sz[0];
+      int size = off_sz[1];
+      assert(offset != -1);
+      if (Function * callee = ci->getCalledFunction()) {
+        errs() << "\nCalled Function : " << callee->getName() << "\n";
+      } else {
+        errs() << "\n";
+      }
+      errs() << "MMIO Read: ";
+      ci->getDebugLoc().print(errs());
+      errs() << *ci << "\n";
+      errs() << "\nOFFSET: " << offset <<  " SIZE: " << size << "\n";
+      errs() << "Results:\n";
+      
+      auto * builder = new FieldConstraintBuilder("mmio", offset, ci);
+      builder->buildConstraints();
+      auto & cstrs = builder->getResults();
+      
+      if (!cstrs.size()) {
+        delete builder;
+        continue;
+      }
+
+      if (cstrs.empty()) {
+        continue;
+      }
+
+      HWInput * hw_input;
+      if (mmioModel.find(offset) == mmioModel.end()) {
+        hw_input = &mmioModel[offset];
+        hw_input->setOffset(offset);
+        hw_input->setSize(size);
+      } else {
+        hw_input = &mmioModel[offset];
+      }
+
+      for (auto * expr : cstrs) {
+        errs() << expr->str() << "\n";
+        genHWInputConstraint(expr, *hw_input);
+      }
+
       delete builder;
-      continue;
     }
-
-    if (cstrs.empty()) {
-      continue;
-    }
-
-    HWInput * hw_input;
-    if (mmioModel.find(offset) == mmioModel.end()) {
-      hw_input = &mmioModel[offset];
-      hw_input->setOffset(offset);
-      hw_input->setSize(size);
-    } else {
-      hw_input = &mmioModel[offset];
-    }
-
-    for (auto * expr : cstrs) {
-      errs() << expr->str() << "\n";
-      genHWInputConstraint(expr, *hw_input);
-    }
-
-    delete builder;
   }
 }
 
@@ -1572,9 +1861,11 @@ void APStage2::extractDMAFieldConstraint(Value * v, TypeOffset type_offset) {
   int size = v->getType()->getScalarSizeInBits() / 8;
 
   /* print some debug info */
-  Instruction * inst = (Instruction*)v;
-  inst->getDebugLoc().print(errs());
-  errs() << "\n IR: " << *inst << "\n";
+  if (isa<Instruction>(v)) {
+    Instruction * inst = (Instruction*)v;
+    inst->getDebugLoc().print(errs());
+    errs() << "\n IR: " << *inst << "\n";
+  } 
 
   auto * builder = new FieldConstraintBuilder(sname, offset, v);
   builder->buildConstraints();
@@ -1623,8 +1914,10 @@ bool APStage2::APStage2Pass(Module &module) {
           drawCallGraph(ci);
           processCall(ci);
         }
-        if (auto *st = dyn_cast<StoreInst>(ii))
+        if (auto *st = dyn_cast<StoreInst>(ii)) {
           processStore(st);
+          identifyKMIByStore(st);
+        }
       }
     }
   }
@@ -1655,13 +1948,13 @@ bool APStage2::APStage2Pass(Module &module) {
     }
 
   }
-  if (!dmaBufferTypes.size()) {
-    errs() << "======= Type Discovery Phase 2 ===========\n";
-    for (auto & s : dmaAddrStoreDst) {
-      errs() << s << "\n";
-    }
-    findMemRegionTypeByCast(dmaAddrStoreDst, dmaBufferTypes);
+  // if (!dmaBufferTypes.size()) {
+  errs() << "======= Type Discovery Phase 2 ===========\n";
+  for (auto & s : dmaAddrStoreDst) {
+    errs() << s << "\n";
   }
+  findMemRegionTypeByCast(dmaAddrStoreDst, dmaBufferTypes);
+  // }
   errs() << "Total number of DMA Buffer Types: " << dmaBufferTypes.size() << "\n";
   for (auto * t : dmaBufferTypes) {
       INFO("DMA Buffer Type: " << t->getStructName());
@@ -1678,7 +1971,7 @@ bool APStage2::APStage2Pass(Module &module) {
 #endif
     Function *bcf = dyn_cast<Function>(cv->stripPointerCasts());
     auto name = bcf->getName();
-    ci->getDebugLoc().print(errs());
+    // ci->getDebugLoc().print(errs());
     if (name.startswith("pcim_iomap_table")) { 
       Value * v = processPCIM_IOMAP(ci);
       if (v) {
@@ -1691,7 +1984,10 @@ bool APStage2::APStage2Pass(Module &module) {
 
   errs() << "=========Secondary DMA Search============\n";
   for (auto * ci : callDmaAllocPage) {
-    findDMAPageAddrOffset(ci);
+    findDMAPageAddrOffset(ci, 4096);
+  }
+  for (auto & p : dmaPhyAddrToDMASz) {
+    findDMAPageAddrOffset(p.first, p.second);
   }
 
   collectDMAReads();

@@ -74,3 +74,59 @@ public:
 private:
   int probe_len;
 };
+
+Stage2HWModel * new_stage2_model_kvaser() {
+  unordered_map<int, HWInput> mmio_mdl =
+  {
+  {4 ,      HWInput(4, 4,
+              {},
+              {0xff,0xff,0x0 },
+              {})
+  },
+  {2 ,      HWInput(2, 4,
+              {0x1, 0x80, },
+              {0xff, },
+              {})
+  },
+  {31 ,       HWInput(31, 4,
+                {0x80, },
+                {},
+                {})
+  },
+  {16 ,       HWInput(16, 4,
+                {0x40, 0x80, },
+                {},
+                {})
+  },
+  {3 ,      HWInput(3, 4,
+              {0x2, 0x4, 0x8, 0x10, 0x40, 0x80, 0xec, },
+              {0x0, },
+              {})
+  },
+  {0 ,      HWInput(0, 4,
+              {0x1, },
+              {0xff, },
+              {})
+  },
+  {32 ,       HWInput(32, 4,
+                {0x1, },
+                {},
+                {})
+  },
+  {12 ,       HWInput(12, 4,
+                {0x20, 0x40, 0x80, 0xc0, },
+                {},
+                {})
+  },
+  {64 ,       HWInput(64, 4,
+                {0x1, },
+                {},
+                {})
+  },
+  };
+
+  vector<DMAInputModel> dma_mdl = {
+  };
+  auto * model = new Stage2HWModel("XXX", mmio_mdl, dma_mdl);
+  return model;
+}

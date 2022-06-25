@@ -48,11 +48,11 @@ void handle_type_cov(struct XXX *sm) {
   inject_cov(addr);
 }
 
-void start_pt(struct XXX *sm) {
+void start_pt(struct XXX *sm, int core_id) {
   pid_t tid;
   memcpy(&tid, &(sm->data), sizeof(pid_t));
   LOG_TO_FILE("afl.log", "start PT for tid..." << tid);
-  aflClient->startPT(tid);
+  aflClient->startPT(core_id);
 }
 
 bool hasStamp(const std::string fname) {
@@ -77,7 +77,22 @@ int main(int argc, char **argv) {
     // LOG_TO_FILE("afl.log", "AFLClient is alive");
   }
   skip_dry_run();
-  SHM<struct XXX> shm("/afl-proxy-0");
+  std::string shmname = "/afl-proxy-";
+  char core_id_str[8];
+  char shm_id_str[8];
+  int core_id;
+
+  if (argc > 3) {
+    strncpy(core_id_str, argv[2], 7);
+    strncpy(shm_id_str, argv[3], 7);
+    core_id = atoi(core_id_str);
+    shmname += std::string(shm_id_str);
+    LOG_TO_FILE("afl.log", "Using shm: " << shmname);
+  } else {
+    LOG_TO_FILE("afl.log", "usage: ap @@ qemu_cpu shm_id");
+  }
+ 
+  SHM<struct XXX> shm(shmname.c_str());
   if (shm.open(SHMOpenType::CREATE)) {
     auto *sm = shm.getMem();
     // LOG_TO_FILE("afl.log", "SHM created @ " << sm);
@@ -85,14 +100,13 @@ int main(int argc, char **argv) {
       unreachable("failed to init semaphore r");
     if (sem_init(&(sm->semw), 1, 0) == -1)
       unreachable("failed to init semaphore w");
+  } else {
+    LOG_TO_FILE("afl.log", "SHM creation failed");
   }
   auto *sm = shm.getMem();
-  if (argc > 1) {
-    INFO("setting input file path: " << argv[1]);
-    strncpy(sm->path, argv[1], 128);
-  } else {
-    INFO("no input file specified");
-  }
+  // set input file path
+  INFO("setting input file path: " << argv[1]);
+  strncpy(sm->path, argv[1], 128);
   // LOG_TO_FILE("afl.log", "entering event loop");
   bool run = true;
   __sync_lock_test_and_set(&(sm->ready), 1);
@@ -107,7 +121,7 @@ int main(int argc, char **argv) {
       handle_type_cov(sm);
       break;
     case (2):
-      start_pt(sm);
+      start_pt(sm, core_id);
       break;
     case (0xFF):
       run = false;
@@ -121,6 +135,6 @@ int main(int argc, char **argv) {
     }
   }
   shm.close();
-  shm_unlink("/afl-proxy-0");
+  shm_unlink(shmname.c_str());
   return 0;
 }

@@ -33,16 +33,10 @@ public:
   inline void insertValue(uint64_t val) { value_set.insert(val); }
   inline void insertBits(uint64_t bits) { bits_set.insert(bits); }
 
-
   void process() {
-    important_bits = 0;
-    if (bits_set.size()) {
-      for (auto & bits : bits_set) {
-        important_bits |= bits;
-      }
-    }
     generateRangeValues();
   }  
+
   void genSpecial(int64_t start, int64_t end, std::vector<int64_t> & res) {
     res.push_back(start+1); 
     res.push_back(start);
@@ -65,6 +59,8 @@ public:
     }
   }
 
+  
+
   std::string genModelInitCode(int base_indent) {
     std::string res;
     std::string indent = "        ";
@@ -72,7 +68,11 @@ public:
     indent += base;
     res = base + "HWInput(" + std::to_string(offset) + ", " + std::to_string(n_bytes) + ",\n" + indent;
     // bits
-    res += to_hex(important_bits) + ",\n" + indent;
+    res += "{";
+    for (auto & v : bits_set) {
+      res += to_hex(v) + ", ";
+    }
+    res += "},\n" + indent;
     // magic values
     res += "{";
     for (auto & v : value_set) {
@@ -93,7 +93,7 @@ private:
   std::vector<std::pair<int64_t, int64_t>> ranges;
   std::set<uint64_t> value_set;
   std::set<uint64_t> bits_set;
-  uint64_t important_bits;
+  // uint64_t important_bits;
   std::set<uint64_t> range_special_vals;
   int offset;
   int n_bytes;
@@ -198,6 +198,48 @@ private:
   ValueType vtype;
 };
 
+/// x > 0xff <-> x & 0x80
+///
+uint64_t checkAllOneValue(uint64_t v) {
+  uint8_t *bytes = (uint8_t*)&v;
+  int i=0;
+
+  for (i=0; i<8; i++) {
+    if (bytes[i] == 0x0) {
+      break;
+    }
+    if (bytes[i] != 0xff) {
+      break;
+    }
+  }
+  if (i == 8) {
+    // all ones
+    return 1ULL << 63;
+  }
+  if (i == 0 || bytes[i] != 0) {
+    return 0;
+  }
+  // std::cerr << "All one detected: " << to_hex(v) << "\n";
+  int nshift = i * 8 - 1;
+  return 1ULL << nshift;
+}
+
+uint64_t getConstantInExpr(Expression * expr) {
+  auto exp_type = expr->getType();
+  assert(exp_type != Expression::ExpType::VALUE);
+  ArithExpr * arith = (ArithExpr*)expr;
+  Expression * lhs = arith->getLHS();
+  Expression * rhs = arith->getRHS();
+  ValueExpr * constant = nullptr;
+  assert(lhs->isConstant() || rhs->isConstant());
+  if (lhs->isConstant()) {
+    constant = (ValueExpr *)lhs;
+  } else {
+    constant = (ValueExpr *)rhs;
+  }
+  return constant->getConstant();
+}
+
 void genHWInputConstraint(Expression * expr, HWInput & hw_input) {
   auto exp_type = expr->getType();
   if(exp_type == Expression::ExpType::VALUE) {
@@ -230,7 +272,19 @@ void genHWInputConstraint(Expression * expr, HWInput & hw_input) {
     } else if (other_expr->getType() == Expression::ExpType::BITAND){  // x & 0xVVVVV == V ?
       ArithExpr * band= (ArithExpr *)other_expr;
       auto * mask = (ValueExpr*)(band->getLHS()->isConstant() ? band->getLHS() : band->getRHS());
+      auto * lhs_exp = band->getLHS()->isConstant() ? band->getRHS() : band->getLHS();
+      auto lhs_exp_type = lhs_exp->getType();
+      
       uint64_t mask_val = mask->getConstant();
+      if (lhs_exp_type == Expression::ExpType::LSHIFT) {
+        uint64_t shift_val = getConstantInExpr(lhs_exp);
+        mask_val = mask_val  >> shift_val;
+        const_val = const_val >> shift_val;
+      } else if (lhs_exp_type == Expression::ExpType::RSHIFT) {
+        uint64_t shift_val = getConstantInExpr(lhs_exp);
+        mask_val = mask_val  << shift_val;
+        const_val = const_val << shift_val;
+      }
       if (const_val == 0) {
         hw_input.insertBits(mask_val);
       } else {
@@ -259,6 +313,11 @@ void genHWInputConstraint(Expression * expr, HWInput & hw_input) {
     }
   } else if (exp_type == Expression::ExpType::GT
             || exp_type == Expression::ExpType::GE) {
+    uint64_t one_bit_set = checkAllOneValue(const_val);
+    if (one_bit_set) {
+      hw_input.insertBits(one_bit_set);
+      return;
+    }
     uint64_t max_val = 0;
     int size = hw_input.nbytes();
     if (size == 1) {

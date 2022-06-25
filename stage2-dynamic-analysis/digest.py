@@ -23,9 +23,11 @@ Lines = fh_wlog.readlines()
 
 for line in Lines:
     line = line.strip()
-    r = re.search("write", line)
-    if r:
+    loc = line.find("INFO:write")
+    if loc != -1:
+        line = line[loc:]
         arr=re.split(r" |=",line)
+        print("processing:" + line)
         reg=int(arr[6],16);
         # if reg not in reg_write_cnt.keys():
         #     reg_write_cnt[reg] = 0
@@ -46,14 +48,22 @@ fh_klog = open(fn_klog, 'r')
 Lines = fh_klog.readlines()
 
 dmaaddrs=[]
-
+top_halfs=[]
+bottom_halfs=[]
 for line in Lines:
     line = line.strip()
-    r = re.search("qemu", line)
+    r = re.search("kvm_hypercall: nr", line)
     if r:
         arr = re.split(r" ",line)
         if (arr[-1]!="0x0" and arr[-7] == "0x1"):
-            dmaaddrs.append((int(arr[-1],16), int(arr[-3],16)))
+            addr = int(arr[-1],16)
+            sz = int(arr[-3],16)
+            dmaaddrs.append((addr, sz))
+            th = addr >> 16
+            bh = addr & 0x0000ffff
+            top_halfs.append((th, sz))
+            bottom_halfs.append((bh, sz))
+            
 
 code = ""
 print("Register, DMA Buffer Address")
@@ -65,6 +75,20 @@ for (a, sz) in dmaaddrs:
             print("=>",hex(a))
             code += "model->setDMAReg(" + all_regs[0] + ", " + hex(sz) + ");\n";
 
+for (a, sz) in top_halfs:
+    for k in addr2reg.keys():
+        if ( a == k ):
+            all_regs = [hex(x) for x in addr2reg[k]]
+            print(all_regs)
+            print("=>",hex(a))
+            code += "model->setDMATopHalfReg(" + all_regs[0] + ", " + hex(sz) + ");\n";
+for (a, sz) in bottom_halfs:
+    for k in addr2reg.keys():
+        if ( a == k ):
+            all_regs = [hex(x) for x in addr2reg[k]]
+            print(all_regs)
+            print("=>",hex(a))
+            code += "model->setDMABottomHalfReg(" + all_regs[0] + ", " + hex(sz) + ");\n";
 
 print("-------------Code-------------------")
 print(code);

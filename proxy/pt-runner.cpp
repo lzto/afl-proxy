@@ -220,12 +220,12 @@ void check_buffer(int fd) {
   ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
 }
 
-void ptWorker(pid_t tid) {
-  pid_t pid = tid;
-  int cpu = 6; // measure on cpu 0
-  // LOG_TO_FILE("afl.log", "target CPU " << cpu << " PID " << pid);
-
+void ptWorker(int core_id) {
+  pid_t pid;
+  int cpu = core_id; // measure on cpu 6
+  LOG_TO_FILE("afl.log", "Measuring on core " << core_id); 
   // setup signal handler for receiving perf data signal
+  pid = -1;
   struct sigaction sa;
   memset(&sa, 0, sizeof(struct sigaction));
   sa.sa_sigaction = perf_event_handler;

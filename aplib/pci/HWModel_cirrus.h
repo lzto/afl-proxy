@@ -29,3 +29,29 @@ public:
 private:
   int probe_len;
 };
+
+Stage2HWModel *new_stage2_model_cirrus() {
+  unordered_map<int, HWInput> mmio_mdl =
+  {
+  {975 ,        HWInput(975, 1,
+                {0x3, 0x8, },
+                {},
+                {})
+  },
+  {965 ,        HWInput(965, 1,
+                {0x8, 0x10, 0x18, },
+                {},
+                {})
+  },
+  {981 ,        HWInput(981, 1,
+                {0x80, },
+                {},
+                {})
+  },
+  };
+
+  vector<DMAInputModel> dma_mdl = {
+  };
+  auto * model = new Stage2HWModel("XXX", mmio_mdl, dma_mdl);
+  return model;
+}

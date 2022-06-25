@@ -53,3 +53,34 @@ public:
 private:
   int probe_len;
 };
+
+Stage2HWModel * new_stage2_model_wanxl() {
+  unordered_map<int, HWInput> mmio_mdl =
+  {
+  {64 ,       HWInput(64, 4,
+                {0x80, 0xc0, },
+                {0x0, },
+                {})
+  },
+  {68 ,       HWInput(68, 4,
+                {},
+                {0x0, },
+                {})
+  },
+  {84 ,       HWInput(84, 4,
+                {},
+                {0x0, },
+                {})
+  },
+  {100 ,        HWInput(100, 4,
+                {0x10, },
+                {0x0, },
+                {})
+  },
+  };
+
+  vector<DMAInputModel> dma_mdl = {
+  };
+  auto * model = new Stage2HWModel("XXX", mmio_mdl, dma_mdl);
+  return model;
+}

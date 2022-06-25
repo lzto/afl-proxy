@@ -296,6 +296,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(ambassador);
   INSERT_MODEL(idt77252);
   INSERT_MODEL(saa7134);
+  INSERT_STAGE2_MODEL(saa7134);
   INSERT_MODEL(cirrus);
   INSERT_MODEL(peak_pci);
   INSERT_MODEL(rp2);
@@ -306,6 +307,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(cpcihp_zt5550);
   INSERT_MODEL(adm8211);
   INSERT_MODEL(3c59x);
+  INSERT_STAGE2_MODEL(3c59x);
   INSERT_MODEL(3w_9xxx);
   INSERT_MODEL(acard_ahci);
   INSERT_MODEL(acp3x);
@@ -318,6 +320,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(arcmsr);
   INSERT_MODEL(arkfb);
   INSERT_MODEL(ast);
+  INSERT_STAGE2_MODEL(ast);
   INSERT_MODEL(ath10k);
   INSERT_MODEL(atl1);
   INSERT_MODEL(atl1c);
@@ -325,7 +328,9 @@ void hw_model_internal_init() {
   INSERT_MODEL(atl2);
   INSERT_MODEL(atlantic);
   INSERT_MODEL(aty128fb);
+  INSERT_STAGE2_MODEL(aty128fb);
   INSERT_MODEL(atyfb);
+  INSERT_STAGE2_MODEL(atyfb);
   INSERT_MODEL(avmfritz);
   INSERT_MODEL(bcma);
   INSERT_MODEL(bnxt);
@@ -341,15 +346,20 @@ void hw_model_internal_init() {
   INSERT_MODEL(cx18);
   INSERT_MODEL(cyber2000fb);
   INSERT_MODEL(de2104x);
+  INSERT_STAGE2_MODEL(de2104x);
   INSERT_MODEL(dw_dmac_pci);
   INSERT_MODEL(earth_pt1);
+  INSERT_STAGE2_MODEL(earth_pt1);
   INSERT_MODEL(ems_pci);
   INSERT_MODEL(emu10k1_gp);
   INSERT_MODEL(eni);
   INSERT_MODEL(epic100);
+  INSERT_STAGE2_MODEL(epic100);
   INSERT_MODEL(f81601);
   INSERT_MODEL(farsync);
+  INSERT_STAGE2_MODEL(farsync);
   INSERT_MODEL(fealnx);
+  INSERT_STAGE2_MODEL(fealnx);
   INSERT_MODEL(firestream);
   INSERT_MODEL(fm801_gp);
   INSERT_MODEL(fore_200e);
@@ -374,10 +384,13 @@ void hw_model_internal_init() {
   INSERT_MODEL(isp1760);
   INSERT_MODEL(isst_if_pci);
   INSERT_MODEL(ivtv);
+  INSERT_STAGE2_MODEL(ivtv);
   INSERT_MODEL(iwlwifi);
   INSERT_MODEL(kpc2000);
   INSERT_MODEL(ksz884x);
+  INSERT_STAGE2_MODEL(ksz884x);
   INSERT_MODEL(kvaser);
+  INSERT_STAGE2_MODEL(kvaser);
   INSERT_MODEL(lanai);
   INSERT_MODEL(lmc);
   INSERT_MODEL(lpfc);
@@ -388,6 +401,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(megaraid_sas);
   INSERT_MODEL(mei_me);
   INSERT_MODEL(mgag200);
+  INSERT_STAGE2_MODEL(mgag200);
   INSERT_MODEL(mISDNinfineon);
   INSERT_MODEL(mlx5);
   INSERT_MODEL(mlxsw_spectrum);
@@ -407,6 +421,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(pc300too);
   INSERT_MODEL(pci200syn);
   INSERT_MODEL(pcnet32);
+  INSERT_STAGE2_MODEL(pcnet32);
   INSERT_MODEL(pcwd_pci);
   INSERT_MODEL(plx_pci);
   INSERT_MODEL(pm2fb);
@@ -414,6 +429,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(r8169);
   INSERT_STAGE2_MODEL(r8169);
   INSERT_MODEL(radeon_fb);
+  INSERT_STAGE2_MODEL(radeon_fb);
   INSERT_MODEL(rivafb);
   INSERT_MODEL(rtsx_pci);
   INSERT_MODEL(rtw88_8822ce);
@@ -422,10 +438,14 @@ void hw_model_internal_init() {
   INSERT_MODEL(sbni);
   INSERT_MODEL(sfc);
   INSERT_MODEL(sis190);
+  INSERT_STAGE2_MODEL(sis190);
   INSERT_MODEL(sisfb);
   INSERT_MODEL(skfp);
+  INSERT_STAGE2_MODEL(skfp);
   INSERT_MODEL(skge);
+  INSERT_STAGE2_MODEL(skge);
   INSERT_MODEL(sky2);
+  INSERT_STAGE2_MODEL(sky2);
   INSERT_MODEL(sm712fb);
   INSERT_MODEL(sm750fb);
   INSERT_MODEL(snd_ad1889);
@@ -438,6 +458,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(spi_sfp)
   INSERT_MODEL(sstfb);
   INSERT_MODEL(sundance);
+  INSERT_STAGE2_MODEL(sundance);
   INSERT_MODEL(sym53c8xx);
   INSERT_MODEL(tg3);
   INSERT_MODEL(tlan);
@@ -455,6 +476,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(vxge);
   INSERT_MODEL(w6692);
   INSERT_MODEL(wanxl);
+  INSERT_STAGE2_MODEL(wanxl);
   INSERT_MODEL(wdt_pci);
   INSERT_MODEL(zatm);
   // test device -- dummy

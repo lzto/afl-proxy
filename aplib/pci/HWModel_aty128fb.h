@@ -72,3 +72,39 @@ private:
   int probe_len;
   uint8_t device_ram[1024000];
 };
+
+Stage2HWModel * new_stage2_model_aty128fb() {
+  unordered_map<int, HWInput> mmio_mdl =
+  {
+  {1 ,      HWInput(1, 1,
+              {},
+              {0xaa, },
+              {})
+  },
+  {16 ,       HWInput(16, 4,
+                {},
+                {0x55555555, },
+                {})
+  },
+  {5952 ,         HWInput(5952, 4,
+                  {0x80000000, },
+                  {},
+                  {0x3e, 0x3f, 0x40, 0xffffffff, 0x100000000, })
+  },
+  {12 ,       HWInput(12, 4,
+                {0x8000, },
+                {},
+                {})
+  },
+  {320 ,        HWInput(320, 4,
+                {0x3, },
+                {},
+                {})
+  },
+  };
+
+  vector<DMAInputModel> dma_mdl = {
+  };
+  auto * model = new Stage2HWModel("XXX", mmio_mdl, dma_mdl);
+  return model;
+}

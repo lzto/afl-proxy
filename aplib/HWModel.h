@@ -33,6 +33,8 @@ using namespace std;
 #define RANDOM_MODE 0
 
 #define PAGE_MASK (~(0xFFFULL))
+
+
 ///
 /// generic bar class
 /// non-present bar will have size=0
@@ -267,7 +269,6 @@ private:
 };
 
 static bool yes(int prob) {
-  assert(prob <= 100 && prob >= 0);
   int r = (rand() % 100) + 1;
   if (r <= prob) {
     return true;
@@ -278,10 +279,10 @@ static bool yes(int prob) {
 
 class HWInput {
 public:
-  HWInput(int off, int nbytes, uint64_t bits, const vector<uint64_t> & magics, 
+  HWInput(int off, int nbytes, const vector<uint64_t> & bits, const vector<uint64_t> & magics, 
           const vector<uint64_t> & range_specials, int prob=75)
     :offset(off), n_bytes(nbytes) {
-    important_bits = bits;
+    bits_vec = bits;
     magic_values = magics;
     range_special_vals = range_specials;
     use_model_prob = prob;
@@ -290,13 +291,72 @@ public:
   HWInput() {}
   inline int size() { return n_bytes; }
 
+  void selectN(int start, int total, vector<vector<int>> & res, vector<int> & path, int n) {
+    if (path.size() == n) {
+      res.push_back(path);
+      return;
+    }
+    if (total - start + path.size() < n) {
+      return;
+    }
+    for (int i=start; i<total; i++) {
+      path.push_back(i);
+      selectN(i+1, total, res, path, n);
+      path.pop_back();
+    }
+  }
+
+  void powerSet(int n, std::vector<std::vector<int>> & res) {
+    vector<int> path;
+    for (int i=1; i<=n; i++) {
+      selectN(0, n, res, path, i);
+    }
+  }
+
+  void generateBitCombs() {
+    important_bits = 0;
+    
+    if (!bits_vec.size()) {
+      return;
+    }
+
+    for (auto & bits : bits_vec) {
+      important_bits |= bits;
+    }
+    
+    if (bits_vec.size() > 4) {
+      bits_combinations.push_back(important_bits);
+      for (auto v : bits_vec) {
+        bits_combinations.push_back(v);
+      }
+      bits_combinations.push_back(0);
+      bits_combinations.push_back(~important_bits);
+      return;
+    }
+
+    vector<vector<int>> combs;
+    powerSet(bits_vec.size(), combs);
+    for (auto & comb : combs) {
+      uint64_t val = 0;
+      for (int i : comb) {
+        val |= bits_vec[i];
+      }
+      bits_comb_set.insert(val);
+    }
+    bits_comb_set.insert(0);
+    bits_comb_set.insert(~important_bits);
+    for (uint64_t bits : bits_comb_set) {
+      bits_combinations.push_back(bits);
+    }
+  }
+
   void genDict() {
+    generateBitCombs();
     for (auto & v : magic_values) {
       dict.push_back(v);
     }
-    if (important_bits) {
-      dict.push_back(important_bits);
-      dict.push_back(~important_bits);
+    for (auto & v : bits_combinations){
+      dict.push_back(v);
     }
     for (auto & v : range_special_vals) {
       dict.push_back(v);
@@ -304,30 +364,41 @@ public:
   }
 
   uint64_t modelRand() {
-    std::vector<uint64_t> candidates;
-    if (magic_values.size()) {
-      int choice = rand() % magic_values.size();
-      candidates.push_back(magic_values[choice]);
-    }
-    if (important_bits) {
-      uint64_t rand_mask = random();
-      uint64_t val = yes(50)?(rand_mask & important_bits):important_bits;
-      candidates.push_back(val);
-    }
-    if (range_special_vals.size()) {
-      int c = rand() % range_special_vals.size();
-      candidates.push_back(range_special_vals[c]);
-    }
-    if (!candidates.size()) {
-      return 0;
-    }
-    int c = rand() % candidates.size();
-    return candidates[c];
+    int c = rand() % dict.size();
+    return dict[c];
+  }
+
+  uint64_t hybridRand(uint64_t original) {
+    if (bits_combinations.size()) {
+      int c = rand() % bits_combinations.size();
+      uint64_t val = bits_combinations[c];
+      val |= original;
+      return val;
+    } 
+    return original;
   }
 
   uint64_t feedData(int mode, uint64_t original) {
+    // debug
+#if 0
+    cerr << "offset: " << offset << "\n";
+    for (auto v : dict) {
+      cerr << hex << "0x" << v << " " << dec;
+    }
+    cerr << "\n";
+#endif
     if (mode == RANDOM_MODE) {
+#if 0
       return yes(use_model_prob)?modelRand():original;
+#else
+      if (yes(use_model_prob)) {
+        return modelRand();
+      } else if (yes(50)) {
+        return hybridRand(original);
+      } else {
+        return original;
+      }
+#endif
     } else {
       int i = original % dict.size();
       return dict[i];
@@ -338,6 +409,9 @@ private:
   vector<uint64_t> magic_values;
   uint64_t important_bits;
   vector<uint64_t> range_special_vals;
+  set<uint64_t> bits_comb_set;
+  vector<uint64_t> bits_combinations;
+  vector<uint64_t> bits_vec;
   vector<uint64_t> dict;
   int use_model_prob;
   int offset;
@@ -377,6 +451,11 @@ public:
     mode = RANDOM_MODE;
   }
 
+  uint64_t rand64() {
+    return ((uint64_t)rand() << 32) | rand() ;
+  }
+
+
   HWInput & getMMIOInputAt(int offset) {
     return mmio_inputs[offset];
   }
@@ -399,8 +478,8 @@ public:
     dma_regs[dma_reg] = dma_sz;
   }
 
-  void setSecondaryDMAInfo(int dma_struct_sz, int dma_buf_sz, int offset) {
-    secondary_dma_infos[dma_buf_sz] = {dma_struct_sz, offset};
+  void setSecondaryDMAInfo(int dma_struct_sz, int dma_buf_sz, int offset, int l2_dma_buf_sz=4096) {
+    secondary_dma_infos[dma_buf_sz].push_back({dma_struct_sz, offset, l2_dma_buf_sz});
   }
 
   bool isLevel1DMASet() { return level1_dma_set; }
@@ -411,19 +490,22 @@ public:
       uint64_t dma_addr = p.first;
       int dma_len = (int)(p.second);
       if (secondary_dma_infos.find(dma_len) != secondary_dma_infos.end()) {
-        vector<int> & sec = secondary_dma_infos[dma_len];
-        int struct_sz = sec[0];
-        int offset = sec[1];
-        assert(dma_len % struct_sz == 0);
-        for (int i=0; i<dma_len/struct_sz; i++) {
-          uint64_t phy_addr = dma_addr + (i * struct_sz) + offset;
-          uint64_t secondary_dma_addr = 0;
-          readPhyMemGeneric((uint8_t*)&secondary_dma_addr, phy_addr, 8);
-          
-          if (secondary_dma_addr && !dma_starts.count(secondary_dma_addr)) {
-            // std::cerr << "Secondary DMA Addr: 0x" << std::hex << secondary_dma_addr << "\n";
-            dmasg.push_back({secondary_dma_addr, 4096});
-            dma_starts.insert(secondary_dma_addr);
+        auto & sec_vec = secondary_dma_infos[dma_len];
+        for (auto & sec : sec_vec) {
+          int struct_sz = sec[0];
+          int offset = sec[1];
+          int l2_dma_sz = sec[2];
+          assert(dma_len % struct_sz == 0);
+          for (int i=0; i<dma_len/struct_sz; i++) {
+            uint64_t phy_addr = dma_addr + (i * struct_sz) + offset;
+            uint64_t secondary_dma_addr = 0;
+            readPhyMemGeneric((uint8_t*)&secondary_dma_addr, phy_addr, 4);
+            
+            if (secondary_dma_addr && !dma_starts.count(secondary_dma_addr)) {
+              std::cerr << "Secondary DMA Addr: 0x" << std::hex << secondary_dma_addr << "\n";
+              dmasg.push_back({secondary_dma_addr, l2_dma_sz});
+              dma_starts.insert(secondary_dma_addr);
+            }
           }
         }
       }
@@ -431,20 +513,62 @@ public:
     unlockDMASG();
   }
 
+  void setOneDMA() {
+    uint64_t dma_addr = 0;
+    dma_addr = (dma_high_addr << 16) | dma_low_addr ;
+    if (!dma_starts.count(dma_addr)) {
+      dma_starts.insert(dma_addr);
+      lockDMASG();
+      level1_dmas.push_back({dma_addr, dma_low_high_sz});
+      dmasg.push_back({dma_addr, dma_low_high_sz});
+      unlockDMASG();
+      level1_dma_set = true;
+      cerr << "L1 DMA Address captured: 0x" << hex << dma_addr << dec << "\n";
+    }
+  }
+
+  void setDMATopHalfReg(int reg, int sz) {
+    dma_hi_reg = reg;
+    dma_low_high_sz = sz;
+  }
+  
+  void setDMABottomHalfReg(int reg, int sz) {
+    dma_low_reg = reg;
+    dma_low_high_sz = sz;
+  }
+
   void captureDMARegistration(int reg, uint64_t value) {
     if (dma_regs.find(reg) != dma_regs.end()) {
+      // cerr << "#DMA @reg " << hex << "0x" << reg << "val: 0x" << hex << value << "\n";  
       int sz = dma_regs[reg];
       if (!sz) {
         sz = 4096;
       }
+
       level1_dma_set = true;
       // avoid recording the same dma buffer address more than once
-      // cerr << "DMA Address captured: 0x" << hex << value << "\n";
+      cerr << "DMA Address captured: 0x" << hex << value << "\n";
+      lockDMASG();
       if (!dma_starts.count(value)) {
         dma_starts.insert(value);
+        level1_dmas.push_back({value, sz});
         dmasg.push_back({value, sz});
       }
+      unlockDMASG();
     }
+#if 0
+    else if (dma_low_reg == reg && dma_addr_set == 0) {
+      dma_low_addr = value;
+      dma_addr_set++;
+    }
+    else if (dma_hi_reg == reg && dma_addr_set == 1) {
+      dma_high_addr = value;
+      dma_addr_set++;
+      if (dma_addr_set == 2) {
+        setOneDMA();
+      }
+    } 
+#endif
   }
 
   void lockDMASG() { dmasgLock.lock(); }
@@ -463,7 +587,7 @@ public:
 
   void feedFuzzMMIOData(int offset, uint8_t * dst, int sz, uint8_t * afl_data) {
     if (mmio_inputs.find(offset) != mmio_inputs.end()) {
-      // cerr << "loading Model input, offset = " << offset << "sz = " << sz << "\n";
+      //cerr << "loading Model input, offset = " << offset << "sz = " << sz << "\n";
       HWInput & hwi = mmio_inputs[offset];
       uint64_t orig = 0;
       uint64_t data = 0;
@@ -482,18 +606,25 @@ public:
     for (auto p : dmasg) {
       uint64_t addr = p.first;
       uint64_t len = p.second;
+      bool overflowed = false;
       if (dma_data + len > dma_data_end) {
         dma_data = dma_data_start;
       }
       if (dma_data + len <= dma_data_end) {
+        // cerr << "filling DMA addr: 0x" << hex << addr << "\n"; 
         writePhyMemGeneric(addr, dma_data, len);
       } else {
-        continue;
+        overflowed = true;
       }
       // feed model data
       if (use_model) {
+#if 0
         if (dma_inputs.find(len) != dma_inputs.end()) {
           DMAInputModel & mdl = dma_inputs[len];
+#else
+        for (auto & len_mdl : dma_inputs) {
+          DMAInputModel & mdl = len_mdl.second;
+#endif
           for (auto & pair : mdl.getInputs()) {
             int offset = pair.first;
             HWInput & hw_input = pair.second;
@@ -502,9 +633,10 @@ public:
             if (len > struct_len  && (len % struct_len) == 0) {
               loop_cnt = len / struct_len;
             }
+            // cerr << "filling DMA addr: 0x" << hex << addr << dec << "offset: " <<  offset << "loop cnt: " << loop_cnt << "\n"; 
             for (int i=0; i<loop_cnt; i++) {
               int off = offset + struct_len * i;
-              uint64_t model_data = hw_input.feedData(mode, dma_data[off]);
+              uint64_t model_data = hw_input.feedData(mode, overflowed? rand64() : dma_data[off]);
               writePhyMemGeneric(addr + off, (uint8_t*)&model_data, hw_input.size());
             }
           }
@@ -520,10 +652,18 @@ private:
   unordered_map<int, HWInput> mmio_inputs;
   unordered_map<int, DMAInputModel> dma_inputs; // map dma_len to input model
   unordered_map<uint64_t, int> dma_regs; // reg -> buffer size
+  int dma_hi_reg=-1;
+  int dma_low_reg=-1;
+  uint64_t dma_low_addr;
+  uint64_t dma_high_addr;
+  uint64_t dma_low_high_sz;
+  int dma_addr_set=0;
+  bool is_dma_addr_low_high;
   vector<pair<uint64_t, uint64_t>> dmasg;
   set<uint64_t> dma_starts;
+  vector<pair<uint64_t, uint64_t>> level1_dmas;
   bool level1_dma_set=false;
-  unordered_map<int, vector<int>> secondary_dma_infos; // dma bufferlen ->struct sz, offset;
+  unordered_map<int, vector<vector<int>>> secondary_dma_infos; // dma bufferlen ->{{struct sz, offset, l2_buffsz}, ...};
   std::mutex dmasgLock;
   int mode;
 };

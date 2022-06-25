@@ -10,10 +10,14 @@ export AFL_SKIP_CPUFREQ=1
 rm dry_run_stamp*
 echo > afl.log
 
+
+SEED=seed
+OUT=out
+
 sudo taskset -c 3 /home/yiluwu/firecracker/AFL/afl-fuzz \
   -b 2 \
   -t 500000000+ -m 256 \
-  -i in -o out \
+  -i in -o $OUT \
   -d \
-  -f seed \
+  -f $SEED \
   ../proxy/build/ap @@

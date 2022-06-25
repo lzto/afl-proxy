@@ -177,3 +177,51 @@ public:
 private:
   int probe_len;
 };
+
+Stage2HWModel *new_stage2_model_pcnet32() {
+  unordered_map<int, HWInput> mmio_mdl =
+  {
+  {16 ,       HWInput(16, 4,
+                {0x1, 0x3, 0x4, 0x100, 0xdf00, 0xdf00, 0xdf00 },
+                {0xffff},
+                {})
+  },
+  {22 ,       HWInput(22, 2,
+                {0x20, 0x40, 0x80, 0x800, 0x4000, },
+                {0xc0, 0xffff, },
+                {})
+  },
+  {28 ,       HWInput(28, 4,
+                {0x20, 0x40, 0x80, 0x800, 0x4000, },
+                {0xc0, 0xffff, },
+                {})
+  },
+  };
+
+  vector<DMAInputModel> dma_mdl = {
+  DMAInputModel(0x100, 16, {
+  {0 , HWInput(0, 4,
+          {},
+          {0x0, },
+          {})
+  },
+  {8 , HWInput(8, 4,
+          {0x4000000, 0x8000000, 0x10000000, 0x40000000, },
+          {},
+          {0x0, 0x1, 0x40, 0x41, 0x60b, 0x60c, 0x60d, 0xffffffff, 0x100000000, 0xffffffffffffffff, })
+  },
+  {6 , HWInput(6, 2,
+          {0x100, 0x400, 0x800, 0x1000, 0x1800, 0x2000, 0x4000, 0x8000, },
+          {},
+          {})
+  },
+  }),
+  };
+  auto * model = new Stage2HWModel("XXX", mmio_mdl, dma_mdl);
+  // model->setSecondaryDMAInfo(16, 0x200, 0);
+  model->setSecondaryDMAInfo(28, 0x1c, 24, 0x100);
+  model->setSecondaryDMAInfo(28, 0x1c, 20, 0x100);
+  model->setDMATopHalfReg(0x10, 0x1c);
+  model->setDMABottomHalfReg(0x10, 0x1c);
+  return model;
+}

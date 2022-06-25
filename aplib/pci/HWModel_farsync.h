@@ -28,3 +28,49 @@ public:
 private:
   int probe_len;
 };
+
+Stage2HWModel *new_stage2_model_farsync() {
+  unordered_map<int, HWInput> mmio_mdl =
+  {
+  {19344 ,          HWInput(19344, 4,
+                  {},
+                  {0x12345678, },
+                  {})
+  },
+  {18752 ,          HWInput(18752, 1,
+                  {},
+                  {0x0, 0x1, 0xff, },
+                  {})
+  },
+  {18964 ,          HWInput(18964, 4,
+                  {},
+                  {0x0, },
+                  {})
+  },
+  {19301 ,          HWInput(19301, 1,
+                  {},
+                  {0x0, },
+                  {})
+  },
+  {18754 ,          HWInput(18754, 2,
+                  {},
+                  {0x18, },
+                  {})
+  },
+  {18753 ,          HWInput(18753, 1,
+                  {},
+                  {0x1, },
+                  {})
+  },
+  {19234 ,          HWInput(19234, 1,
+                  {},
+                  {0x0, },
+                  {})
+  },
+  };
+
+  vector<DMAInputModel> dma_mdl = {
+  };
+  auto * model = new Stage2HWModel("XXX", mmio_mdl, dma_mdl);
+  return model;
+}

@@ -73,3 +73,19 @@ private:
   int probe_len;
   uint8_t device_ram[1024000];
 };
+
+Stage2HWModel * new_stage2_model_earth_pt1() {
+  unordered_map<int, HWInput> mmio_mdl =
+  {
+  {0 ,      HWInput(0, 4,
+              {0x1, 0x2, 0x80, 0x20000000, 0x80000000, },
+              {},
+              {})
+  },
+  };
+
+  vector<DMAInputModel> dma_mdl = {
+  };
+  auto * model = new Stage2HWModel("XXX", mmio_mdl, dma_mdl);
+  return model;
+}

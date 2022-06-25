@@ -357,3 +357,49 @@ public:
 private:
   int probe_len;
 };
+
+
+Stage2HWModel * new_stage2_model_ksz884x() {
+  unordered_map<int, HWInput> mmio_mdl =
+  {
+  {0 ,      HWInput(0, 4,
+              {0x1, },
+              {},
+              {})
+  },
+  {1026 ,         HWInput(1026, 2,
+                  {0x3000, },
+                  {},
+                  {})
+  },
+  {44 ,       HWInput(44, 4,
+                {0x2000000, 0x4000000, 0x8000000, 0x20000000, 0x50000000, 0x80000000, },
+                {0x0, },
+                {})
+  },
+  {1024 ,         HWInput(1024, 2,
+                  {0xc, 0x8800, 0x8810, },
+                  {},
+                  {})
+  },
+  {1192 ,         HWInput(1192, 4,
+                  {0x80000, 0x40000000, },
+                  {},
+                  {})
+  },
+  };
+
+  vector<DMAInputModel> dma_mdl = {
+  DMAInputModel(0x810,16, {
+  {0 , HWInput(0, 4,
+          {0x2000000, 0x60000000, 0x80000000, },
+          {},
+          {})
+  },
+  }),
+  };
+  auto * model = new Stage2HWModel("XXX", mmio_mdl, dma_mdl);
+  model->setSecondaryDMAInfo(16, 0x810, 8, 4096);
+  model->setDMAReg(0x14, 0x810);
+  return model;
+}

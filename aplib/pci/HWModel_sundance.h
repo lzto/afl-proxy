@@ -11938,101 +11938,166 @@ public:
   };
   virtual void write(uint64_t data, uint64_t addr, size_t size) final{};
 
-  virtual int read(uint8_t *dest, uint64_t addr, size_t size, int bar) {
-    if (read(dest, addr, size))
-      return size;
-    if (addr == 0x4e) {
-      (*(uint16_t *)dest) = 0x0004 | 0x0010 | 0x0200 | 0x0400;
-      return size;
-    }
-    // TxStatus
-    if (addr == 0x46) {
-      (*(uint16_t *)dest) = (rand() & (~0x1e)) | 0x80;
-      return size;
-    }
-    // TxListPtr
-    if (addr == 0x04) {
-      (*(uint32_t *)dest) = 0;
-      return size;
-    }
-    //
-    // bars[bar]->read(dest, addr, size);
-    //(*(uint64_t*)dest) ^= rand();
-    // return size;
-    return 0;
-  };
-  virtual void write(uint64_t data, uint64_t addr, size_t size, int bar) {
-    bars[bar]->write(data, addr, size);
-    // assuming page aligned though not true
-    if (addr == 0x04) {
-      // INFO("=Got DMA TxListPtr: "<< hexval(data));
-      txlist = std::make_pair(data, 32 * 4 * 4);
-      dmasgLock.lock();
-      dmasg.clear();
-      dmasg.push_back(txlist);
-      dmasg.push_back(rxlist);
-      dmasgLock.unlock();
-    }
-    if (addr == 0x10) {
-      // INFO("=Got DMA RxListPtr: " << hexval(data));
-      rxlist = std::make_pair(data, 64 * 4 * 4);
-      dmasgLock.lock();
-      dmasg.clear();
-      dmasg.push_back(txlist);
-      dmasg.push_back(rxlist);
-      dmasgLock.unlock();
-    }
-  }
-  virtual void feedRandomDMAData() {
-    struct netdev_desc {
-      uint32_t next_desc;
-      uint32_t status;
-      struct desc_frag {
-        uint32_t addr, length;
-      } frag;
-    };
-    lockDMASG();
-    // txlist
-    if (txlist.first != -1) {
-      int desc_cnt = txlist.second / sizeof(struct netdev_desc);
-      struct netdev_desc *descs = (struct netdev_desc *)malloc(txlist.second);
-      readPhyMemGeneric((uint8_t *)descs, txlist.first, txlist.second);
-      for (int i = 0; i < desc_cnt; i++) {
-        uint64_t addr = descs[i].frag.addr;
-        uint64_t len = descs[i].frag.length & 0x7fffffff;
-        bool deviceOwn = !(descs[i].status & 0x8000);
-        if (len && deviceOwn) {
-          writeRandomDataToPhyMemGeneric(addr, len);
-          descs[i].status = rand() | 0x00010000;
-        }
-      }
-      writePhyMemGeneric(txlist.first, (uint8_t *)descs, txlist.second);
-      free(descs);
-    }
-    // rxlist
-    if (rxlist.first != -1) {
-      int desc_cnt = rxlist.second / sizeof(struct netdev_desc);
-      struct netdev_desc *descs = (struct netdev_desc *)malloc(rxlist.second);
-      readPhyMemGeneric((uint8_t *)descs, rxlist.first, rxlist.second);
-      for (int i = 0; i < desc_cnt; i++) {
-        uint64_t addr = descs[i].frag.addr;
-        uint64_t len = descs[i].frag.length & 0x7fffffff;
-        bool deviceOwn = !(descs[i].status & 0x8000);
-        // only do when it is not owned by host
-        // possible race condition with  host
-        if (len && deviceOwn) {
-          writeRandomDataToPhyMemGeneric(addr, len);
-          descs[i].status = (len) | 0x8000;
-        }
-      }
-      writePhyMemGeneric(rxlist.first, (uint8_t *)descs, rxlist.second);
-      free(descs);
-    }
-    unlockDMASG();
-  };
+  // virtual int read(uint8_t *dest, uint64_t addr, size_t size, int bar) {
+  //   if (read(dest, addr, size))
+  //     return size;
+  //   if (addr == 0x4e) {
+  //     (*(uint16_t *)dest) = 0x0004 | 0x0010 | 0x0200 | 0x0400;
+  //     return size;
+  //   }
+  //   // TxStatus
+  //   if (addr == 0x46) {
+  //     (*(uint16_t *)dest) = (rand() & (~0x1e)) | 0x80;
+  //     return size;
+  //   }
+  //   // TxListPtr
+  //   if (addr == 0x04) {
+  //     (*(uint32_t *)dest) = 0;
+  //     return size;
+  //   }
+  //   //
+  //   // bars[bar]->read(dest, addr, size);
+  //   //(*(uint64_t*)dest) ^= rand();
+  //   // return size;
+  //   return 0;
+  // };
+  // virtual void write(uint64_t data, uint64_t addr, size_t size, int bar) {
+  //   bars[bar]->write(data, addr, size);
+  //   // assuming page aligned though not true
+  //   if (addr == 0x04) {
+  //     // INFO("=Got DMA TxListPtr: "<< hexval(data));
+  //     txlist = std::make_pair(data, 32 * 4 * 4);
+  //     dmasgLock.lock();
+  //     dmasg.clear();
+  //     dmasg.push_back(txlist);
+  //     dmasg.push_back(rxlist);
+  //     dmasgLock.unlock();
+  //   }
+  //   if (addr == 0x10) {
+  //     // INFO("=Got DMA RxListPtr: " << hexval(data));
+  //     rxlist = std::make_pair(data, 64 * 4 * 4);
+  //     dmasgLock.lock();
+  //     dmasg.clear();
+  //     dmasg.push_back(txlist);
+  //     dmasg.push_back(rxlist);
+  //     dmasgLock.unlock();
+  //   }
+  // }
+  // virtual void feedRandomDMAData() {
+  //   struct netdev_desc {
+  //     uint32_t next_desc;
+  //     uint32_t status;
+  //     struct desc_frag {
+  //       uint32_t addr, length;
+  //     } frag;
+  //   };
+  //   lockDMASG();
+  //   // txlist
+  //   if (txlist.first != -1) {
+  //     int desc_cnt = txlist.second / sizeof(struct netdev_desc);
+  //     struct netdev_desc *descs = (struct netdev_desc *)malloc(txlist.second);
+  //     readPhyMemGeneric((uint8_t *)descs, txlist.first, txlist.second);
+  //     for (int i = 0; i < desc_cnt; i++) {
+  //       uint64_t addr = descs[i].frag.addr;
+  //       uint64_t len = descs[i].frag.length & 0x7fffffff;
+  //       bool deviceOwn = !(descs[i].status & 0x8000);
+  //       if (len && deviceOwn) {
+  //         writeRandomDataToPhyMemGeneric(addr, len);
+  //         descs[i].status = rand() | 0x00010000;
+  //       }
+  //     }
+  //     writePhyMemGeneric(txlist.first, (uint8_t *)descs, txlist.second);
+  //     free(descs);
+  //   }
+  //   // rxlist
+  //   if (rxlist.first != -1) {
+  //     int desc_cnt = rxlist.second / sizeof(struct netdev_desc);
+  //     struct netdev_desc *descs = (struct netdev_desc *)malloc(rxlist.second);
+  //     readPhyMemGeneric((uint8_t *)descs, rxlist.first, rxlist.second);
+  //     for (int i = 0; i < desc_cnt; i++) {
+  //       uint64_t addr = descs[i].frag.addr;
+  //       uint64_t len = descs[i].frag.length & 0x7fffffff;
+  //       bool deviceOwn = !(descs[i].status & 0x8000);
+  //       // only do when it is not owned by host
+  //       // possible race condition with  host
+  //       if (len && deviceOwn) {
+  //         writeRandomDataToPhyMemGeneric(addr, len);
+  //         descs[i].status = (len) | 0x8000;
+  //       }
+  //     }
+  //     writePhyMemGeneric(rxlist.first, (uint8_t *)descs, rxlist.second);
+  //     free(descs);
+  //   }
+  //   unlockDMASG();
+  // };
 
 private:
   int probe_len;
   std::pair<uint64_t, uint64_t> txlist;
   std::pair<uint64_t, uint64_t> rxlist;
 };
+
+Stage2HWModel * new_stage2_model_sundance() {
+  unordered_map<int, HWInput> mmio_mdl =
+  {
+  {50 ,       HWInput(50, 4,
+                {0x400, },
+                {},
+                {})
+  },
+  {54 ,       HWInput(54, 4,
+                {0x8000, },
+                {},
+                {})
+  },
+  {48 ,       HWInput(48, 4,
+                {0x80, 0x4000000, },
+                {},
+                {})
+  },
+  {0 ,      HWInput(0, 4,
+              {0xc000, },
+              {},
+              {})
+  },
+  {78 ,       HWInput(78, 4,
+                {0x2, 0x44, 0x80, 0x100, 0x182, 0x400, 0x5c6, },
+                {},
+                {})
+  },
+  {70 ,       HWInput(70, 4,
+                {0x2, 0x4, 0x8, 0x10, 0x1e, 0x80, },
+                {},
+                {})
+  },
+  {4 ,      HWInput(4, 4,
+              {},
+              {0x0, },
+              {})
+  },
+  {82 ,       HWInput(82, 4,
+                {0x400, },
+                {},
+                {})
+  },
+  {69 ,       HWInput(69, 4,
+                {0x2, 0x4, },
+                {},
+                {})
+  },
+  };
+
+  vector<DMAInputModel> dma_mdl = {
+  DMAInputModel(512,16, {
+  {4 , HWInput(4, 4,
+          {0x10000, },
+          {},
+          {})
+  },
+  }),
+  };
+  auto * model = new Stage2HWModel("XXX", mmio_mdl, dma_mdl);
+  model->setDMAReg(0x10, 0x400);
+  model->setSecondaryDMAInfo(16, 512, 8);
+  return model;
+}
