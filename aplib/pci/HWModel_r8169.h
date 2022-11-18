@@ -17,7 +17,7 @@ public:
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024}});
   }
   virtual ~HWModel_r8169(){};
-  virtual void restart_device() final { probe_len = 0; };
+  virtual void restart_device() final { probe_len = 0; restart_cnt++;};
   virtual int read(uint8_t *dest, uint64_t addr, size_t size) final {
     if (probe_len > 1000)
       return 0;
@@ -29,6 +29,7 @@ public:
     case (0x60): {
       static uint32_t reg60 = 0x80000000;
       static int cnt = 0;
+      CHECK_RESET;
       if (cnt == 3) {
         *((uint32_t *)dest) = reg60 | 0xc800;
       } else if (cnt == 1) {

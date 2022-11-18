@@ -38,7 +38,7 @@ public:
     if (!afl_area_ptr) {
       return;
     }
-    //LOG_TO_FILE("afl.log", " pc@" << std::hex << (uint64_t)(cur_loc));
+    // LOG_TO_FILE("afl.log", " pc@" << std::hex << (uint64_t)(cur_loc));
     cur_loc = (cur_loc >> 4) ^ (cur_loc << 8);
     cur_loc &= MAP_SIZE - 1;
     if (cur_loc >= afl_inst_rms) {

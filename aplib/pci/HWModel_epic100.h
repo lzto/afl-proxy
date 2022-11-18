@@ -18,34 +18,34 @@ public:
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024}});
   }
   virtual ~HWModel_epic100(){};
-  virtual void restart_device() final { probe_len = 0; };
+  virtual void restart_device() final { probe_len = 0; restart_cnt++;};
   virtual int read(uint8_t *dest, uint64_t addr, size_t size) final {
     if (probe_len > 87)
       return 0;
     switch (addr) {
     case (0x40): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint16_t *)dest) = 0x0;
       cnt++;
       break;
     }
     case (0x44): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint16_t *)dest) = 0x0;
       cnt++;
       break;
     }
     case (0x48): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint16_t *)dest) = 0x0;
       cnt++;
       break;
     }
     case (0x30): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint32_t *)dest) = 0x0;
       if (cnt == 1)
@@ -112,7 +112,7 @@ public:
       break;
     }
     case (0x34): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint16_t *)dest) = 0xff;
       if (cnt == 1)
@@ -181,7 +181,7 @@ public:
       break;
     }
     case (0x10): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint32_t *)dest) = 0x0;
       if (cnt == 1)

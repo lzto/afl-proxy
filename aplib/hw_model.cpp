@@ -288,6 +288,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(tifm_7xx1);
   INSERT_MODEL(cb710);
   INSERT_MODEL(ne2k);
+  INSERT_STAGE2_MODEL(ne2k);
   INSERT_MODEL(kyro);
   INSERT_MODEL(gxt4500);
   INSERT_MODEL(he);
@@ -472,6 +473,7 @@ void hw_model_internal_init() {
   INSERT_MODEL(vmwgfx);
   INSERT_MODEL(vmw_pvrdma);
   INSERT_MODEL(vmxnet3);
+  INSERT_STAGE2_MODEL(vmxnet3);
   INSERT_MODEL(vt8623fb);
   INSERT_MODEL(vxge);
   INSERT_MODEL(w6692);

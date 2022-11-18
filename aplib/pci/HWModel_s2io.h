@@ -38,6 +38,25 @@ public:
       cnt++;
       break;
     }
+    case (0x914): {
+      static int cnt;
+      if (cnt == 0)
+        *((uint64_t *)dest) = 0x1234567;
+      if (cnt == 1)
+        *((uint64_t *)dest) = 0x1234567;
+      if (cnt == 2)
+        *((uint64_t *)dest) = 0x1234567;
+      if (cnt == 3)
+        *((uint64_t *)dest) = 0xfe234567;
+      if (cnt == 4)
+        *((uint64_t *)dest) = 0x1234567;
+      if (cnt == 5)
+        *((uint64_t *)dest) = 0x1234567;
+      if (cnt == 6)
+        *((uint64_t *)dest) = 0x0;
+      cnt++;
+      break;
+    }
     case (0x908): {
       static int cnt;
       if (cnt == 0)
@@ -55,6 +74,15 @@ public:
         *((uint64_t *)dest) = 0x1dc456789abcdef;
       if (cnt == 1)
         *((uint64_t *)dest) = 0x123456789abcdef;
+      cnt++;
+      break;
+    }
+    case (0x964): {
+      static int cnt;
+      if (cnt == 0)
+        *((uint64_t *)dest) = 0x1dc4567;
+      if (cnt == 1)
+        *((uint64_t *)dest) = 0x1234567;
       cnt++;
       break;
     }

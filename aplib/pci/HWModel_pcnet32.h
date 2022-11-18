@@ -17,13 +17,14 @@ public:
               {PCI_BAR_TYPE_MMIO, 64 * 1024 * 1024}});
   }
   virtual ~HWModel_pcnet32(){};
-  virtual void restart_device() final { probe_len = 0; };
+  virtual void restart_device() final { probe_len = 0; restart_cnt++; };
   virtual int read(uint8_t *dest, uint64_t addr, size_t size) final {
     if (probe_len > 40)
       return 0;
     switch (addr) {
     case (0x14): {
       static int cnt;
+      CHECK_RESET;
       if (cnt == 0)
         *((uint16_t *)dest) = 0x0;
       cnt++;
@@ -31,6 +32,7 @@ public:
     }
     case (0x10): {
       static int cnt;
+      CHECK_RESET;
       if (cnt == 0)
         *((uint16_t *)dest) = 0x4;
       if (cnt == 1)
@@ -98,6 +100,7 @@ public:
     }
     case (0x12): {
       static int cnt;
+      CHECK_RESET;
       if (cnt == 0)
         *((uint16_t *)dest) = 0x58;
       cnt++;
@@ -105,6 +108,7 @@ public:
     }
     case (0x0): {
       static int cnt;
+      CHECK_RESET;
       if (cnt == 0)
         *((uint8_t *)dest) = 0x0;
       cnt++;
@@ -112,6 +116,7 @@ public:
     }
     case (0x1): {
       static int cnt;
+      CHECK_RESET;
       if (cnt == 0)
         *((uint8_t *)dest) = 0x0;
       cnt++;
@@ -119,6 +124,7 @@ public:
     }
     case (0x2): {
       static int cnt;
+      CHECK_RESET;
       if (cnt == 0)
         *((uint8_t *)dest) = 0x0;
       cnt++;
@@ -126,6 +132,7 @@ public:
     }
     case (0x3): {
       static int cnt;
+      CHECK_RESET;
       if (cnt == 0)
         *((uint8_t *)dest) = 0x0;
       cnt++;
@@ -133,6 +140,7 @@ public:
     }
     case (0x4): {
       static int cnt;
+      CHECK_RESET;
       if (cnt == 0)
         *((uint8_t *)dest) = 0x0;
       cnt++;
@@ -140,6 +148,7 @@ public:
     }
     case (0x5): {
       static int cnt;
+      CHECK_RESET;
       if (cnt == 0)
         *((uint8_t *)dest) = 0x0;
       cnt++;
@@ -147,6 +156,7 @@ public:
     }
     case (0x16): {
       static int cnt;
+      CHECK_RESET;
       if (cnt == 0)
         *((uint16_t *)dest) = 0x0;
       cnt++;

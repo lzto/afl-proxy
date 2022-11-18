@@ -65,6 +65,11 @@ static int use_dma;
 static bool use_stage2;
 // How long an AFL fuzzing epoch lasts
 static int64_t afl_epoch;
+static  bool test_probe;
+static  bool model_probe_fuzz;
+static  int model_mutate_prob = 10; // prob of mutating the value of the probing model
+static int model_reset_time = 3;
+static uint64_t model_delay=0;
 // TODO: need to figure out the address of IRQ register
 // stores the milliseconds interval between triggering each IRQ,
 // This knob can be overriden by upper-level model
@@ -82,7 +87,7 @@ again:
   shmname += string(getenv("SFP_SHMID"));
   shm = new SHM<struct XXX>(shmname.c_str());
   if (!shm->open(SHMOpenType::CONNECT)) {
-    WARN("cannot connect tp /afl-proxy. retry.. ");
+    WARN("cannot connect tp" + shmname + " retry.. ");
     usleep(100);
     delete shm;
     goto again;
@@ -132,6 +137,22 @@ void ti_worker() {
     else
       sleep(use_irq / 1000);
     ap_trigger_irq();
+  }
+}
+
+///
+/// WatchDog Thread
+/// If the Kernel Panics, we terminate the QEMU and restart it
+thread *watchdog_thread;
+void watch_dog() {
+  sleep(180);
+  while (1) {
+    auto cur_time = chrono::steady_clock::now();
+    auto elapsed_secs = chrono::duration_cast<chrono::seconds>(cur_time - afl_last_epoch_end).count();
+    if (elapsed_secs > 60) {
+      exit(0);
+    }
+    sleep(5);
   }
 }
 
@@ -186,6 +207,51 @@ void ap_init(void) {
     if (knob_stage2.isPresented() && knob_stage2.isSet()) {
       use_stage2 = true;
     }
+    
+    EnvKnob knob_model_prob("USE_MODEL_PROB");
+    if (knob_model_prob.isPresented() && use_stage2) {
+      assert(get_stage2_hw_instance());
+      int prob = knob_model_prob.getIntValue();
+      get_stage2_hw_instance()->setProb(prob);
+    }
+
+    if (use_stage2) {
+      assert(knob_model_prob.isPresented());
+    }
+
+    EnvKnob knob_mdl_delay("MODEL_DELAY");
+    if (knob_mdl_delay.isPresented() && knob_mdl_delay.isSet()) {
+      model_delay = knob_mdl_delay.getIntValue();
+    }
+
+    /////////////////////////
+    EnvKnob knob_test_probe("TEST_PROBE");
+    if (knob_test_probe.isPresented() && knob_test_probe.isSet()) {
+      test_probe = true;
+    }
+
+
+    /////////////////////////
+    EnvKnob knob_mpf("MODEL_PROBE_FUZZ");
+    if (knob_mpf.isPresented() && knob_mpf.isSet()) {
+      model_probe_fuzz = true;
+    }
+
+
+    ////////////////////////////
+    EnvKnob knob_mdl_reset_time("MODEL_RESET_TIME");
+    if (knob_mdl_reset_time.isPresented()
+       && knob_mdl_reset_time.isSet()) {
+      model_reset_time = knob_mdl_reset_time.getIntValue();
+    }
+
+    ////////////////////////////
+    EnvKnob knob_mutate_prob("MODEL_MUTATE_PROB");
+    if (knob_mutate_prob.isPresented()) {
+      model_mutate_prob = knob_mutate_prob.getIntValue();
+      INFO("Model Mutation Probability Set As: " << model_mutate_prob);
+    }
+    
 
     // export device memory through shared memory
     EnvKnob knob6("EXPORT_DEVMEM");
@@ -203,6 +269,7 @@ void ap_init(void) {
     if (use_stage2) {
       assert(get_stage2_hw_instance());
     }
+    watchdog_thread = new thread(watch_dog);
   }
   
   if (isEnabled)
@@ -223,16 +290,53 @@ int ap_fetch_fuzz_data_rand(char *dest, uint64_t addr, size_t size) {
 int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size, int bar) {
   static int counter;
   static uint64_t delay_counter = 0;
-  static uint64_t delay = 400;
+  static std::chrono::_V2::steady_clock::time_point last_dev_restart = chrono::steady_clock::now();
   uint64_t zero = 0;
   uint64_t wrapped_addr;
   auto cur_time = chrono::steady_clock::now();
   auto elapsed_secs = chrono::duration_cast<chrono::seconds>(cur_time - afl_last_epoch_end).count();
+  auto secs_since_last_restart = chrono::duration_cast<chrono::seconds>(cur_time - last_dev_restart).count();
   Stage2HWModel * stage2 = get_stage2_hw_instance();
+  uint64_t probe_mdl_input;
+  uint64_t probe_input;
   // for probing
-  if (get_hw_instance()->read(dest, addr, size, bar))
+  if (!test_probe) {
+    if (get_hw_instance()->read(dest, addr, size, bar))
+      goto end;
+  } else {
+    // fuzz probing
+    // try to reset model
+    assert(ap_get_fuzz_file()[0]);
+    counter++;
+    if (counter % 100 == 0 || elapsed_secs >= afl_epoch) {
+      counter = 0;
+      INFO("epoch ended");
+      ap_exit();
+      afl_last_epoch_end = chrono::steady_clock::now();
+    }
+    ap_init();
+    if (model_probe_fuzz) {
+      if (secs_since_last_restart > model_reset_time) {
+        get_hw_instance()->restart_device();
+        INFO("Device model resetted..");
+        last_dev_restart = cur_time;
+      }
+      get_hw_instance()->read((uint8_t*)&probe_mdl_input, addr, size, bar);
+      if (yes(model_mutate_prob) && fuzzdatasize) { //&& get_hw_instance()->getRestartCnt() > 0) {
+        wrapped_addr = addr % fuzzdatasize;
+        memcpy(dest, fuzzdata + wrapped_addr, size);
+      } else {
+        // use symbolic model
+        memcpy(dest, &probe_mdl_input, size);
+      }
+    } else if (fuzzdatasize) {
+      // pure AFL based probing, very dumb baseline
+      if (addr < fuzzdatasize)
+        memcpy(dest, fuzzdata + addr, size);
+    }
     goto end;
-
+  }
+  // probing testing logic end
   if (!sm) {
     for (int i = 0; i < size; i++)
       dest[i] = rand();
@@ -258,12 +362,8 @@ int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size, int bar) {
   if (wrapped_addr >= fuzzdatasize)
     goto end;
   
-  if (stage2 && use_stage2 && delay_counter > delay) {
-#if 0
-    memcpy(dest, fuzzdata + wrapped_addr, size);
-#else
+  if (stage2 && use_stage2 && delay_counter > model_delay) {
     stage2->feedFuzzMMIOData(addr, dest, size, (fuzzdata + wrapped_addr));
-#endif
   } else if (addr + size <= fuzzdatasize) {
     memcpy(dest, fuzzdata + wrapped_addr, size);
   } else {
@@ -418,6 +518,19 @@ again:
 /// called by QEMU to trigger DMA data buffer fill -- through ML model or random
 /// data
 ///
+void ap_qemu_fuzz_dma_generic(uint8_t * buffer, int size) {
+  // INFO("QEMU DMA FUZZ");
+  if (fuzzdatasize == 0) {
+    for (int i=0; i<size; i++) {
+      buffer[i] = yes(model_mutate_prob) ? (uint8_t)rand() : buffer[i];
+    }
+    return;
+  }
+  for (int i=0; i<size; i++) {
+    buffer[i] = yes(model_mutate_prob) ? fuzzdata[i % fuzzdatasize] : buffer[i];
+  }
+}
+
 void ap_fill_dma_buffer() {
   static bool secondary_dma_scanned =  true; // false;
   if (!use_dma)
@@ -483,6 +596,36 @@ void ap_fill_dma_buffer() {
   auto elapsed_secs = chrono::duration_cast<chrono::microseconds>(end_time - cur_time).count();
   // cerr << "DMA fill time: " << elapsed_secs << " us\n";
 #endif
+}
+
+int ap_qemu_mmio_read(uint8_t *dest, uint64_t addr, size_t size, int bar) {
+  static int counter;
+  uint64_t wrapped_addr;
+  auto cur_time = chrono::steady_clock::now();
+  auto elapsed_secs = chrono::duration_cast<chrono::seconds>(cur_time - afl_last_epoch_end).count();
+  // fuzz probing
+  // try to reset model
+  assert(ap_get_fuzz_file()[0]);
+  counter++;
+  if (counter % 100 == 0 || elapsed_secs >= afl_epoch) {
+    counter = 0;
+    INFO("epoch ended");
+    ap_exit();
+    afl_last_epoch_end = chrono::steady_clock::now();
+  }
+  ap_init();
+
+  // Within Probing Phase, Use the Expert Model
+  if (!fuzzdatasize || get_hw_instance()->read(dest, addr, size, bar) != 0) {
+    return -1;
+  }
+  // Fuzz with some probability 
+  if (yes(model_mutate_prob)) { //&& get_hw_instance()->getRestartCnt() > 0) {
+    wrapped_addr = addr % fuzzdatasize;
+    memcpy(dest, fuzzdata + wrapped_addr, size);
+    return 0;
+  } 
+  return -1;
 }
 
 ///

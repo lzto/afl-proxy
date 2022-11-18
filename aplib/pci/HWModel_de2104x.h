@@ -12,13 +12,13 @@ public:
     setupBar({{PCI_BAR_TYPE_MMIO, 0}, {PCI_BAR_TYPE_MMIO, 0x100}});
   }
   virtual ~HWModel_de2104x(){};
-  virtual void restart_device() final { probe_len = 0; };
+  virtual void restart_device() final { probe_len = 0; restart_cnt++; };
   virtual int read(uint8_t *dest, uint64_t addr, size_t size) final {
     if (probe_len > 16)
       return 0;
     switch (addr) {
     case (0x0): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint32_t *)dest) = 0xff00ffff;
       if (cnt == 1)
@@ -35,14 +35,14 @@ public:
       break;
     }
     case (0x28): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint32_t *)dest) = 0x0;
       cnt++;
       break;
     }
     case (0x48): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint32_t *)dest) = 0x0;
       if (cnt == 1)

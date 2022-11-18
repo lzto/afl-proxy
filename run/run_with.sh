@@ -19,7 +19,8 @@ rm dry_run_stamp*
 echo > afl.log
 AFL_CORE_ID=$((AFL_BIND_ID+1))
 
-sudo taskset -c $AFL_CORE_ID /home/yiluwu/firecracker/AFL/afl-fuzz \
+#taskset -c $AFL_CORE_ID 
+sudo /home/yiluwu/firecracker/AFL/afl-fuzz \
   -b $AFL_BIND_ID \
   -t 500000000+ -m 256 \
   -i ../$IN_DIR -o out \

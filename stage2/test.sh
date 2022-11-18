@@ -61,15 +61,16 @@ bc=~/linux/drivers/net/ethernet/micrel/ksz884x.o.bc
 # bc=~/linux/drivers/net/ethernet/smsc/epic100.o.bc
 # bc=~/linux/drivers/net/ethernet/google/gve/gve.o.bc 
 # bc=~/linux/drivers/net/ethernet/dec/tulip/de2104x.o.bc 
-# bc=~/linux/drivers/net/ethernet/8390/ne2k-pci.o.bc
+bc=~/linux/drivers/net/ethernet/8390/ne2k.bc
 # bc=~/linux/drivers/net/ethernet/marvell/skge.o.bc
 # bc=~/linux/drivers/net/ethernet/broadcom/tg3.o.bc
-# bc=~/linux/drivers/net/ethernet/neterion/s2io.o.bc
+bc=~/linux/drivers/net/ethernet/neterion/s2io.o.bc
 # bc=~/linux/drivers/net/ethernet/ti/tlan.o.bc
 # bc=~/linux/drivers/net/ethernet/sis/sis190.o.bc
 # bc=~/linux/drivers/net/ethernet/neterion/vxge/vxge.o.bc
 # bc=~/linux/drivers/net/ethernet/3com/3c59x.o.bc
 # bc=~/linux/drivers/net/ethernet/atheros/atlx/atl1.o.bc
+bc=~/linux/drivers/net/vmxnet3/vmxnet3.o.bc
 
 #opt \
 #  -load ./build/src/libapstage2.so \

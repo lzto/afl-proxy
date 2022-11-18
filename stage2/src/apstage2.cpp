@@ -1546,17 +1546,38 @@ int APStage2::findMMIO_Offset(CallInst * mmio) {
   Value * src = mmio->getNumArgOperands() == 1 ? 
                 mmio->getArgOperand(0) : mmio->getArgOperand(1);
   src = src->stripPointerCasts();
+  if (isa<CastInst>(src)) {
+    src = static_cast<CastInst*>(src)->getOperand(0);
+  }
   int offset;
   int res = -1;
-  if (auto * gep = dyn_cast<GetElementPtrInst>(src)) {
+  GetElementPtrInst * gep=nullptr;
+  BinaryOperator * bin_op=nullptr;
+  if ((gep = dyn_cast<GetElementPtrInst>(src))
+      || (bin_op = dyn_cast<BinaryOperator>(src))) {
     // errs() << "gep: " << *gep << "\n";
-    offset = getGEPOffset(gep);
-    if (offset == -1) {
-      errs() << "MMIO Offset is not constant\n";
+    Value * ptr = nullptr;
+    if (gep) {
+      offset = getGEPOffset(gep);
+      if (offset == -1) {
+        errs() << "MMIO Offset is not constant\n";
+        return -1;
+      }
+    /* find load instruction */
+      ptr = gep->getPointerOperand()->stripPointerCasts();
+    } else if (bin_op->getOpcode() == Instruction::Add) {
+      Value * op1 = bin_op->getOperand(1);
+      if (!isa<ConstantInt>(op1)) {
+        errs() << "Add: MMIO Offset is not constant\n";
+        return -1;
+      }
+      ConstantInt * ci = (ConstantInt*)op1;
+      offset = ci->getZExtValue();
+      ptr =  bin_op->getOperand(0)->stripPointerCasts();
+    } else {
+      errs() << "Unhandled Op\n";
       return -1;
     }
-    /* find load instruction */
-    Value * ptr = gep->getPointerOperand()->stripPointerCasts();
     if (auto *load = dyn_cast<LoadInst>(ptr)) {
       //  errs() << "load: " << *load << "\n";
       Value * load_src = load->getPointerOperand();
@@ -1628,8 +1649,13 @@ int APStage2::findMMIO_Offset(CallInst * mmio) {
       }
     errs() << "Case 2: conservatively set base_off to be 0\n";
     return offset;
+  } else if (isa<Instruction>(src)) {
+    errs() << "Not GEP: " << *src << "\n Loc: ";
+    mmio->getDebugLoc().print(errs());
+    errs() << "\n";
   } else {
-    errs() << "Not GEP\n";
+    errs() << "Case 3: conservatively set base_off to be 0\n";
+    return 0;
   }
   return res;
 }

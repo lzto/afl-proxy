@@ -15,13 +15,13 @@ public:
     rxlist = std::make_pair(-1, -1);
   }
   virtual ~HWModel_sundance(){};
-  virtual void restart_device() final { probe_len = 0; };
+  virtual void restart_device() final { probe_len = 0; restart_cnt++;};
   virtual int read(uint8_t *dest, uint64_t addr, size_t size) final {
     if (probe_len > 5893)
       return 0;
     switch (addr) {
     case (0x36): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint32_t *)dest) = 0x0;
       if (cnt == 1)
@@ -42,7 +42,7 @@ public:
       break;
     }
     case (0x34): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint16_t *)dest) = 0x13;
       if (cnt == 1)
@@ -53,7 +53,7 @@ public:
       break;
     }
     case (0x79): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint8_t *)dest) = 0x0;
       if (cnt == 1)
@@ -120,7 +120,7 @@ public:
       break;
     }
     case (0x70): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint16_t *)dest) = 0x0;
       if (cnt == 1)
@@ -187,7 +187,7 @@ public:
       break;
     }
     case (0x72): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint16_t *)dest) = 0x0;
       if (cnt == 1)
@@ -254,7 +254,7 @@ public:
       break;
     }
     case (0x74): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint8_t *)dest) = 0x0;
       if (cnt == 1)
@@ -321,7 +321,7 @@ public:
       break;
     }
     case (0x76): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint8_t *)dest) = 0x0;
       if (cnt == 1)
@@ -388,7 +388,7 @@ public:
       break;
     }
     case (0x77): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint8_t *)dest) = 0x0;
       if (cnt == 1)
@@ -455,7 +455,7 @@ public:
       break;
     }
     case (0x75): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint8_t *)dest) = 0x0;
       if (cnt == 1)
@@ -522,7 +522,7 @@ public:
       break;
     }
     case (0x78): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint8_t *)dest) = 0x0;
       if (cnt == 1)
@@ -589,7 +589,7 @@ public:
       break;
     }
     case (0x7a): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint8_t *)dest) = 0x0;
       if (cnt == 1)
@@ -656,7 +656,7 @@ public:
       break;
     }
     case (0x7b): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint8_t *)dest) = 0x0;
       if (cnt == 1)
@@ -723,7 +723,7 @@ public:
       break;
     }
     case (0x7c): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint8_t *)dest) = 0x0;
       if (cnt == 1)
@@ -790,7 +790,7 @@ public:
       break;
     }
     case (0x7d): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint8_t *)dest) = 0x0;
       if (cnt == 1)
@@ -857,7 +857,7 @@ public:
       break;
     }
     case (0x7e): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint8_t *)dest) = 0x0;
       if (cnt == 1)
@@ -924,7 +924,7 @@ public:
       break;
     }
     case (0x7f): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint8_t *)dest) = 0x0;
       if (cnt == 1)
@@ -991,7 +991,7 @@ public:
       break;
     }
     case (0x6c): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint16_t *)dest) = 0x0;
       if (cnt == 1)
@@ -1058,7 +1058,7 @@ public:
       break;
     }
     case (0x6e): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint16_t *)dest) = 0x0;
       if (cnt == 1)
@@ -1125,7 +1125,7 @@ public:
       break;
     }
     case (0x68): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint16_t *)dest) = 0x0;
       if (cnt == 1)
@@ -1192,7 +1192,7 @@ public:
       break;
     }
     case (0x6a): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint16_t *)dest) = 0x0;
       if (cnt == 1)
@@ -1259,7 +1259,7 @@ public:
       break;
     }
     case (0x5e): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint8_t *)dest) = 0x0;
       if (cnt == 1)
@@ -11906,7 +11906,7 @@ public:
       break;
     }
     case (0x30): {
-      static int cnt;
+      static int cnt; CHECK_RESET;
       if (cnt == 0)
         *((uint32_t *)dest) = 0x80808080;
       if (cnt == 1)

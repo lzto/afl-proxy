@@ -38,6 +38,8 @@ void ap_init(void);
 const char *ap_get_fuzz_file(void);
 int ap_get_fuzz_data(uint8_t *dest, uint64_t addr, size_t size, int bar);
 void ap_set_fuzz_data(uint64_t data, uint64_t addr, size_t size, int bar);
+void ap_qemu_fuzz_dma_generic(uint8_t * buffer, int size);
+int ap_qemu_mmio_read(uint8_t *dest, uint64_t addr, size_t size, int bar);
 void ap_log_pc(uint64_t);
 void ap_exit(void);
 void ap_attach_pt(void);

@@ -432,3 +432,34 @@ public:
 private:
   int probe_len;
 };
+
+Stage2HWModel * new_stage2_model_ne2k() {
+  unordered_map<int, HWInput> mmio_mdl =
+  {
+  {13 ,       HWInput(13, 1,
+                {},
+                {0x0, 0xf},
+                {})
+  },
+  {0 ,      HWInput(0, 1,
+              {0x4, },
+              {0xff, 0x0},
+              {})
+  },
+  {4 ,      HWInput(4, 1,
+              {0x1, 0x4, 0x8, 0x10, 0x20, 0x28, 0x40, 0x80, },
+              {},
+              {})
+  },
+  {7 ,      HWInput(7, 1,
+              {0x2, 0x5, 0x8, 0xa, 0x10, 0x20, 0x40, 0x80, },
+              {0x0, 0xff, },
+              {})
+  },
+  };
+
+  vector<DMAInputModel> dma_mdl = {
+  };
+  auto * model = new Stage2HWModel("XXX", mmio_mdl, dma_mdl);
+  return model;
+}

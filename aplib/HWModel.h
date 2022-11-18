@@ -34,7 +34,14 @@ using namespace std;
 
 #define PAGE_MASK (~(0xFFFULL))
 
+#define CHECK_RESET \
+  static uint64_t ver=0; \
+  if (restart_cnt > ver) { \
+    ver = restart_cnt; \
+    cnt = 0;\
+  } \
 
+  
 ///
 /// generic bar class
 /// non-present bar will have size=0
@@ -162,6 +169,8 @@ public:
       p->swithToSHM(name);
   };
 
+  int getRestartCnt() { return restart_cnt; }
+
   // rw without knowing the bar
   // TODO: need to separate this into probe_read probe_write
   virtual int read(uint8_t *dest, uint64_t addr, size_t size) = 0;
@@ -254,6 +263,7 @@ protected:
   const uint16_t revision;
   int pciBarCnt;
   int msixBarIdx;
+  uint64_t restart_cnt=0;
   vector<Bar *> bars;
   // dma scatter gather list <pair<address, size>>
   vector<pair<uint64_t, uint64_t>> dmasg;
@@ -363,6 +373,10 @@ public:
     }
   }
 
+  void setProb(int prob) {
+    use_model_prob = prob;
+  }
+
   uint64_t modelRand() {
     int c = rand() % dict.size();
     return dict[c];
@@ -455,6 +469,17 @@ public:
     return ((uint64_t)rand() << 32) | rand() ;
   }
 
+  void setProb(int prob) {
+    for (auto & p : mmio_inputs) {
+      p.second.setProb(prob);
+    }
+    for (auto & p : dma_inputs) {
+      auto & dma_mdl = p.second;
+      for (auto & mmios : dma_mdl.getInputs()) {
+        mmios.second.setProb(prob);
+      }
+    }
+  }
 
   HWInput & getMMIOInputAt(int offset) {
     return mmio_inputs[offset];
@@ -500,7 +525,7 @@ public:
             uint64_t phy_addr = dma_addr + (i * struct_sz) + offset;
             uint64_t secondary_dma_addr = 0;
             readPhyMemGeneric((uint8_t*)&secondary_dma_addr, phy_addr, 4);
-            
+            secondary_dma_addr &= PAGE_MASK;
             if (secondary_dma_addr && !dma_starts.count(secondary_dma_addr)) {
               std::cerr << "Secondary DMA Addr: 0x" << std::hex << secondary_dma_addr << "\n";
               dmasg.push_back({secondary_dma_addr, l2_dma_sz});
@@ -546,13 +571,15 @@ public:
       }
 
       level1_dma_set = true;
+      // page-align DMA address
+      uint64_t page_aligned_addr = value & PAGE_MASK;
       // avoid recording the same dma buffer address more than once
-      cerr << "DMA Address captured: 0x" << hex << value << "\n";
+      cerr << "@reg 0x " << hex << reg << dec <<" DMA Address captured: 0x" << hex << value << dec << "\n";
       lockDMASG();
-      if (!dma_starts.count(value)) {
-        dma_starts.insert(value);
-        level1_dmas.push_back({value, sz});
-        dmasg.push_back({value, sz});
+      if (!dma_starts.count(page_aligned_addr)) {
+        dma_starts.insert(page_aligned_addr);
+        level1_dmas.push_back({page_aligned_addr, sz});
+        dmasg.push_back({page_aligned_addr, sz});
       }
       unlockDMASG();
     }
