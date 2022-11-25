@@ -71,6 +71,11 @@ bc=~/linux/drivers/net/ethernet/neterion/s2io.o.bc
 # bc=~/linux/drivers/net/ethernet/3com/3c59x.o.bc
 # bc=~/linux/drivers/net/ethernet/atheros/atlx/atl1.o.bc
 bc=~/linux/drivers/net/vmxnet3/vmxnet3.o.bc
+bc=~/linux/drivers/net/ethernet/intel/e1000/e1000.o.bc
+bc=~/linux/drivers/net/ethernet/realtek/8139too.o.bc
+bc=~/linux/drivers/net/ethernet/dec/tulip/tulip.o.bc
+bc=~/linux/drivers/net/ethernet/sun/sunhme.o.bc
+bc=~/linux/drivers/net/ethernet/realtek/8139cp.o.bc
 
 #opt \
 #  -load ./build/src/libapstage2.so \

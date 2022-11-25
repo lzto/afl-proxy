@@ -89,6 +89,8 @@
 #include "HWModel_denali_pci.h"
 #include "HWModel_dw_dmac_pci.h"
 #include "HWModel_earth_pt1.h"
+#include "HWModel_e1000.h"
+#include "HWModel_e1000e.h"
 #include "HWModel_efa.h"
 #include "HWModel_ems_pci.h"
 #include "HWModel_emu10k1_gp.h"
@@ -240,7 +242,10 @@
 #include "HWModel_wanxl.h"
 #include "HWModel_wdt_pci.h"
 #include "HWModel_zatm.h"
-
+#include "HWModel_8139too.h"
+#include "HWModel_sunhme.h"
+#include "HWModel_tulip.h"
+#include "HWModel_8139cp.h"
 #include <functional>
 #include <map>
 using namespace std;
@@ -354,6 +359,9 @@ void hw_model_internal_init() {
   INSERT_MODEL(ems_pci);
   INSERT_MODEL(emu10k1_gp);
   INSERT_MODEL(eni);
+  INSERT_MODEL(e1000);
+  INSERT_STAGE2_MODEL(e1000);
+  INSERT_MODEL(e1000e);
   INSERT_MODEL(epic100);
   INSERT_STAGE2_MODEL(epic100);
   INSERT_MODEL(f81601);
@@ -517,6 +525,13 @@ void hw_model_internal_init() {
   INSERT_MODEL(xpad);
   INSERT_MODEL(zd1201);
   INSERT_MODEL(zd1211rw);
+  INSERT_MODEL(8139too);
+  INSERT_STAGE2_MODEL(8139too);
+  INSERT_MODEL(8139cp);
+  INSERT_STAGE2_MODEL(8139cp);
+  INSERT_STAGE2_MODEL(sunhme);
+  INSERT_MODEL(tulip);
+  INSERT_STAGE2_MODEL(tulip);
   // test_usb device --- dummy
   INSERT_MODEL(test_usb);
 }

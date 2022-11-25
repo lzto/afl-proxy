@@ -145,7 +145,7 @@ void ti_worker() {
 /// If the Kernel Panics, we terminate the QEMU and restart it
 thread *watchdog_thread;
 void watch_dog() {
-  sleep(180);
+  sleep(130);
   while (1) {
     auto cur_time = chrono::steady_clock::now();
     auto elapsed_secs = chrono::duration_cast<chrono::seconds>(cur_time - afl_last_epoch_end).count();
@@ -156,9 +156,9 @@ void watch_dog() {
   }
 }
 
+static bool isEnabled=false;
 void ap_init(void) {
   static bool initialized;
-  static bool isEnabled;
   if (!initialized) {
     srand(time(0));
     hw_model_internal_init();
@@ -603,6 +603,7 @@ int ap_qemu_mmio_read(uint8_t *dest, uint64_t addr, size_t size, int bar) {
   uint64_t wrapped_addr;
   auto cur_time = chrono::steady_clock::now();
   auto elapsed_secs = chrono::duration_cast<chrono::seconds>(cur_time - afl_last_epoch_end).count();
+  Stage2HWModel * stage2 = get_stage2_hw_instance();
   // fuzz probing
   // try to reset model
   assert(ap_get_fuzz_file()[0]);
@@ -622,7 +623,11 @@ int ap_qemu_mmio_read(uint8_t *dest, uint64_t addr, size_t size, int bar) {
   // Fuzz with some probability 
   if (yes(model_mutate_prob)) { //&& get_hw_instance()->getRestartCnt() > 0) {
     wrapped_addr = addr % fuzzdatasize;
-    memcpy(dest, fuzzdata + wrapped_addr, size);
+    if (stage2 && use_stage2) {
+      stage2->feedFuzzMMIOData(addr, dest, size, (fuzzdata + wrapped_addr));
+    } else {
+      memcpy(dest, fuzzdata + wrapped_addr, size);
+    }
     return 0;
   } 
   return -1;
