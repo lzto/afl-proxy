@@ -520,14 +520,19 @@ again:
 ///
 void ap_qemu_fuzz_dma_generic(uint8_t * buffer, int size) {
   // INFO("QEMU DMA FUZZ");
+  Stage2HWModel * stage2 = get_stage2_hw_instance();
   if (fuzzdatasize == 0) {
     for (int i=0; i<size; i++) {
       buffer[i] = yes(model_mutate_prob) ? (uint8_t)rand() : buffer[i];
     }
     return;
   }
-  for (int i=0; i<size; i++) {
-    buffer[i] = yes(model_mutate_prob) ? fuzzdata[i % fuzzdatasize] : buffer[i];
+  if (use_stage2 && stage2) {
+    stage2->fuzzQEMU_DMABuffer(buffer, size, fuzzdata, fuzzdatasize, model_mutate_prob);
+  } else {
+    for (int i=0; i<size; i++) {
+      buffer[i] = yes(model_mutate_prob) ? fuzzdata[i % fuzzdatasize] : buffer[i];
+    }
   }
 }
 
@@ -600,6 +605,7 @@ void ap_fill_dma_buffer() {
 
 int ap_qemu_mmio_read(uint8_t *dest, uint64_t addr, size_t size, int bar) {
   static int counter;
+  static uint64_t cnt;
   uint64_t wrapped_addr;
   auto cur_time = chrono::steady_clock::now();
   auto elapsed_secs = chrono::duration_cast<chrono::seconds>(cur_time - afl_last_epoch_end).count();
@@ -608,6 +614,7 @@ int ap_qemu_mmio_read(uint8_t *dest, uint64_t addr, size_t size, int bar) {
   // try to reset model
   assert(ap_get_fuzz_file()[0]);
   counter++;
+  cnt++;
   if (counter % 100 == 0 || elapsed_secs >= afl_epoch) {
     counter = 0;
     INFO("epoch ended");
@@ -617,7 +624,7 @@ int ap_qemu_mmio_read(uint8_t *dest, uint64_t addr, size_t size, int bar) {
   ap_init();
 
   // Within Probing Phase, Use the Expert Model
-  if (!fuzzdatasize || get_hw_instance()->read(dest, addr, size, bar) != 0) {
+  if (!fuzzdatasize || get_hw_instance()->read(dest, addr, size, bar) != 0 || cnt < 12000) {
     return -1;
   }
   // Fuzz with some probability 

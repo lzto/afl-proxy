@@ -673,6 +673,30 @@ public:
     }
     unlockDMASG();
   }
+
+  void fuzzQEMU_DMABuffer(uint8_t * buffer, int len, uint8_t * afl_data, int afl_len, int use_prob) {
+    for (auto & len_mdl : dma_inputs) {
+      DMAInputModel & mdl = len_mdl.second;
+
+      for (auto & pair : mdl.getInputs()) {
+        int offset = pair.first;
+        HWInput & hw_input = pair.second;
+        int loop_cnt = 1;
+        int struct_len = mdl.getStructLen() ;
+        if (len > struct_len  && (len % struct_len) == 0) {
+          loop_cnt = len / struct_len;
+        }
+        // cerr << "filling DMA addr: 0x" << hex << addr << dec << "offset: " <<  offset << "loop cnt: " << loop_cnt << "\n"; 
+        for (int i=0; i<loop_cnt; i++) {
+          int off = offset + struct_len * i;
+          int wrapped_addr = off % afl_len;
+          uint64_t model_data = hw_input.feedData(mode, afl_data[wrapped_addr]);
+          if (yes(use_prob))
+            memcpy(&buffer[off], (uint8_t*)&model_data, hw_input.size());
+        }
+      }
+    }
+  }
   
 private:
   string dev_name;
