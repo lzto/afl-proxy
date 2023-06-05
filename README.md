@@ -84,21 +84,6 @@ APLib Environment Variables
 * **USE_IRQ**=0,non-zero-value-X: generate interrupt every X milliseconds, 0 to disable, this can be overriden by upper layer device model
 * **WAITGDB**=0,1: stop and waiting for gdb to attach at launch, useful for debugging aplib
 
-Device Model Generation Through Machine Learning
-----------
-
-ML related code is in **ml** and **pylib** directory. To use it, first build python library
-
-```
-cd pylib && make
-```
-You will need to change the qemu launch script path in **launch\_qemu** and **kill\_qemu** function.
-
-Adjust **ml/config** and fitness function for target driver and run **train.py** to get the result in **real\_winner.pkl**.
-
-To run the generated model, use **run.py** script.
-
-Some pre-trained device model is located at [sfp-ml-dev-model-db](sfp-ml-dev-model-db)
 
 PT and ALF coverage update
 ----------
