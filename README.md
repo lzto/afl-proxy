@@ -48,6 +48,13 @@ $(afl-proxy): make
 * prepare rootfs image **TODO**
 * prepare target kernel **TODO**
 
+S2E Repos:
+
+https://github.com/lzto/guest-images
+https://github.com/lzto/s2e
+https://github.com/lzto/s2e-linux-kernel
+
+
 Run AFL proxy
 -------------
 
