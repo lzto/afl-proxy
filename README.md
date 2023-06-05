@@ -93,4 +93,9 @@ Misc
 ----------
 * s2e-tools: tools to convert s2e result to device model, prepare s2e project, check status and upload artifact to model archive server
 
+Builtin Device Models
+----------
+Device models are under ***afl-proxy/aplib/***, you are more than welcome to send pull request, contribute and improve existing device models.
+
+
 
