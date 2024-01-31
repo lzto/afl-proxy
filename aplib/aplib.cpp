@@ -1,6 +1,7 @@
 ///
 /// afl proxy library
 /// 2020-2022 Tong Zhang<ztong0001@gmail.com>
+/// 2022 Yilun Wu<yiluwu@cs.stonybrook.edu>
 ///
 #include "aplib.h"
 #include "shm.h"
@@ -521,6 +522,10 @@ again:
 void ap_qemu_fuzz_dma_generic(uint8_t * buffer, int size) {
   // INFO("QEMU DMA FUZZ");
   Stage2HWModel * stage2 = get_stage2_hw_instance();
+  static uint64_t cnt;
+  cnt++;
+  // if (cnt < 100)
+  //   return;
   if (fuzzdatasize == 0) {
     for (int i=0; i<size; i++) {
       buffer[i] = yes(model_mutate_prob) ? (uint8_t)rand() : buffer[i];
@@ -529,6 +534,9 @@ void ap_qemu_fuzz_dma_generic(uint8_t * buffer, int size) {
   }
   if (use_stage2 && stage2) {
     stage2->fuzzQEMU_DMABuffer(buffer, size, fuzzdata, fuzzdatasize, model_mutate_prob);
+    for (int i=0; i<size; i++) {
+      buffer[i] = yes(model_mutate_prob) ? fuzzdata[i % fuzzdatasize] : buffer[i];
+    }
   } else {
     for (int i=0; i<size; i++) {
       buffer[i] = yes(model_mutate_prob) ? fuzzdata[i % fuzzdatasize] : buffer[i];
@@ -624,7 +632,7 @@ int ap_qemu_mmio_read(uint8_t *dest, uint64_t addr, size_t size, int bar) {
   ap_init();
 
   // Within Probing Phase, Use the Expert Model
-  if (!fuzzdatasize || get_hw_instance()->read(dest, addr, size, bar) != 0 || cnt < 12000) {
+  if (!fuzzdatasize || get_hw_instance()->read(dest, addr, size, bar) != 0) {
     return -1;
   }
   // Fuzz with some probability 

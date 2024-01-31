@@ -1,3 +1,4 @@
+/// 2022 Yilun Wu<yiluwu@cs.stonybrook.edu>
 #ifndef __HW_INPUT_MODEL_H
 #define __HW_INPUT_MODEL_H
 #include <stdint.h>

@@ -2,6 +2,7 @@
 # this little script will make life easier
 # 2018 Tong Zhang<t.zhang2@partner.samsung.com>
 # 2020-2021 Tong Zhang<ztong0001@gmail.com>
+# 2022 Yilun Wu<yiluwu@cs.stonybrook.edu>
 
 function build
 {

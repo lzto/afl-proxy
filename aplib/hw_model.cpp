@@ -1,6 +1,7 @@
 ///
 /// hw model
 /// 2021 Tong Zhang<ztong0001@gmail.com>
+/// 2022 Yilun Wu<yiluwu@cs.stonybrook.edu>
 ///
 #include "hw_model.h"
 

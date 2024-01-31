@@ -1,6 +1,7 @@
 ///
 /// QEMU definitions
 /// 2022 Tong Zhang<ztong0001@gmail.com>
+/// 2022 Yilun Wu<yiluwu@cs.stonybrook.edu>
 ///
 #ifndef _QEMU_DEFS_
 #define _QEMU_DEFS_
