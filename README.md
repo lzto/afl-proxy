@@ -1,6 +1,6 @@
 Notice
 ----------------------
-This repo is incompleted and depreciated
+This repo is incomplete and depreciated
 
 For full code, please refer to: https://github.com/yiluwusbu/DEVFUZZ 
 
