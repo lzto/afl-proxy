@@ -1,3 +1,9 @@
+Notice
+----------------------
+This repo is incompleted and depreciated
+
+For full code, please refer to: https://github.com/yiluwusbu/DEVFUZZ 
+
 AFL Proxy
 ----------------------
 This is AFL proxy(AP). This repo contains a lighweight proxy program(**ap**) launched by AFL.
